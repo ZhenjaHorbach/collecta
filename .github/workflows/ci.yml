@@ -62,6 +62,8 @@ jobs:
       - run: npm ci
       - name: Install EAS CLI
         run: npm install -g eas-cli
+      - name: Export web build
+        run: npx expo export --platform web
       - name: Deploy to EAS Hosting
         run: eas deploy --non-interactive
         env:
