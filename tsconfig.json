@@ -4,7 +4,14 @@
     "strict": true,
     "paths": {
       "@/*": ["./*"],
-      "~/src/*": ["./src/*"]
+      "~/*": ["./src/*"],
+      "@screens/*": ["./src/screens/*"],
+      "@components/*": ["./src/components/*"],
+      "@services/*": ["./src/services/*"],
+      "@hooks/*": ["./src/hooks/*"],
+      "@utils/*": ["./src/utils/*"],
+      "@types/*": ["./src/types/*"],
+      "@constants/*": ["./src/constants/*"]
     }
   },
   "include": [
