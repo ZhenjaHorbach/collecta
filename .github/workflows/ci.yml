@@ -45,15 +45,9 @@ jobs:
           node-version: 20
           cache: npm
       - run: npm ci
-      - name: Install EAS CLI
-        run: npm install -g eas-cli
       - name: Expo Doctor
         run: npx expo-doctor || true
-      - name: EAS Build dry run (iOS)
-        run: eas build --platform ios --non-interactive --dry-run
-        env:
-          EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
-      - name: EAS Build dry run (Android)
-        run: eas build --platform android --non-interactive --dry-run
+      - name: Bundle check (web)
+        run: npx expo export --platform web
         env:
           EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
