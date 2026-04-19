@@ -1,6 +1,7 @@
 # Architecture
 
 ## Directory map
+
 ```
 src/
   app/           — Expo Router file-based routes (thin wrappers over screens)
@@ -15,6 +16,7 @@ supabase/
 ```
 
 ## Rules
+
 - `app/` route files are thin: import and render a screen from `src/screens/`
 - Business logic lives in services and hooks, not in components or screens
 - A hook may call a service; a service must not import a hook
@@ -22,6 +24,7 @@ supabase/
 - Types may be imported by anything; types import nothing from this project
 
 ## Naming
+
 - Screens: `<Name>Screen.tsx` → `export const CollectionScreen`
 - Components: `<Name>.tsx` → `export const CollectionCard`
 - Services: `<domain>.service.ts` → functions, not classes

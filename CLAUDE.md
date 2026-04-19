@@ -1,9 +1,11 @@
 # Collecta
 
 ## Project overview
+
 Real-world photo collection app. Users discover, photograph, and collect real-world objects organized into thematic collections (e.g., "Soviet mosaics", "brutalist architecture", "vintage shop signs"). AI validates whether a photo matches the collection criteria.
 
 ## Architecture
+
 React Native (Expo) + Supabase + Claude Vision API
 
 - **Frontend**: React Native via Expo Router (file-based navigation)
@@ -15,6 +17,7 @@ React Native (Expo) + Supabase + Claude Vision API
 - **Maps**: react-native-maps
 
 ## Styling
+
 - NativeWind (Tailwind CSS for React Native)
 - Use `className` prop, NOT `StyleSheet.create`
 - Dark theme: `bg-slate-950`, `text-slate-100`
@@ -24,6 +27,7 @@ React Native (Expo) + Supabase + Claude Vision API
 - No inline style objects unless absolutely necessary (animations, dynamic values)
 
 ## Code conventions
+
 - TypeScript strict, no `any`
 - Functional components with named exports
 - Services in `/src/services`, hooks in `/src/hooks`
@@ -31,6 +35,7 @@ React Native (Expo) + Supabase + Claude Vision API
 - Path alias: `@/` maps to root, `~/src/` maps to `/src`
 
 ## Directory structure
+
 ```
 src/
   screens/     # Full-screen route components

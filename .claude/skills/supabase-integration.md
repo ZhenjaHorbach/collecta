@@ -1,6 +1,7 @@
 # Supabase Integration Patterns
 
 ## Client setup
+
 ```ts
 // src/services/supabase.ts
 import { createClient } from '@supabase/supabase-js';
@@ -8,11 +9,12 @@ import { Database } from '~/src/types/database.types';
 
 export const supabase = createClient<Database>(
   process.env.EXPO_PUBLIC_SUPABASE_URL!,
-  process.env.EXPO_PUBLIC_SUPABASE_ANON_KEY!,
+  process.env.EXPO_PUBLIC_SUPABASE_ANON_KEY!
 );
 ```
 
 ## Query patterns
+
 ```ts
 // Typed select
 const { data, error } = await supabase
@@ -32,6 +34,7 @@ const { data } = await supabase
 ```
 
 ## Auth
+
 ```ts
 // Sign in with OAuth
 await supabase.auth.signInWithOAuth({ provider: 'google' });
@@ -44,6 +47,7 @@ supabase.auth.onAuthStateChange((event, session) => { ... });
 ```
 
 ## Realtime
+
 ```ts
 // In a hook, with cleanup
 useEffect(() => {
@@ -51,11 +55,14 @@ useEffect(() => {
     .channel('collection-updates')
     .on('postgres_changes', { event: '*', schema: 'public', table: 'items' }, handler)
     .subscribe();
-  return () => { supabase.removeChannel(channel); };
+  return () => {
+    supabase.removeChannel(channel);
+  };
 }, []);
 ```
 
 ## Storage
+
 ```ts
 // Upload
 const { data } = await supabase.storage
@@ -63,12 +70,13 @@ const { data } = await supabase.storage
   .upload(`${userId}/${filename}`, fileBlob, { contentType: 'image/jpeg' });
 
 // Signed URL (private bucket)
-const { data: { signedUrl } } = await supabase.storage
-  .from('photos')
-  .createSignedUrl(path, 3600);
+const {
+  data: { signedUrl },
+} = await supabase.storage.from('photos').createSignedUrl(path, 3600);
 ```
 
 ## PowerSync (offline sync)
+
 - Initialize PowerSync in `src/services/powersync.service.ts`
 - Use `usePowerSync()` hook for reactive queries in components
 - Sync rules defined in `powersync.yaml` — map Supabase tables to local SQLite
