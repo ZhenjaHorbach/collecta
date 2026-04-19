@@ -47,7 +47,22 @@ jobs:
       - run: npm ci
       - name: Expo Doctor
         run: npx expo-doctor || true
-      - name: Bundle check (web)
-        run: npx expo export --platform web
+
+  deploy:
+    name: Deploy to EAS Hosting
+    runs-on: ubuntu-latest
+    needs: [lint-and-typecheck, test, build-check]
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+      - run: npm ci
+      - name: Install EAS CLI
+        run: npm install -g eas-cli
+      - name: Deploy to EAS Hosting
+        run: eas deploy --non-interactive
         env:
           EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
