@@ -1,3 +1,3 @@
-import { ModalScreen } from '@/src/screens/ModalScreen';
+import { ModalScreen } from '@screens/ModalScreen';
 
 export default ModalScreen;
