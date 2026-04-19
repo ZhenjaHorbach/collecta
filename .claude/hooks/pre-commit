@@ -1,0 +1,10 @@
+#!/bin/sh
+# Claude Code pre-commit guidance
+# These checks should pass before committing
+
+echo "Pre-commit checklist:"
+echo "  [ ] No 'any' types introduced (run: npx tsc --noEmit)"
+echo "  [ ] No console.log in production code (check src/ for console.log)"
+echo "  [ ] All imports resolved (tsc will catch unresolved modules)"
+echo "  [ ] ESLint passes (run: npx eslint src/ --max-warnings 0)"
+echo "  [ ] No StyleSheet.create used (use NativeWind className instead)"

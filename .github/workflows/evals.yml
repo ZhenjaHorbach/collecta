@@ -1,0 +1,37 @@
+name: AI Evals
+
+on:
+  workflow_dispatch:
+    inputs:
+      eval_suite:
+        description: 'Eval suite to run (default: all)'
+        required: false
+        default: 'all'
+
+jobs:
+  run-ai-evals:
+    name: Run Claude Vision Evals
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+      - run: npm ci
+
+      - name: Run eval suite
+        run: |
+          npx ts-node src/evals/run.ts --suite ${{ github.event.inputs.eval_suite }}
+        env:
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_ANON_KEY: ${{ secrets.SUPABASE_ANON_KEY }}
+
+      - name: Upload eval report
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: eval-report-${{ github.run_number }}
+          path: eval-results/
+          retention-days: 30
