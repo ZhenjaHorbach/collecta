@@ -11,7 +11,8 @@
     "lint": "expo lint",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
-    "test": "jest"
+    "test": "jest",
+    "prepare": "husky"
   },
   "jest": {
     "preset": "jest-expo",
@@ -64,10 +65,21 @@
     "eslint": "^9.25.0",
     "eslint-config-expo": "~10.0.0",
     "eslint-config-prettier": "^10.1.8",
+    "husky": "^9.1.7",
     "jest": "^29.7.0",
     "jest-expo": "^55.0.16",
+    "lint-staged": "^16.4.0",
     "prettier": "^3.8.3",
     "typescript": "~5.9.2"
+  },
+  "lint-staged": {
+    "*.{ts,tsx}": [
+      "prettier --write",
+      "eslint --max-warnings 0"
+    ],
+    "*.{js,json,md}": [
+      "prettier --write"
+    ]
   },
   "private": true
 }
