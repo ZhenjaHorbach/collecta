@@ -66,6 +66,10 @@ jobs:
         run: npm install -g eas-cli
       - name: Export web build
         run: npx expo export --platform web
+        env:
+          EXPO_PUBLIC_SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          EXPO_PUBLIC_SUPABASE_ANON_KEY: ${{ secrets.SUPABASE_ANON_KEY }}
+          EXPO_PUBLIC_POWERSYNC_URL: ${{ secrets.POWERSYNC_URL }}
       - name: Deploy to EAS Hosting
         run: eas deploy --non-interactive
         env:
