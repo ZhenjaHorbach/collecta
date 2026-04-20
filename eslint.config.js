@@ -7,6 +7,6 @@ module.exports = defineConfig([
   expoConfig,
   prettier,
   {
-    ignores: ['dist/*'],
+    ignores: ['dist/*', 'supabase/functions/**'],
   },
 ]);

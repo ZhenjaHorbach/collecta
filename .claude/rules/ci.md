@@ -24,8 +24,19 @@
 - Report uploaded as artifact, retained 30 days
 - Required before changing AI validation prompts
 
+## Supabase deploy (`.github/workflows/deploy-supabase.yml`)
+
+- Triggers automatically on push to `main` when `supabase/migrations/**` or `supabase/functions/**` change
+- Manual trigger via `workflow_dispatch` with `deploy_functions` / `run_migrations` toggles
+- `concurrency: cancel-in-progress: false` — never cancel an in-flight migration
+- Uses `supabase/setup-cli@v1` + `supabase db push --include-all` + `supabase functions deploy`
+- Slash command: `/deploy-supabase` — full instructions and one-liner commands
+
 ## Secrets required
 
 - `EXPO_TOKEN` — EAS build authentication
 - `ANTHROPIC_API_KEY` — Claude API for evals
-- `SUPABASE_URL` + `SUPABASE_ANON_KEY` — eval environment
+- `SUPABASE_URL` -- Supabase project URL (Project → Settings → API)
+- `SUPABASE_ANON_KEY` — Supabase anon public key (Project → Settings → API)
+- `SUPABASE_ACCESS_TOKEN` — Supabase CLI auth (Account → Access Tokens)
+- `SUPABASE_PROJECT_ID` — Supabase project reference ID (Project → Settings → General)
