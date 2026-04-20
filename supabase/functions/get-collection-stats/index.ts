@@ -8,11 +8,11 @@
 declare const Deno: any;
 
 // @ts-ignore — Deno URL import
-import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
 
 const supabase = createClient(
-  Deno.env.get("SUPABASE_URL")!,
-  Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!,
+  Deno.env.get('SUPABASE_URL')!,
+  Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
 );
 
 interface CollectionStats {
@@ -30,34 +30,34 @@ async function fetchStats(collectionId: string): Promise<CollectionStats> {
   //   total_finds     → count finds joined through collection_items
   //   unique_collectors → count distinct user_id from finds (above join)
   //   validated_finds → count finds where ai_validated = true (above join)
-  throw new Error("Not implemented");
+  throw new Error('Not implemented');
 }
 
 Deno.serve(async (req: Request) => {
-  if (req.method !== "GET") {
-    return new Response("Method Not Allowed", { status: 405 });
+  if (req.method !== 'GET') {
+    return new Response('Method Not Allowed', { status: 405 });
   }
 
   const url = new URL(req.url);
-  const collectionId = url.searchParams.get("collection_id");
+  const collectionId = url.searchParams.get('collection_id');
 
   if (!collectionId) {
-    return new Response(
-      JSON.stringify({ error: "collection_id query param is required" }),
-      { status: 400, headers: { "Content-Type": "application/json" } },
-    );
+    return new Response(JSON.stringify({ error: 'collection_id query param is required' }), {
+      status: 400,
+      headers: { 'Content-Type': 'application/json' },
+    });
   }
 
   const { data: collection, error } = await supabase
-    .from("collections")
-    .select("id")
-    .eq("id", collectionId)
+    .from('collections')
+    .select('id')
+    .eq('id', collectionId)
     .single();
 
   if (error || !collection) {
-    return new Response(JSON.stringify({ error: "Collection not found" }), {
+    return new Response(JSON.stringify({ error: 'Collection not found' }), {
       status: 404,
-      headers: { "Content-Type": "application/json" },
+      headers: { 'Content-Type': 'application/json' },
     });
   }
 
@@ -65,6 +65,6 @@ Deno.serve(async (req: Request) => {
 
   return new Response(JSON.stringify(stats), {
     status: 200,
-    headers: { "Content-Type": "application/json" },
+    headers: { 'Content-Type': 'application/json' },
   });
 });

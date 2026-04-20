@@ -19,7 +19,7 @@ on:
 
 concurrency:
   group: deploy-supabase
-  cancel-in-progress: false  # never cancel an in-flight migration
+  cancel-in-progress: false # never cancel an in-flight migration
 
 jobs:
   deploy-supabase:

@@ -10,11 +10,11 @@
 declare const Deno: any;
 
 // @ts-ignore — Deno URL import
-import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
 
 const supabase = createClient(
-  Deno.env.get("SUPABASE_URL")!,
-  Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!,
+  Deno.env.get('SUPABASE_URL')!,
+  Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
 );
 
 interface AuthUserRecord {
@@ -25,31 +25,31 @@ interface AuthUserRecord {
 }
 
 interface WebhookPayload {
-  type: "INSERT" | "UPDATE" | "DELETE";
+  type: 'INSERT' | 'UPDATE' | 'DELETE';
   table: string;
   record: AuthUserRecord;
   schema: string;
 }
 
 Deno.serve(async (req: Request) => {
-  if (req.method !== "POST") {
-    return new Response("Method Not Allowed", { status: 405 });
+  if (req.method !== 'POST') {
+    return new Response('Method Not Allowed', { status: 405 });
   }
 
   let payload: WebhookPayload;
   try {
     payload = await req.json();
   } catch {
-    return new Response(JSON.stringify({ error: "Invalid JSON" }), {
+    return new Response(JSON.stringify({ error: 'Invalid JSON' }), {
       status: 400,
-      headers: { "Content-Type": "application/json" },
+      headers: { 'Content-Type': 'application/json' },
     });
   }
 
-  if (payload.type !== "INSERT" || payload.table !== "users") {
+  if (payload.type !== 'INSERT' || payload.table !== 'users') {
     return new Response(JSON.stringify({ skipped: true }), {
       status: 200,
-      headers: { "Content-Type": "application/json" },
+      headers: { 'Content-Type': 'application/json' },
     });
   }
 
@@ -59,10 +59,10 @@ Deno.serve(async (req: Request) => {
   //   - send welcome email via Resend / SendGrid
   //   - join user to featured/default collections
   //   - emit analytics event
-  console.log("New user created:", user.id, user.email);
+  console.log('New user created:', user.id, user.email);
 
   return new Response(JSON.stringify({ ok: true }), {
     status: 200,
-    headers: { "Content-Type": "application/json" },
+    headers: { 'Content-Type': 'application/json' },
   });
 });
