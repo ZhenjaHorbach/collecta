@@ -6,7 +6,6 @@ on:
     paths:
       - 'supabase/migrations/**'
       - 'supabase/functions/**'
-      - 'powersync/sync-rules.yaml'
   workflow_dispatch:
     inputs:
       deploy_functions:
@@ -15,10 +14,6 @@ on:
         default: true
       run_migrations:
         description: 'Run DB migrations'
-        type: boolean
-        default: true
-      deploy_sync_rules:
-        description: 'Deploy PowerSync sync rules'
         type: boolean
         default: true
 
@@ -58,13 +53,3 @@ jobs:
         run: supabase functions deploy --no-verify-jwt
         env:
           SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
-
-      - name: Deploy PowerSync sync rules
-        if: >
-          github.event_name == 'push' ||
-          (github.event_name == 'workflow_dispatch' && inputs.deploy_sync_rules)
-        run: |
-          npm install -g @powersync/cli
-          powersync deploy --project ${{ secrets.POWERSYNC_PROJECT_ID }} powersync/sync-rules.yaml
-        env:
-          POWERSYNC_TOKEN: ${{ secrets.POWERSYNC_TOKEN }}
