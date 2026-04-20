@@ -8,10 +8,10 @@
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 declare const Deno: any;
 
-// @ts-ignore — Deno URL import
-import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
-// @ts-ignore — Deno URL import
-import Anthropic from 'https://esm.sh/@anthropic-ai/sdk@0.27.0';
+// @ts-ignore — Deno npm specifier
+import { createClient } from 'npm:@supabase/supabase-js@2';
+// @ts-ignore — Deno npm specifier
+import Anthropic from 'npm:@anthropic-ai/sdk';
 
 const supabase = createClient(
   Deno.env.get('SUPABASE_URL')!,

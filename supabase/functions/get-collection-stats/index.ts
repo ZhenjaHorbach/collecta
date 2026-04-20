@@ -7,8 +7,8 @@
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 declare const Deno: any;
 
-// @ts-ignore — Deno URL import
-import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
+// @ts-ignore — Deno npm specifier
+import { createClient } from 'npm:@supabase/supabase-js@2';
 
 const supabase = createClient(
   Deno.env.get('SUPABASE_URL')!,
