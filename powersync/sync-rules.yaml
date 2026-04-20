@@ -1,0 +1,32 @@
+# PowerSync Sync Rules
+# Deploy: powersync deploy --project $POWERSYNC_PROJECT_ID powersync/sync-rules.yaml
+# Docs: https://docs.powersync.com/usage/sync-rules
+
+bucket_definitions:
+  # Public collections and their items — readable by everyone
+  public_collections:
+    data:
+      - SELECT * FROM collections WHERE is_public = true
+      - SELECT * FROM collection_items
+
+  # Private collections created by the current user
+  own_collections:
+    parameters:
+      - SELECT request.user_id() AS user_id
+    data:
+      - SELECT * FROM collections
+        WHERE is_public = false AND creator_id = bucket.user_id
+      - SELECT ci.* FROM collection_items ci
+        JOIN collections c ON c.id = ci.collection_id
+        WHERE c.is_public = false AND c.creator_id = bucket.user_id
+
+  # Finds, joined collections, and reactions scoped to the current user
+  user_data:
+    parameters:
+      - SELECT request.user_id() AS user_id
+    data:
+      - SELECT * FROM finds WHERE user_id = bucket.user_id
+      - SELECT * FROM user_collections WHERE user_id = bucket.user_id
+      - SELECT r.* FROM reactions r
+        JOIN finds f ON f.id = r.find_id
+        WHERE f.user_id = bucket.user_id
