@@ -1,13 +1,13 @@
 -- Migration: 001_init
 -- Creates core tables: users, collections, collection_items, finds, user_collections, reactions
+-- Idempotent: safe to re-run if tables were created manually before first migration push
 -- Rollback: drop tables in reverse dependency order (reactions, user_collections, finds, collection_items, collections, users)
 
 -- ─── Extensions ────────────────────────────────────────────────────────────────
 create extension if not exists "uuid-ossp";
 
 -- ─── users ─────────────────────────────────────────────────────────────────────
--- Public profile extending auth.users; id mirrors auth.users.id
-create table public.users (
+create table if not exists public.users (
   id           uuid primary key references auth.users (id) on delete cascade,
   username     text unique not null,
   display_name text not null,
@@ -19,21 +19,19 @@ create table public.users (
 
 alter table public.users enable row level security;
 
--- Anyone can read profiles
+drop policy if exists "users: public read" on public.users;
 create policy "users: public read"
   on public.users for select
   using (true);
 
--- Users can only update their own profile
+drop policy if exists "users: owner update" on public.users;
 create policy "users: owner update"
   on public.users for update
   using (auth.uid() = id)
   with check (auth.uid() = id);
 
--- Insert is triggered by auth signup (service role); no client-side insert policy
-
 -- ─── collections ───────────────────────────────────────────────────────────────
-create table public.collections (
+create table if not exists public.collections (
   id               uuid primary key default uuid_generate_v4(),
   creator_id       uuid not null references public.users (id) on delete cascade,
   title            text not null,
@@ -46,32 +44,34 @@ create table public.collections (
 
 alter table public.collections enable row level security;
 
+drop policy if exists "collections: public collections readable by all" on public.collections;
 create policy "collections: public collections readable by all"
   on public.collections for select
   using (is_public or creator_id = auth.uid());
 
+drop policy if exists "collections: authenticated users can create" on public.collections;
 create policy "collections: authenticated users can create"
   on public.collections for insert
   with check (auth.uid() = creator_id);
 
+drop policy if exists "collections: owner can update" on public.collections;
 create policy "collections: owner can update"
   on public.collections for update
   using (auth.uid() = creator_id)
   with check (auth.uid() = creator_id);
 
+drop policy if exists "collections: owner can delete" on public.collections;
 create policy "collections: owner can delete"
   on public.collections for delete
   using (auth.uid() = creator_id);
 
 -- ─── collection_items ──────────────────────────────────────────────────────────
--- Individual items/objects a user needs to photograph within a collection
-create table public.collection_items (
+create table if not exists public.collection_items (
   id                   uuid primary key default uuid_generate_v4(),
   collection_id        uuid not null references public.collections (id) on delete cascade,
   name                 text not null,
   description          text,
   example_image_url    text,
-  -- Prompt sent to Claude Vision when validating a find against this item
   ai_validation_prompt text,
   sort_order           integer not null default 0,
   created_at           timestamptz not null default now(),
@@ -80,7 +80,7 @@ create table public.collection_items (
 
 alter table public.collection_items enable row level security;
 
--- Readable if the parent collection is public or the viewer is the creator
+drop policy if exists "collection_items: readable via collection access" on public.collection_items;
 create policy "collection_items: readable via collection access"
   on public.collection_items for select
   using (
@@ -91,6 +91,7 @@ create policy "collection_items: readable via collection access"
     )
   );
 
+drop policy if exists "collection_items: owner can insert" on public.collection_items;
 create policy "collection_items: owner can insert"
   on public.collection_items for insert
   with check (
@@ -100,6 +101,7 @@ create policy "collection_items: owner can insert"
     )
   );
 
+drop policy if exists "collection_items: owner can update" on public.collection_items;
 create policy "collection_items: owner can update"
   on public.collection_items for update
   using (
@@ -109,6 +111,7 @@ create policy "collection_items: owner can update"
     )
   );
 
+drop policy if exists "collection_items: owner can delete" on public.collection_items;
 create policy "collection_items: owner can delete"
   on public.collection_items for delete
   using (
@@ -119,17 +122,14 @@ create policy "collection_items: owner can delete"
   );
 
 -- ─── finds ─────────────────────────────────────────────────────────────────────
--- A user's photo submission claiming they found a collection item
-create table public.finds (
+create table if not exists public.finds (
   id                  uuid primary key default uuid_generate_v4(),
   user_id             uuid not null references public.users (id) on delete cascade,
   collection_item_id  uuid not null references public.collection_items (id) on delete cascade,
   photo_url           text not null,
-  -- AI validation result fields (populated asynchronously)
   ai_validated        boolean,
   ai_confidence       real,
   ai_notes            text,
-  -- Optional geolocation
   location_lat        double precision,
   location_lng        double precision,
   notes               text,
@@ -138,7 +138,7 @@ create table public.finds (
 
 alter table public.finds enable row level security;
 
--- Readable if the parent collection is public or viewer owns the find
+drop policy if exists "finds: readable if collection is public or own find" on public.finds;
 create policy "finds: readable if collection is public or own find"
   on public.finds for select
   using (
@@ -151,22 +151,24 @@ create policy "finds: readable if collection is public or own find"
     )
   );
 
+drop policy if exists "finds: authenticated users can create own finds" on public.finds;
 create policy "finds: authenticated users can create own finds"
   on public.finds for insert
   with check (auth.uid() = user_id);
 
+drop policy if exists "finds: owner can update" on public.finds;
 create policy "finds: owner can update"
   on public.finds for update
   using (auth.uid() = user_id)
   with check (auth.uid() = user_id);
 
+drop policy if exists "finds: owner can delete" on public.finds;
 create policy "finds: owner can delete"
   on public.finds for delete
   using (auth.uid() = user_id);
 
 -- ─── user_collections ──────────────────────────────────────────────────────────
--- Tracks which collections a user has joined/is actively collecting
-create table public.user_collections (
+create table if not exists public.user_collections (
   id            uuid primary key default uuid_generate_v4(),
   user_id       uuid not null references public.users (id) on delete cascade,
   collection_id uuid not null references public.collections (id) on delete cascade,
@@ -176,22 +178,28 @@ create table public.user_collections (
 
 alter table public.user_collections enable row level security;
 
+drop policy if exists "user_collections: users read own rows" on public.user_collections;
 create policy "user_collections: users read own rows"
   on public.user_collections for select
   using (auth.uid() = user_id);
 
+drop policy if exists "user_collections: users can join collections" on public.user_collections;
 create policy "user_collections: users can join collections"
   on public.user_collections for insert
   with check (auth.uid() = user_id);
 
+drop policy if exists "user_collections: users can leave collections" on public.user_collections;
 create policy "user_collections: users can leave collections"
   on public.user_collections for delete
   using (auth.uid() = user_id);
 
 -- ─── reactions ─────────────────────────────────────────────────────────────────
-create type public.reaction_type as enum ('like', 'fire', 'wow');
+do $$ begin
+  create type public.reaction_type as enum ('like', 'fire', 'wow');
+exception when duplicate_object then null;
+end $$;
 
-create table public.reactions (
+create table if not exists public.reactions (
   id         uuid primary key default uuid_generate_v4(),
   user_id    uuid not null references public.users (id) on delete cascade,
   find_id    uuid not null references public.finds (id) on delete cascade,
@@ -202,15 +210,17 @@ create table public.reactions (
 
 alter table public.reactions enable row level security;
 
--- Reactions are public (visible on the find)
+drop policy if exists "reactions: public read" on public.reactions;
 create policy "reactions: public read"
   on public.reactions for select
   using (true);
 
+drop policy if exists "reactions: authenticated users can react" on public.reactions;
 create policy "reactions: authenticated users can react"
   on public.reactions for insert
   with check (auth.uid() = user_id);
 
+drop policy if exists "reactions: owner can remove reaction" on public.reactions;
 create policy "reactions: owner can remove reaction"
   on public.reactions for delete
   using (auth.uid() = user_id);
@@ -224,20 +234,22 @@ begin
 end;
 $$;
 
+drop trigger if exists users_updated_at on public.users;
 create trigger users_updated_at
   before update on public.users
   for each row execute procedure public.set_updated_at();
 
+drop trigger if exists collections_updated_at on public.collections;
 create trigger collections_updated_at
   before update on public.collections
   for each row execute procedure public.set_updated_at();
 
+drop trigger if exists collection_items_updated_at on public.collection_items;
 create trigger collection_items_updated_at
   before update on public.collection_items
   for each row execute procedure public.set_updated_at();
 
 -- ─── user profile auto-create on signup ────────────────────────────────────────
--- Inserts a minimal users row when a new auth.users entry is created
 create or replace function public.handle_new_user()
 returns trigger language plpgsql security definer as $$
 begin
@@ -252,15 +264,16 @@ begin
 end;
 $$;
 
+drop trigger if exists on_auth_user_created on auth.users;
 create trigger on_auth_user_created
   after insert on auth.users
   for each row execute procedure public.handle_new_user();
 
 -- ─── indexes ───────────────────────────────────────────────────────────────────
-create index finds_user_id_idx              on public.finds (user_id);
-create index finds_collection_item_id_idx   on public.finds (collection_item_id);
-create index finds_created_at_idx           on public.finds (created_at desc);
-create index collection_items_collection_idx on public.collection_items (collection_id);
-create index user_collections_user_idx      on public.user_collections (user_id);
-create index user_collections_collection_idx on public.user_collections (collection_id);
-create index reactions_find_id_idx          on public.reactions (find_id);
+create index if not exists finds_user_id_idx               on public.finds (user_id);
+create index if not exists finds_collection_item_id_idx    on public.finds (collection_item_id);
+create index if not exists finds_created_at_idx            on public.finds (created_at desc);
+create index if not exists collection_items_collection_idx on public.collection_items (collection_id);
+create index if not exists user_collections_user_idx       on public.user_collections (user_id);
+create index if not exists user_collections_collection_idx on public.user_collections (collection_id);
+create index if not exists reactions_find_id_idx           on public.reactions (find_id);
