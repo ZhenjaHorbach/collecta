@@ -1,19 +1,15 @@
-import { DarkTheme, DefaultTheme, ThemeProvider } from '@react-navigation/native';
+import '../../global.css';
+
+import { AuthGuard } from '@components/AuthGuard';
+import { DarkTheme, ThemeProvider } from '@react-navigation/native';
+import { connector, db } from '@services/database.service';
 import { Stack } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import { useEffect } from 'react';
+import { View } from 'react-native';
 import 'react-native-reanimated';
 
-import { useColorScheme } from '@hooks/use-color-scheme';
-import { connector, db } from '@services/database.service';
-
-export const unstable_settings = {
-  anchor: '(tabs)',
-};
-
 export default function RootLayout() {
-  const colorScheme = useColorScheme();
-
   useEffect(() => {
     db.connect(connector);
     return () => {
@@ -22,12 +18,21 @@ export default function RootLayout() {
   }, []);
 
   return (
-    <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
-      <Stack>
-        <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
-        <Stack.Screen name="modal" options={{ presentation: 'modal', title: 'Modal' }} />
-      </Stack>
-      <StatusBar style="auto" />
+    <ThemeProvider value={DarkTheme}>
+      <View className="flex-1 bg-bg">
+        <AuthGuard>
+          <Stack>
+            <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
+            <Stack.Screen name="auth" options={{ headerShown: false }} />
+            <Stack.Screen name="collection/[id]" options={{ headerShown: false }} />
+            <Stack.Screen
+              name="collection/create"
+              options={{ headerShown: false, presentation: 'modal' }}
+            />
+          </Stack>
+        </AuthGuard>
+        <StatusBar style="light" />
+      </View>
     </ThemeProvider>
   );
 }

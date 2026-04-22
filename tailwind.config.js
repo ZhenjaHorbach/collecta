@@ -22,6 +22,7 @@ module.exports = {
         'gold-hi': '#F4CE88',
         'gold-lo': '#B8894A',
         'gold-glow': 'rgba(233,184,106,0.25)',
+        'on-gold': '#1A1410',
 
         // Semantic accent colors
         coral: '#F07A63',

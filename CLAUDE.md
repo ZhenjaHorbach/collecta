@@ -20,10 +20,9 @@ React Native (Expo) + Supabase + Claude Vision API
 
 - NativeWind (Tailwind CSS for React Native)
 - Use `className` prop, NOT `StyleSheet.create`
-- Dark theme: `bg-slate-950`, `text-slate-100`
-- Accent color: `amber-500` (gold) for progress, achievements, CTAs
+- Dark theme only — custom tokens defined in `tailwind.config.js` (e.g. `bg-bg`, `text-text`, `text-gold`)
+- Accent color: `gold` for progress, achievements, CTAs
 - All spacing via Tailwind classes (`p-4`, `gap-3`, etc.)
-- Custom colors defined in `tailwind.config.js`
 - No inline style objects unless absolutely necessary (animations, dynamic values)
 
 ## Code conventions
@@ -32,19 +31,26 @@ React Native (Expo) + Supabase + Claude Vision API
 - Functional components with named exports
 - Services in `/src/services`, hooks in `/src/hooks`
 - Types in `/src/types`
-- Path alias: `@/` maps to root, `~/src/` maps to `/src`
+- Path aliases: `@components/*`, `@screens/*`, `@services/*`, `@hooks/*`, `@utils/*`, `@constants/*`
 
 ## Directory structure
 
+Each screen and component lives in its own folder with an `index.ts` re-export.
+
 ```
 src/
-  screens/     # Full-screen route components
-  components/  # Reusable UI components
-  services/    # API clients, Supabase queries, Claude API calls
-  hooks/       # Custom React hooks
-  utils/       # Pure helper functions
-  types/       # Shared TypeScript types and interfaces
-  app/         # Expo Router file-based routes
+  app/          # Expo Router routes (thin wrappers)
+    (tabs)/     # Feed, Map, Camera, Collections, Profile
+    (auth)/     # Welcome, SignIn, SignUp, Verify, Onboarding
+    collection/ # [id] detail, create (modal)
+  screens/      # Full-screen components (one folder each)
+  components/   # Reusable UI components (one folder each)
+  services/     # Supabase queries, Claude API, storage
+  hooks/        # Custom React hooks
+  utils/        # Pure helper functions
+  types/        # Shared TypeScript interfaces
+  constants/    # Theme tokens, config
 supabase/
-  migrations/  # SQL migration files
+  migrations/   # SQL migration files
+  functions/    # Edge functions
 ```

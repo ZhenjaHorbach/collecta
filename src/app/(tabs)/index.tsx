@@ -1,3 +1,3 @@
-import { HomeScreen } from '@screens/HomeScreen';
+import { FeedScreen } from '@screens/FeedScreen';
 
-export default HomeScreen;
+export default FeedScreen;

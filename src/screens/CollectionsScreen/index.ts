@@ -1,0 +1,1 @@
+export { CollectionsScreen } from './CollectionsScreen';

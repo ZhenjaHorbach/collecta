@@ -9,4 +9,9 @@ module.exports = defineConfig([
   {
     ignores: ['dist/*', 'supabase/functions/**'],
   },
+  {
+    rules: {
+      'bem-helper/case': 'off',
+    },
+  },
 ]);
