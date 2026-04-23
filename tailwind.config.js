@@ -2,44 +2,41 @@
 module.exports = {
   content: ['./src/**/*.{js,jsx,ts,tsx}', './app/**/*.{js,jsx,ts,tsx}'],
   presets: [require('nativewind/preset')],
+  darkMode: 'class',
   theme: {
     extend: {
       colors: {
-        // Backgrounds
-        bg: '#0E1116',
-        surface: '#171B22',
-        'surface-hi': '#1F252E',
-        'surface-lo': '#0A0D12',
-        'app-shell': '#06080B',
+        // Semantic tokens — values come from CSS variables in global.css
+        // (:root = light, .dark:root = dark). Runtime hex values live in
+        // src/constants/palettes.ts for native APIs that can't consume var().
+        bg: 'var(--bg)',
+        surface: 'var(--surface)',
+        'surface-hi': 'var(--surface-hi)',
+        'surface-lo': 'var(--surface-lo)',
+        'app-shell': 'var(--app-shell)',
 
-        // Text
-        text: '#F4F1EA',
-        'text-dim': 'rgba(244,241,234,0.62)',
-        'text-muted': 'rgba(244,241,234,0.38)',
+        text: 'var(--text)',
+        'text-dim': 'var(--text-dim)',
+        'text-muted': 'var(--text-muted)',
 
-        // Accent — gold
-        gold: '#E9B86A',
-        'gold-hi': '#F4CE88',
-        'gold-lo': '#B8894A',
-        'gold-glow': 'rgba(233,184,106,0.25)',
-        'on-gold': '#1A1410',
+        gold: 'var(--gold)',
+        'gold-hi': 'var(--gold-hi)',
+        'gold-lo': 'var(--gold-lo)',
+        'gold-glow': 'var(--gold-glow)',
+        'on-gold': 'var(--on-gold)',
 
-        // Semantic accent colors
-        coral: '#F07A63',
-        mint: '#7CCBA6',
-        sky: '#6BA8D4',
+        coral: 'var(--coral)',
+        mint: 'var(--mint)',
+        sky: 'var(--sky)',
 
-        // Strokes / borders
-        stroke: 'rgba(255,255,255,0.06)',
-        'stroke-hi': 'rgba(255,255,255,0.12)',
+        stroke: 'var(--stroke)',
+        'stroke-hi': 'var(--stroke-hi)',
 
-        // Overlays
-        overlay: 'rgba(14,17,22,0.82)',
-        'overlay-hi': 'rgba(14,17,22,0.9)',
+        overlay: 'var(--overlay)',
+        'overlay-hi': 'var(--overlay-hi)',
 
-        // Map
-        'map-bg': '#1A2230',
-        'map-deep': '#0E1722',
+        'map-bg': 'var(--map-bg)',
+        'map-deep': 'var(--map-deep)',
       },
 
       borderRadius: {

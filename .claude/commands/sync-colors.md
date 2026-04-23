@@ -1,46 +1,41 @@
 # /sync-colors
 
-Verify that `src/constants/colors.ts` stays in sync with `tailwind.config.js`, and fix any drift. Tailwind config is the **source of truth** — `Colors.ts` mirrors a subset of it for native APIs (ActivityIndicator, style props, placeholderTextColor, tabBar colors) that cannot consume `className`.
+Verify that color tokens stay in sync across the three theming layers, and fix any drift.
 
-## When to run
+## Layers
 
-- After adding or changing a color in `tailwind.config.js`
-- After adding or changing a color in `src/constants/colors.ts`
-- Before opening a PR that touches either file
+| File                        | Role                                                                      |
+| --------------------------- | ------------------------------------------------------------------------- |
+| `src/constants/palettes.ts` | **Source of truth** — `PALETTES.light` / `PALETTES.dark`, camelCase keys. |
+| `global.css`                | `:root` (light) and `.dark:root` (dark) CSS-variable declarations.        |
+| `tailwind.config.js`        | Each token in `theme.extend.colors` maps `kebab-name` → `'var(--kebab)'`. |
+
+Runtime theme switching reads `PALETTES` via `useThemeVars.ts` and `useColors.ts` — both out of scope.
 
 ## Invariants
 
-1. **Source of truth**: `tailwind.config.js` → `theme.extend.colors`. Every entry in `src/constants/colors.ts` MUST have a matching entry in Tailwind with the same hex/rgba value.
-2. **Naming**: kebab-case in Tailwind maps to camelCase in `Colors` — e.g. `surface-hi` → `surfaceHi`, `on-gold` → `onGold`, `text-dim` → `textDim`.
-3. **Subset allowed**: `Colors.ts` does NOT need to mirror every Tailwind token. Only entries that appear in `Colors.ts` must match. Tokens that are never used outside `className` (e.g. `overlay`, `map-bg`, `gold-glow`) can live in Tailwind only.
-4. **No extras**: every key in `Colors` MUST exist in Tailwind. If a raw-hex usage has no Tailwind counterpart, add it to Tailwind first, then mirror it.
+1. `PALETTES.light` and `PALETTES.dark` have identical key sets.
+2. For every `PALETTES` key: kebab form exists in both `:root` / `.dark:root` with matching values, and in Tailwind as `'var(--kebab)'`.
+3. No extra keys in `global.css` or `tailwind.config.js` beyond `PALETTES`.
 
 ## Procedure
 
-1. Read `tailwind.config.js` and extract the flat map `theme.extend.colors` (name → value).
-2. Read `src/constants/colors.ts` and extract the flat map `Colors` (camelCase name → value).
-3. Convert each `Colors` key back to kebab-case and look up the Tailwind entry.
-4. Report three categories of drift:
-   - **Missing in Tailwind**: a `Colors.*` entry whose kebab-case key has no Tailwind counterpart. This is an error — add the token to Tailwind first.
-   - **Value mismatch**: same key on both sides, different hex/rgba. Tailwind wins — update `Colors.ts` to match.
-   - **Tailwind-only (informational)**: Tailwind entries not present in `Colors.ts`. Not an error; list them so the user can decide whether any new raw-hex consumer needs mirroring.
-5. If drift is found and the user requested a fix (default: yes when invoked via `/sync-colors`), update `src/constants/colors.ts` to match Tailwind. Preserve the file's existing header comment, `as const` assertion, and `ColorToken` type export.
-6. After writing, run `npx tsc --noEmit` and `npx eslint src/constants/colors.ts` to verify.
+1. Extract flat maps from each layer.
+2. Compare and report drift under these headings (one line per entry, `name: observed → expected`):
+   - **Key-set mismatch** — `PALETTES.light` vs `.dark`
+   - **global.css** — missing / value mismatch / extra
+   - **Tailwind** — missing / value mismatch / extra
+3. Fix drift by editing the downstream files to match `PALETTES`. Preserve comments, headers, `as const`, and type exports.
+4. Run `npx tsc --noEmit` and `npx eslint <edited-ts-files>`.
 
-## Kebab ↔ camelCase helpers
+Kebab ↔ camel: `surface-hi` ↔ `surfaceHi`.
 
-- Kebab → camel: `surface-hi` → `surfaceHi` (lowercase first segment, capitalize first letter of each subsequent segment).
-- Camel → kebab: the inverse — insert `-` before each uppercase letter and lowercase it.
+## Output
 
-## Output format
-
-Respond with one of:
-
-- `✓ Colors in sync` — nothing to do.
-- A report listing drift with category headings (`Missing in Tailwind`, `Value mismatch`, `Tailwind-only`), one entry per line in the form `key: colorsValue → tailwindValue`. Follow with either the applied fix (file edit) or a diff preview if the user asked to preview only.
+- `✓ Colors in sync` when nothing to do.
+- Otherwise: drift report (by heading) + applied fix, or a diff preview if the user asked to preview only.
 
 ## Non-goals
 
-- Do NOT regenerate `tailwind.config.js` from `Colors.ts` — direction is always Tailwind → Colors.
-- Do NOT add new tokens speculatively. Only sync what already exists in `Colors.ts`.
-- Do NOT remove comments, type exports, or file headers in `Colors.ts` — only mutate the token values inside the `Colors = { … } as const` object.
+- Direction is always `PALETTES` → others. Never regenerate `PALETTES` from any other file.
+- Do not touch `useThemeVars.ts` / `useColors.ts`.

@@ -1,5 +1,5 @@
-import { Colors } from '@constants/colors';
 import { useAuth } from '@hooks/useAuth';
+import { useColors } from '@hooks/useColors';
 import { useRouter, useSegments } from 'expo-router';
 import { useEffect, type PropsWithChildren } from 'react';
 import { ActivityIndicator, View } from 'react-native';
@@ -11,6 +11,7 @@ export function AuthGuard({ children }: PropsWithChildren) {
   const { session, loading } = useAuth();
   const segments = useSegments();
   const router = useRouter();
+  const colors = useColors();
 
   useEffect(() => {
     if (loading) return;
@@ -25,7 +26,7 @@ export function AuthGuard({ children }: PropsWithChildren) {
   if (loading) {
     return (
       <View className="flex-1 bg-bg items-center justify-center">
-        <ActivityIndicator color={Colors.gold} />
+        <ActivityIndicator color={colors.gold} />
       </View>
     );
   }

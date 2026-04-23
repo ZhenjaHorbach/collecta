@@ -1,7 +1,10 @@
 import '../../global.css';
+import '@i18n';
 
 import { AuthGuard } from '@components/AuthGuard';
-import { DarkTheme, ThemeProvider } from '@react-navigation/native';
+import { useTheme } from '@hooks/useTheme';
+import { useThemeVars } from '@hooks/useThemeVars';
+import { DarkTheme, DefaultTheme, ThemeProvider } from '@react-navigation/native';
 import { connector, db } from '@services/database.service';
 import { Stack } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
@@ -10,6 +13,9 @@ import { View } from 'react-native';
 import 'react-native-reanimated';
 
 export default function RootLayout() {
+  const { resolved } = useTheme();
+  const themeVars = useThemeVars();
+
   useEffect(() => {
     db.connect(connector);
     return () => {
@@ -17,9 +23,11 @@ export default function RootLayout() {
     };
   }, []);
 
+  const isDark = resolved === 'dark';
+
   return (
-    <ThemeProvider value={DarkTheme}>
-      <View className="flex-1 bg-bg">
+    <ThemeProvider value={isDark ? DarkTheme : DefaultTheme}>
+      <View style={themeVars} className="flex-1 bg-bg">
         <AuthGuard>
           <Stack>
             <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
@@ -31,7 +39,7 @@ export default function RootLayout() {
             />
           </Stack>
         </AuthGuard>
-        <StatusBar style="light" />
+        <StatusBar style={isDark ? 'light' : 'dark'} />
       </View>
     </ThemeProvider>
   );

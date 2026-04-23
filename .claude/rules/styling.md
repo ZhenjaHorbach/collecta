@@ -1,67 +1,43 @@
-# Styling Rules
+# Styling
 
-## Core rule
+## Core
 
-Always use NativeWind `className` prop. Never use `StyleSheet.create`.
+- Use NativeWind `className`. Never `StyleSheet.create`.
+- Colors, spacing, radii come from the design-system tokens below. Don't invent values.
 
-## Design tokens (from Collecta.html design file)
+## Color tokens
 
-### Backgrounds
+All color tokens are **semantic** and auto-adapt per theme. Writing the same class in light vs dark yields different values — never bypass this.
 
-- `bg-bg` — #0E1116 — app background
-- `bg-surface` — #171B22 — card / sheet surface
-- `bg-surface-hi` — #1F252E — elevated surface
-- `bg-surface-lo` — #0A0D12 — recessed / tab bar gradient base
-- `bg-app-shell` — #06080B — outermost shell
+**Backgrounds** `bg-bg`, `bg-surface`, `bg-surface-hi`, `bg-surface-lo`, `bg-app-shell`
 
-### Text
+**Text** `text-text`, `text-text-dim` (secondary), `text-text-muted` (placeholder)
 
-- `text-text` — #F4F1EA — primary text
-- `text-text-dim` — 62% opacity — secondary text
-- `text-text-muted` — 38% opacity — placeholder / disabled
+**Gold accent** `bg-gold`, `bg-gold-hi`, `bg-gold-lo`, `text-on-gold` — CTAs, progress, achievements
 
-### Accent — Gold
+**Semantic** `coral` (errors), `mint` (success), `sky` (info / links)
 
-- `text-gold` / `bg-gold` — #E9B86A — CTAs, progress, achievements
-- `text-gold-hi` / `bg-gold-hi` — #F4CE88 — highlighted gold
-- `text-gold-lo` / `bg-gold-lo` — #B8894A — dimmed gold
+**Borders** `border-stroke`, `border-stroke-hi`
 
-### Semantic colors
+## Theming rules
 
-- `text-coral` / `bg-coral` — #F07A63 — errors, warnings
-- `text-mint` / `bg-mint` — #7CCBA6 — success, nature
-- `text-sky` / `bg-sky` — #6BA8D4 — info, links
+- Use semantic tokens only. Never hex / rgba inline, and never palette-specific classes like `bg-white`, `bg-slate-950`, `text-amber-600`.
+- Never add `dark:` prefixes. Tokens swap automatically when the root `.dark` class toggles via `useColorScheme()`. **Why:** `dark:bg-X` duplicates logic already encoded in `PALETTES` and drifts from the source of truth.
+- New colors go into **both** `PALETTES.light` and `PALETTES.dark` in `src/constants/palettes.ts`, then `global.css` and `tailwind.config.js`. Run `/sync-colors` to verify.
+- For native APIs that can't consume `className` (`ActivityIndicator`, `tabBar`, `placeholderTextColor`, shadow, Animated styles), use `useColors()` from `@hooks/useColors`.
+- Runtime theme preference: `useTheme()` from `@hooks/useTheme`. Don't call NativeWind's `useColorScheme()` directly from UI code — use `useColors()` or the semantic class.
 
-### Borders
+## Radius scale
 
-- `border-stroke` — rgba(255,255,255,0.06) — default border
-- `border-stroke-hi` — rgba(255,255,255,0.12) — emphasized border
-
-## Border radius scale
-
-- `rounded-sm` = 10px — pills, chips
-- `rounded-md` = 16px — cards, sheets
-- `rounded-lg` = 22px — large cards
-- `rounded-xl` = 28px — modals, bottom sheets
+`rounded-sm` 10px · `rounded-md` 16px · `rounded-lg` 22px · `rounded-xl` 28px.
 
 ## Spacing scale
 
-Consistent spacing — do not invent arbitrary values:
+`gap-2` 8 · `gap-3` 12 · `gap-4` 16 · `p-4` 16 (screen padding) · `p-6` 24 (card padding). Don't invent arbitrary values.
 
-- `gap-2` = 8px (tight list items)
-- `gap-3` = 12px (default card gap)
-- `gap-4` = 16px (section gap)
-- `p-4` = 16px (standard screen padding)
-- `p-6` = 24px (card padding)
+## Inline `style` — allowed only for
 
-## Dark theme
-
-Dark theme is the only theme. Never add light-mode variants unless explicitly asked.
-
-## Exceptions
-
-Inline `style` prop is allowed only for:
-
-- Animated values (Reanimated `animatedStyle`)
-- Truly dynamic runtime values (e.g., `{ width: progress * 100 + '%' }`)
+- Reanimated `animatedStyle`
+- Dynamic runtime values (e.g. `{ width: progress * 100 + '%' }`)
 - Third-party components that don't accept `className`
+- `style={themeVars}` on the root `<View>` in `_layout.tsx` (CSS-var injection via `vars()`)

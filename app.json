@@ -45,7 +45,8 @@
           }
         }
       ],
-      "@journeyapps/react-native-quick-sqlite"
+      "@journeyapps/react-native-quick-sqlite",
+      "expo-localization"
     ],
     "experiments": {
       "typedRoutes": true,
