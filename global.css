@@ -1,3 +1,72 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+/* Theme tokens — mirrored from src/constants/palettes.ts. NativeWind reads
+ * these CSS variables on both web and native; toggling the `.dark` class on
+ * the root via `useColorScheme()` swaps every `bg-bg` / `text-text` / `bg-gold`
+ * in the tree automatically. Keep the two :root blocks in sync with palettes. */
+
+@layer base {
+  :root {
+    --bg: #ffffff;
+    --surface: #f4f4f5;
+    --surface-hi: #e4e4e7;
+    --surface-lo: #fafafa;
+    --app-shell: #ffffff;
+
+    --text: #0f172a;
+    --text-dim: rgba(15, 23, 42, 0.62);
+    --text-muted: rgba(15, 23, 42, 0.38);
+
+    --gold: #d97706;
+    --gold-hi: #f59e0b;
+    --gold-lo: #b45309;
+    --gold-glow: rgba(217, 119, 6, 0.25);
+    --on-gold: #ffffff;
+
+    --coral: #ef4444;
+    --mint: #10b981;
+    --sky: #0ea5e9;
+
+    --stroke: rgba(15, 23, 42, 0.08);
+    --stroke-hi: rgba(15, 23, 42, 0.16);
+
+    --overlay: rgba(255, 255, 255, 0.82);
+    --overlay-hi: rgba(255, 255, 255, 0.9);
+
+    --map-bg: #e2e8f0;
+    --map-deep: #cbd5e1;
+  }
+
+  .dark:root {
+    --bg: #0e1116;
+    --surface: #171b22;
+    --surface-hi: #1f252e;
+    --surface-lo: #0a0d12;
+    --app-shell: #06080b;
+
+    --text: #f4f1ea;
+    --text-dim: rgba(244, 241, 234, 0.62);
+    --text-muted: rgba(244, 241, 234, 0.38);
+
+    --gold: #e9b86a;
+    --gold-hi: #f4ce88;
+    --gold-lo: #b8894a;
+    --gold-glow: rgba(233, 184, 106, 0.25);
+    --on-gold: #1a1410;
+
+    --coral: #f07a63;
+    --mint: #7ccba6;
+    --sky: #6ba8d4;
+
+    --stroke: rgba(255, 255, 255, 0.06);
+    --stroke-hi: rgba(255, 255, 255, 0.12);
+
+    --overlay: rgba(14, 17, 22, 0.82);
+    --overlay-hi: rgba(14, 17, 22, 0.9);
+
+    --map-bg: #1a2230;
+    --map-deep: #0e1722;
+  }
+}

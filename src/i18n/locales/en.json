@@ -1,0 +1,96 @@
+{
+  "common": {
+    "or": "or",
+    "loading": "Loading…",
+    "unknownError": "Unknown error",
+    "goBack": "Go back",
+    "close": "Close"
+  },
+  "languages": {
+    "en": "English",
+    "ru": "Русский",
+    "pl": "Polski",
+    "uk": "Українська"
+  },
+  "tabs": {
+    "feed": "Feed",
+    "map": "Map",
+    "collections": "Finds",
+    "profile": "Me",
+    "camera": "Camera"
+  },
+  "auth": {
+    "welcome": {
+      "title": "Collect\nthe world,\none photo\nat a time.",
+      "subtitle": "Turn everyday finds into curated collections. Bodega cats, street art, cloud types — whatever you spot.",
+      "createAccount": "Create account",
+      "haveAccount": "I already have an account"
+    },
+    "signIn": {
+      "title": "Welcome back",
+      "subtitle": "Sign in to keep your streak going.",
+      "emailPlaceholder": "Email",
+      "passwordPlaceholder": "Password",
+      "submit": "Sign in",
+      "continueWithGoogle": "Continue with Google",
+      "errorTitle": "Sign in failed",
+      "googleErrorTitle": "Google sign in failed"
+    },
+    "signUp": {
+      "title": "Create account",
+      "subtitle": "Start your first collection in under a minute.",
+      "emailPlaceholder": "Email",
+      "passwordPlaceholder": "Password (min 6 characters)",
+      "submit": "Sign up",
+      "continueWithGoogle": "Continue with Google",
+      "errorTitle": "Sign up failed",
+      "googleErrorTitle": "Google sign in failed"
+    },
+    "verify": {
+      "title": "Check your email",
+      "subtitle": "We sent an 8-digit code to {{email}}.",
+      "fallbackEmail": "your email",
+      "codePlaceholder": "8-digit code",
+      "submit": "Verify",
+      "errorTitle": "Verification failed"
+    },
+    "onboarding": {
+      "title": "What do you collect?",
+      "subtitle": "Pick at least 3. We'll show you trending collections in those areas.",
+      "comingSoon": "Interest picker coming soon",
+      "startCollecting": "Start collecting"
+    }
+  },
+  "feed": {
+    "title": "Feed",
+    "comingSoon": "Home feed coming soon"
+  },
+  "map": {
+    "comingSoon": "Map coming soon"
+  },
+  "camera": {
+    "comingSoon": "Camera coming soon"
+  },
+  "collections": {
+    "title": "Collections",
+    "comingSoon": "Collections coming soon",
+    "create": "Create collection",
+    "newCollection": "New Collection",
+    "createComingSoon": "Create collection coming soon",
+    "detailTitle": "Collection",
+    "detailComingSoon": "Collection {{id}} coming soon"
+  },
+  "profile": {
+    "title": "Profile",
+    "comingSoon": "Profile coming soon",
+    "language": "Language",
+    "chooseLanguage": "Choose language",
+    "theme": "Theme",
+    "chooseTheme": "Choose appearance"
+  },
+  "theme": {
+    "system": "System",
+    "dark": "Dark",
+    "light": "Light"
+  }
+}

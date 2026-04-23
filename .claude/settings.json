@@ -7,7 +7,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "jq -r '.tool_input.file_path // empty' | grep -qE '(tailwind\\.config\\.js|src/constants/colors\\.ts)$' && echo '{\"hookSpecificOutput\":{\"hookEventName\":\"PostToolUse\",\"additionalContext\":\"You just edited tailwind.config.js or src/constants/colors.ts. Run /sync-colors now to verify the two stay in sync.\"}}' || true"
+            "command": "jq -r '.tool_input.file_path // empty' | grep -qE '(tailwind\\.config\\.js|global\\.css|src/constants/palettes\\.ts)$' && echo '{\"hookSpecificOutput\":{\"hookEventName\":\"PostToolUse\",\"additionalContext\":\"You just edited a theming file (palettes.ts, global.css, or tailwind.config.js). Run /sync-colors now to verify all three layers stay in sync.\"}}' || true"
           }
         ]
       }

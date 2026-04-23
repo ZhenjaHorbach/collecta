@@ -16,6 +16,7 @@ module.exports = function (api) {
             '@utils': './src/utils',
             '@typings': './src/types',
             '@constants': './src/constants',
+            '@i18n': './src/i18n',
           },
         },
       ],

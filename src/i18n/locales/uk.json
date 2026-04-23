@@ -1,0 +1,96 @@
+{
+  "common": {
+    "or": "або",
+    "loading": "Завантаження…",
+    "unknownError": "Невідома помилка",
+    "goBack": "Назад",
+    "close": "Закрити"
+  },
+  "languages": {
+    "en": "English",
+    "ru": "Русский",
+    "pl": "Polski",
+    "uk": "Українська"
+  },
+  "tabs": {
+    "feed": "Стрічка",
+    "map": "Мапа",
+    "collections": "Знахідки",
+    "profile": "Профіль",
+    "camera": "Камера"
+  },
+  "auth": {
+    "welcome": {
+      "title": "Колекціонуй\nсвіт,\nпо одному\nфото.",
+      "subtitle": "Перетворюй повсякденні знахідки на колекції. Коти біля крамниць, стріт-арт, хмари — все, що помітиш.",
+      "createAccount": "Створити акаунт",
+      "haveAccount": "У мене вже є акаунт"
+    },
+    "signIn": {
+      "title": "З поверненням",
+      "subtitle": "Увійди, щоб не втратити серію.",
+      "emailPlaceholder": "Email",
+      "passwordPlaceholder": "Пароль",
+      "submit": "Увійти",
+      "continueWithGoogle": "Продовжити з Google",
+      "errorTitle": "Не вдалося увійти",
+      "googleErrorTitle": "Помилка входу через Google"
+    },
+    "signUp": {
+      "title": "Створити акаунт",
+      "subtitle": "Почни першу колекцію менш ніж за хвилину.",
+      "emailPlaceholder": "Email",
+      "passwordPlaceholder": "Пароль (мінімум 6 символів)",
+      "submit": "Зареєструватися",
+      "continueWithGoogle": "Продовжити з Google",
+      "errorTitle": "Не вдалося зареєструватися",
+      "googleErrorTitle": "Помилка входу через Google"
+    },
+    "verify": {
+      "title": "Перевір пошту",
+      "subtitle": "Ми надіслали 8-значний код на {{email}}.",
+      "fallbackEmail": "твою пошту",
+      "codePlaceholder": "8-значний код",
+      "submit": "Підтвердити",
+      "errorTitle": "Не вдалося підтвердити"
+    },
+    "onboarding": {
+      "title": "Що ти колекціонуєш?",
+      "subtitle": "Обери мінімум 3. Ми покажемо актуальні колекції у цих темах.",
+      "comingSoon": "Вибір інтересів скоро з'явиться",
+      "startCollecting": "Почати колекціонувати"
+    }
+  },
+  "feed": {
+    "title": "Стрічка",
+    "comingSoon": "Стрічка скоро з'явиться"
+  },
+  "map": {
+    "comingSoon": "Мапа скоро з'явиться"
+  },
+  "camera": {
+    "comingSoon": "Камера скоро з'явиться"
+  },
+  "collections": {
+    "title": "Колекції",
+    "comingSoon": "Колекції скоро з'являться",
+    "create": "Створити колекцію",
+    "newCollection": "Нова колекція",
+    "createComingSoon": "Створення колекцій скоро з'явиться",
+    "detailTitle": "Колекція",
+    "detailComingSoon": "Колекція {{id}} скоро з'явиться"
+  },
+  "profile": {
+    "title": "Профіль",
+    "comingSoon": "Профіль скоро з'явиться",
+    "language": "Мова",
+    "chooseLanguage": "Оберіть мову",
+    "theme": "Тема",
+    "chooseTheme": "Оберіть оформлення"
+  },
+  "theme": {
+    "system": "Системна",
+    "dark": "Темна",
+    "light": "Світла"
+  }
+}

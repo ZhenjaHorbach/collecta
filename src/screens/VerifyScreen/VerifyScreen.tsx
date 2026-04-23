@@ -5,10 +5,12 @@ import { SafeAreaView } from '@components/SafeAreaView';
 import { verifyEmailOtp } from '@services/auth.service';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { Alert, Text, View } from 'react-native';
 
 export function VerifyScreen() {
   const router = useRouter();
+  const { t } = useTranslation();
   const params = useLocalSearchParams<{ email?: string }>();
   const [token, setToken] = useState('');
   const [submitting, setSubmitting] = useState(false);
@@ -20,7 +22,10 @@ export function VerifyScreen() {
       await verifyEmailOtp(params.email, token.trim());
       router.replace('/(tabs)');
     } catch (err) {
-      Alert.alert('Verification failed', err instanceof Error ? err.message : 'Unknown error');
+      Alert.alert(
+        t('auth.verify.errorTitle'),
+        err instanceof Error ? err.message : t('common.unknownError')
+      );
     } finally {
       setSubmitting(false);
     }
@@ -30,22 +35,22 @@ export function VerifyScreen() {
     <SafeAreaView>
       <GoBackButton />
       <View className="flex-1 px-6 pt-2">
-        <Text className="text-3xl font-bold text-text mb-2">Check your email</Text>
+        <Text className="text-3xl font-bold text-text mb-2">{t('auth.verify.title')}</Text>
         <Text className="text-text-dim text-sm mb-8">
-          We sent an 8-digit code to {params.email ?? 'your email'}.
+          {t('auth.verify.subtitle', { email: params.email ?? t('auth.verify.fallbackEmail') })}
         </Text>
 
         <Input
           value={token}
           onChangeText={setToken}
-          placeholder="8-digit code"
+          placeholder={t('auth.verify.codePlaceholder')}
           keyboardType="number-pad"
           maxLength={8}
           className="text-center tracking-[8px] text-lg mb-4"
         />
 
         <Button
-          label="Verify"
+          label={t('auth.verify.submit')}
           onPress={onVerify}
           loading={submitting}
           disabled={token.length < 8}

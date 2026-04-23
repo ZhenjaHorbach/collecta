@@ -6,10 +6,12 @@ import { signInWithGoogle, signUpWithEmail } from '@services/auth.service';
 import { useRouter } from 'expo-router';
 import type { Href } from 'expo-router';
 import { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { Alert, Text, View } from 'react-native';
 
 export function SignUpScreen() {
   const router = useRouter();
+  const { t } = useTranslation();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [submitting, setSubmitting] = useState(false);
@@ -26,7 +28,10 @@ export function SignUpScreen() {
         router.replace(`/auth/verify?email=${encodeURIComponent(trimmedEmail)}` as Href);
       }
     } catch (err) {
-      Alert.alert('Sign up failed', err instanceof Error ? err.message : 'Unknown error');
+      Alert.alert(
+        t('auth.signUp.errorTitle'),
+        err instanceof Error ? err.message : t('common.unknownError')
+      );
     } finally {
       setSubmitting(false);
     }
@@ -38,7 +43,10 @@ export function SignUpScreen() {
       await signInWithGoogle();
       router.replace('/(tabs)');
     } catch (err) {
-      Alert.alert('Google sign in failed', err instanceof Error ? err.message : 'Unknown error');
+      Alert.alert(
+        t('auth.signUp.googleErrorTitle'),
+        err instanceof Error ? err.message : t('common.unknownError')
+      );
     } finally {
       setSubmitting(false);
     }
@@ -48,16 +56,14 @@ export function SignUpScreen() {
     <SafeAreaView>
       <GoBackButton />
       <View className="flex-1 px-6 pt-2">
-        <Text className="text-3xl font-bold text-text mb-2">Create account</Text>
-        <Text className="text-text-dim text-sm mb-8">
-          Start your first collection in under a minute.
-        </Text>
+        <Text className="text-3xl font-bold text-text mb-2">{t('auth.signUp.title')}</Text>
+        <Text className="text-text-dim text-sm mb-8">{t('auth.signUp.subtitle')}</Text>
 
         <View className="gap-3 mb-4">
           <Input
             value={email}
             onChangeText={setEmail}
-            placeholder="Email"
+            placeholder={t('auth.signUp.emailPlaceholder')}
             autoCapitalize="none"
             keyboardType="email-address"
             autoComplete="email"
@@ -65,22 +71,27 @@ export function SignUpScreen() {
           <Input
             value={password}
             onChangeText={setPassword}
-            placeholder="Password (min 6 characters)"
+            placeholder={t('auth.signUp.passwordPlaceholder')}
             secureTextEntry
             autoComplete="password-new"
           />
         </View>
 
-        <Button label="Sign up" onPress={onSignUp} loading={submitting} className="mb-3" />
+        <Button
+          label={t('auth.signUp.submit')}
+          onPress={onSignUp}
+          loading={submitting}
+          className="mb-3"
+        />
 
         <View className="flex-row items-center my-4 gap-3">
           <View className="flex-1 h-px bg-stroke" />
-          <Text className="text-text-muted text-xs">or</Text>
+          <Text className="text-text-muted text-xs">{t('common.or')}</Text>
           <View className="flex-1 h-px bg-stroke" />
         </View>
 
         <Button
-          label="Continue with Google"
+          label={t('auth.signUp.continueWithGoogle')}
           variant="secondary"
           onPress={onGoogle}
           disabled={submitting}

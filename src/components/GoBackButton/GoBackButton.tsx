@@ -1,5 +1,6 @@
 import { useRouter } from 'expo-router';
 import type { ReactNode } from 'react';
+import { useTranslation } from 'react-i18next';
 import { Text, TouchableOpacity, View } from 'react-native';
 
 type Icon = 'back' | 'close';
@@ -17,6 +18,7 @@ const glyphByIcon: Record<Icon, string> = {
 
 export function GoBackButton({ icon = 'back', onPress, children }: GoBackButtonProps) {
   const router = useRouter();
+  const { t } = useTranslation();
   const handlePress = onPress ?? (() => router.back());
 
   return (
@@ -24,7 +26,7 @@ export function GoBackButton({ icon = 'back', onPress, children }: GoBackButtonP
       <TouchableOpacity
         onPress={handlePress}
         accessibilityRole="button"
-        accessibilityLabel={icon === 'back' ? 'Go back' : 'Close'}
+        accessibilityLabel={icon === 'back' ? t('common.goBack') : t('common.close')}
         className="w-10 h-10 rounded-xl bg-surface items-center justify-center border border-stroke">
         <Text className="text-text text-base">{glyphByIcon[icon]}</Text>
       </TouchableOpacity>

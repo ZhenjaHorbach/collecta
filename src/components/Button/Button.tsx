@@ -1,4 +1,4 @@
-import { Colors } from '@constants/colors';
+import { useColors } from '@hooks/useColors';
 import {
   ActivityIndicator,
   Text,
@@ -24,11 +24,6 @@ const labelByVariant: Record<Variant, string> = {
   secondary: 'text-text font-semibold text-base',
 };
 
-const spinnerColorByVariant: Record<Variant, string> = {
-  primary: Colors.onGold,
-  secondary: Colors.text,
-};
-
 export function Button({
   label,
   variant = 'primary',
@@ -37,13 +32,15 @@ export function Button({
   className,
   ...props
 }: ButtonProps) {
+  const colors = useColors();
+  const spinnerColor = variant === 'primary' ? colors.onGold : colors.text;
   return (
     <TouchableOpacity
       disabled={disabled || loading}
       className={`w-full py-4 rounded-full items-center active:opacity-75 disabled:opacity-50 ${containerByVariant[variant]} ${className ?? ''}`}
       {...props}>
       {loading ? (
-        <ActivityIndicator color={spinnerColorByVariant[variant]} />
+        <ActivityIndicator color={spinnerColor} />
       ) : (
         <Text className={labelByVariant[variant]}>{label}</Text>
       )}

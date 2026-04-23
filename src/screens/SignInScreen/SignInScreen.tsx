@@ -5,10 +5,12 @@ import { SafeAreaView } from '@components/SafeAreaView';
 import { signInWithEmail, signInWithGoogle } from '@services/auth.service';
 import { useRouter } from 'expo-router';
 import { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { Alert, Text, View } from 'react-native';
 
 export function SignInScreen() {
   const router = useRouter();
+  const { t } = useTranslation();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [submitting, setSubmitting] = useState(false);
@@ -20,7 +22,10 @@ export function SignInScreen() {
       await signInWithEmail(email.trim(), password);
       router.replace('/(tabs)');
     } catch (err) {
-      Alert.alert('Sign in failed', err instanceof Error ? err.message : 'Unknown error');
+      Alert.alert(
+        t('auth.signIn.errorTitle'),
+        err instanceof Error ? err.message : t('common.unknownError')
+      );
     } finally {
       setSubmitting(false);
     }
@@ -32,7 +37,10 @@ export function SignInScreen() {
       await signInWithGoogle();
       router.replace('/(tabs)');
     } catch (err) {
-      Alert.alert('Google sign in failed', err instanceof Error ? err.message : 'Unknown error');
+      Alert.alert(
+        t('auth.signIn.googleErrorTitle'),
+        err instanceof Error ? err.message : t('common.unknownError')
+      );
     } finally {
       setSubmitting(false);
     }
@@ -42,14 +50,14 @@ export function SignInScreen() {
     <SafeAreaView>
       <GoBackButton />
       <View className="flex-1 px-6 pt-2">
-        <Text className="text-3xl font-bold text-text mb-2">Welcome back</Text>
-        <Text className="text-text-dim text-sm mb-8">Sign in to keep your streak going.</Text>
+        <Text className="text-3xl font-bold text-text mb-2">{t('auth.signIn.title')}</Text>
+        <Text className="text-text-dim text-sm mb-8">{t('auth.signIn.subtitle')}</Text>
 
         <View className="gap-3 mb-4">
           <Input
             value={email}
             onChangeText={setEmail}
-            placeholder="Email"
+            placeholder={t('auth.signIn.emailPlaceholder')}
             autoCapitalize="none"
             keyboardType="email-address"
             autoComplete="email"
@@ -57,22 +65,27 @@ export function SignInScreen() {
           <Input
             value={password}
             onChangeText={setPassword}
-            placeholder="Password"
+            placeholder={t('auth.signIn.passwordPlaceholder')}
             secureTextEntry
             autoComplete="password"
           />
         </View>
 
-        <Button label="Sign in" onPress={onSignIn} loading={submitting} className="mb-3" />
+        <Button
+          label={t('auth.signIn.submit')}
+          onPress={onSignIn}
+          loading={submitting}
+          className="mb-3"
+        />
 
         <View className="flex-row items-center my-4 gap-3">
           <View className="flex-1 h-px bg-stroke" />
-          <Text className="text-text-muted text-xs">or</Text>
+          <Text className="text-text-muted text-xs">{t('common.or')}</Text>
           <View className="flex-1 h-px bg-stroke" />
         </View>
 
         <Button
-          label="Continue with Google"
+          label={t('auth.signIn.continueWithGoogle')}
           variant="secondary"
           onPress={onGoogle}
           disabled={submitting}

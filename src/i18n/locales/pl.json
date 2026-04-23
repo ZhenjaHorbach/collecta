@@ -1,0 +1,96 @@
+{
+  "common": {
+    "or": "lub",
+    "loading": "Ładowanie…",
+    "unknownError": "Nieznany błąd",
+    "goBack": "Wstecz",
+    "close": "Zamknij"
+  },
+  "languages": {
+    "en": "English",
+    "ru": "Русский",
+    "pl": "Polski",
+    "uk": "Українська"
+  },
+  "tabs": {
+    "feed": "Aktualności",
+    "map": "Mapa",
+    "collections": "Znaleziska",
+    "profile": "Ja",
+    "camera": "Aparat"
+  },
+  "auth": {
+    "welcome": {
+      "title": "Kolekcjonuj\nświat,\njedno zdjęcie\nna raz.",
+      "subtitle": "Zamień codzienne znaleziska w kolekcje. Koty, street art, rodzaje chmur — cokolwiek zauważysz.",
+      "createAccount": "Załóż konto",
+      "haveAccount": "Mam już konto"
+    },
+    "signIn": {
+      "title": "Witaj ponownie",
+      "subtitle": "Zaloguj się, aby utrzymać passę.",
+      "emailPlaceholder": "Email",
+      "passwordPlaceholder": "Hasło",
+      "submit": "Zaloguj się",
+      "continueWithGoogle": "Kontynuuj z Google",
+      "errorTitle": "Logowanie nie powiodło się",
+      "googleErrorTitle": "Błąd logowania przez Google"
+    },
+    "signUp": {
+      "title": "Załóż konto",
+      "subtitle": "Zacznij swoją pierwszą kolekcję w mniej niż minutę.",
+      "emailPlaceholder": "Email",
+      "passwordPlaceholder": "Hasło (min. 6 znaków)",
+      "submit": "Zarejestruj się",
+      "continueWithGoogle": "Kontynuuj z Google",
+      "errorTitle": "Rejestracja nie powiodła się",
+      "googleErrorTitle": "Błąd logowania przez Google"
+    },
+    "verify": {
+      "title": "Sprawdź swoją pocztę",
+      "subtitle": "Wysłaliśmy 8-cyfrowy kod na {{email}}.",
+      "fallbackEmail": "twój adres email",
+      "codePlaceholder": "8-cyfrowy kod",
+      "submit": "Zweryfikuj",
+      "errorTitle": "Weryfikacja nie powiodła się"
+    },
+    "onboarding": {
+      "title": "Co kolekcjonujesz?",
+      "subtitle": "Wybierz co najmniej 3. Pokażemy popularne kolekcje w tych tematach.",
+      "comingSoon": "Wybór zainteresowań wkrótce",
+      "startCollecting": "Zacznij kolekcjonować"
+    }
+  },
+  "feed": {
+    "title": "Aktualności",
+    "comingSoon": "Aktualności wkrótce"
+  },
+  "map": {
+    "comingSoon": "Mapa wkrótce"
+  },
+  "camera": {
+    "comingSoon": "Aparat wkrótce"
+  },
+  "collections": {
+    "title": "Kolekcje",
+    "comingSoon": "Kolekcje wkrótce",
+    "create": "Utwórz kolekcję",
+    "newCollection": "Nowa kolekcja",
+    "createComingSoon": "Tworzenie kolekcji wkrótce",
+    "detailTitle": "Kolekcja",
+    "detailComingSoon": "Kolekcja {{id}} wkrótce"
+  },
+  "profile": {
+    "title": "Profil",
+    "comingSoon": "Profil wkrótce",
+    "language": "Język",
+    "chooseLanguage": "Wybierz język",
+    "theme": "Motyw",
+    "chooseTheme": "Wybierz wygląd"
+  },
+  "theme": {
+    "system": "Systemowy",
+    "dark": "Ciemny",
+    "light": "Jasny"
+  }
+}

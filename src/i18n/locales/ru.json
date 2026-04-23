@@ -1,0 +1,96 @@
+{
+  "common": {
+    "or": "или",
+    "loading": "Загрузка…",
+    "unknownError": "Неизвестная ошибка",
+    "goBack": "Назад",
+    "close": "Закрыть"
+  },
+  "languages": {
+    "en": "English",
+    "ru": "Русский",
+    "pl": "Polski",
+    "uk": "Українська"
+  },
+  "tabs": {
+    "feed": "Лента",
+    "map": "Карта",
+    "collections": "Находки",
+    "profile": "Профиль",
+    "camera": "Камера"
+  },
+  "auth": {
+    "welcome": {
+      "title": "Коллекционируй\nмир,\nпо одной\nфотографии.",
+      "subtitle": "Превращай повседневные находки в коллекции. Коты у магазинов, стрит-арт, облака — всё, что заметишь.",
+      "createAccount": "Создать аккаунт",
+      "haveAccount": "У меня уже есть аккаунт"
+    },
+    "signIn": {
+      "title": "С возвращением",
+      "subtitle": "Войди, чтобы не терять серию.",
+      "emailPlaceholder": "Email",
+      "passwordPlaceholder": "Пароль",
+      "submit": "Войти",
+      "continueWithGoogle": "Продолжить с Google",
+      "errorTitle": "Не удалось войти",
+      "googleErrorTitle": "Ошибка входа через Google"
+    },
+    "signUp": {
+      "title": "Создать аккаунт",
+      "subtitle": "Начни первую коллекцию меньше чем за минуту.",
+      "emailPlaceholder": "Email",
+      "passwordPlaceholder": "Пароль (минимум 6 символов)",
+      "submit": "Зарегистрироваться",
+      "continueWithGoogle": "Продолжить с Google",
+      "errorTitle": "Не удалось зарегистрироваться",
+      "googleErrorTitle": "Ошибка входа через Google"
+    },
+    "verify": {
+      "title": "Проверь почту",
+      "subtitle": "Мы отправили 8-значный код на {{email}}.",
+      "fallbackEmail": "твою почту",
+      "codePlaceholder": "8-значный код",
+      "submit": "Подтвердить",
+      "errorTitle": "Подтверждение не удалось"
+    },
+    "onboarding": {
+      "title": "Что ты коллекционируешь?",
+      "subtitle": "Выбери минимум 3. Мы покажем актуальные коллекции по этим темам.",
+      "comingSoon": "Выбор интересов скоро появится",
+      "startCollecting": "Начать коллекционировать"
+    }
+  },
+  "feed": {
+    "title": "Лента",
+    "comingSoon": "Лента скоро появится"
+  },
+  "map": {
+    "comingSoon": "Карта скоро появится"
+  },
+  "camera": {
+    "comingSoon": "Камера скоро появится"
+  },
+  "collections": {
+    "title": "Коллекции",
+    "comingSoon": "Коллекции скоро появятся",
+    "create": "Создать коллекцию",
+    "newCollection": "Новая коллекция",
+    "createComingSoon": "Создание коллекций скоро появится",
+    "detailTitle": "Коллекция",
+    "detailComingSoon": "Коллекция {{id}} скоро появится"
+  },
+  "profile": {
+    "title": "Профиль",
+    "comingSoon": "Профиль скоро появится",
+    "language": "Язык",
+    "chooseLanguage": "Выберите язык",
+    "theme": "Тема",
+    "chooseTheme": "Выберите оформление"
+  },
+  "theme": {
+    "system": "Системная",
+    "dark": "Тёмная",
+    "light": "Светлая"
+  }
+}
