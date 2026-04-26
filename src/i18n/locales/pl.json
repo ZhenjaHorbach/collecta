@@ -73,12 +73,41 @@
   },
   "collections": {
     "title": "Kolekcje",
-    "comingSoon": "Kolekcje wkrótce",
-    "create": "Utwórz kolekcję",
+    "create": "Utwórz",
     "newCollection": "Nowa kolekcja",
-    "createComingSoon": "Tworzenie kolekcji wkrótce",
     "detailTitle": "Kolekcja",
-    "detailComingSoon": "Kolekcja {{id}} wkrótce"
+    "tabs": {
+      "mine": "Moje",
+      "pickedUp": "Dołączone"
+    },
+    "empty": {
+      "mine": "Nie masz jeszcze kolekcji. Utwórz pierwszą.",
+      "pickedUp": "Nic jeszcze nie dołączono."
+    },
+    "progress": "{{found}} / {{total}}",
+    "share": "Udostępnij",
+    "loadError": "Nie udało się wczytać kolekcji",
+    "freeform": "Otwarta",
+    "rarity": {
+      "common": "Zwykłe",
+      "uncommon": "Rzadkie",
+      "rare": "Bardzo rzadkie"
+    },
+    "items": {
+      "header": "Czego szukać"
+    }
+  },
+  "categories": {
+    "nature": "Natura",
+    "urban": "Miasto",
+    "animals": "Zwierzęta",
+    "food": "Jedzenie",
+    "transport": "Transport",
+    "art": "Sztuka",
+    "sports": "Sport",
+    "visual": "Wizualne",
+    "seasonal": "Sezonowe",
+    "travel": "Podróże"
   },
   "profile": {
     "title": "Profil",

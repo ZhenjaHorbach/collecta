@@ -73,12 +73,41 @@
   },
   "collections": {
     "title": "Колекції",
-    "comingSoon": "Колекції скоро з'являться",
-    "create": "Створити колекцію",
+    "create": "Створити",
     "newCollection": "Нова колекція",
-    "createComingSoon": "Створення колекцій скоро з'явиться",
     "detailTitle": "Колекція",
-    "detailComingSoon": "Колекція {{id}} скоро з'явиться"
+    "tabs": {
+      "mine": "Мої",
+      "pickedUp": "Підхоплені"
+    },
+    "empty": {
+      "mine": "Ще немає колекцій. Створи першу.",
+      "pickedUp": "Поки нічого не підхоплено."
+    },
+    "progress": "{{found}} / {{total}}",
+    "share": "Поділитися",
+    "loadError": "Не вдалося завантажити колекції",
+    "freeform": "Вільна",
+    "rarity": {
+      "common": "Звичайне",
+      "uncommon": "Незвичайне",
+      "rare": "Рідкісне"
+    },
+    "items": {
+      "header": "Що шукати"
+    }
+  },
+  "categories": {
+    "nature": "Природа",
+    "urban": "Місто",
+    "animals": "Тварини",
+    "food": "Їжа",
+    "transport": "Транспорт",
+    "art": "Мистецтво",
+    "sports": "Спорт",
+    "visual": "Візуальне",
+    "seasonal": "Сезонне",
+    "travel": "Подорожі"
   },
   "profile": {
     "title": "Профіль",

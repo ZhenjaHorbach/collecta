@@ -21,6 +21,10 @@ const collections = new Table({
   description: column.text,
   cover_image_url: column.text,
   is_public: column.integer,
+  category: column.text,
+  icon: column.text,
+  ai_hint: column.text,
+  is_freeform: column.integer,
   created_at: column.text,
   updated_at: column.text,
 });
@@ -32,6 +36,8 @@ const collection_items = new Table({
   example_image_url: column.text,
   ai_validation_prompt: column.text,
   sort_order: column.integer,
+  rarity: column.text,
+  fun_fact: column.text,
   created_at: column.text,
   updated_at: column.text,
 });
