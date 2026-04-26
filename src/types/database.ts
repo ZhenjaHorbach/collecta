@@ -15,8 +15,10 @@ export type Database = {
           created_at: string;
           description: string | null;
           example_image_url: string | null;
+          fun_fact: string | null;
           id: string;
           name: string;
+          rarity: Database['public']['Enums']['item_rarity'];
           sort_order: number;
           updated_at: string;
         };
@@ -26,8 +28,10 @@ export type Database = {
           created_at?: string;
           description?: string | null;
           example_image_url?: string | null;
+          fun_fact?: string | null;
           id?: string;
           name: string;
+          rarity?: Database['public']['Enums']['item_rarity'];
           sort_order?: number;
           updated_at?: string;
         };
@@ -37,8 +41,10 @@ export type Database = {
           created_at?: string;
           description?: string | null;
           example_image_url?: string | null;
+          fun_fact?: string | null;
           id?: string;
           name?: string;
+          rarity?: Database['public']['Enums']['item_rarity'];
           sort_order?: number;
           updated_at?: string;
         };
@@ -54,31 +60,43 @@ export type Database = {
       };
       collections: {
         Row: {
+          ai_hint: string | null;
+          category: Database['public']['Enums']['collection_category'] | null;
           cover_image_url: string | null;
           created_at: string;
           creator_id: string;
           description: string | null;
+          icon: string | null;
           id: string;
+          is_freeform: boolean;
           is_public: boolean;
           title: string;
           updated_at: string;
         };
         Insert: {
+          ai_hint?: string | null;
+          category?: Database['public']['Enums']['collection_category'] | null;
           cover_image_url?: string | null;
           created_at?: string;
           creator_id: string;
           description?: string | null;
+          icon?: string | null;
           id?: string;
+          is_freeform?: boolean;
           is_public?: boolean;
           title: string;
           updated_at?: string;
         };
         Update: {
+          ai_hint?: string | null;
+          category?: Database['public']['Enums']['collection_category'] | null;
           cover_image_url?: string | null;
           created_at?: string;
           creator_id?: string;
           description?: string | null;
+          icon?: string | null;
           id?: string;
+          is_freeform?: boolean;
           is_public?: boolean;
           title?: string;
           updated_at?: string;
@@ -263,6 +281,18 @@ export type Database = {
       [_ in never]: never;
     };
     Enums: {
+      collection_category:
+        | 'nature'
+        | 'urban'
+        | 'animals'
+        | 'food'
+        | 'transport'
+        | 'art'
+        | 'sports'
+        | 'visual'
+        | 'seasonal'
+        | 'travel';
+      item_rarity: 'common' | 'uncommon' | 'rare';
       reaction_type: 'like' | 'fire' | 'wow';
     };
     CompositeTypes: {
@@ -389,6 +419,19 @@ export type CompositeTypes<
 export const Constants = {
   public: {
     Enums: {
+      collection_category: [
+        'nature',
+        'urban',
+        'animals',
+        'food',
+        'transport',
+        'art',
+        'sports',
+        'visual',
+        'seasonal',
+        'travel',
+      ],
+      item_rarity: ['common', 'uncommon', 'rare'],
       reaction_type: ['like', 'fire', 'wow'],
     },
   },

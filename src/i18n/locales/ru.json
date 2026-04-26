@@ -73,12 +73,41 @@
   },
   "collections": {
     "title": "Коллекции",
-    "comingSoon": "Коллекции скоро появятся",
-    "create": "Создать коллекцию",
+    "create": "Создать",
     "newCollection": "Новая коллекция",
-    "createComingSoon": "Создание коллекций скоро появится",
     "detailTitle": "Коллекция",
-    "detailComingSoon": "Коллекция {{id}} скоро появится"
+    "tabs": {
+      "mine": "Мои",
+      "pickedUp": "Подхваченные"
+    },
+    "empty": {
+      "mine": "Пока ни одной коллекции. Создай первую.",
+      "pickedUp": "Пока ничего не подхвачено."
+    },
+    "progress": "{{found}} / {{total}}",
+    "share": "Поделиться",
+    "loadError": "Не удалось загрузить коллекции",
+    "freeform": "Свободная",
+    "rarity": {
+      "common": "Обычное",
+      "uncommon": "Необычное",
+      "rare": "Редкое"
+    },
+    "items": {
+      "header": "Что искать"
+    }
+  },
+  "categories": {
+    "nature": "Природа",
+    "urban": "Город",
+    "animals": "Животные",
+    "food": "Еда",
+    "transport": "Транспорт",
+    "art": "Искусство",
+    "sports": "Спорт",
+    "visual": "Визуальное",
+    "seasonal": "Сезонное",
+    "travel": "Путешествия"
   },
   "profile": {
     "title": "Профиль",

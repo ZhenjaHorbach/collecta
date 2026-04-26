@@ -73,12 +73,41 @@
   },
   "collections": {
     "title": "Collections",
-    "comingSoon": "Collections coming soon",
-    "create": "Create collection",
-    "newCollection": "New Collection",
-    "createComingSoon": "Create collection coming soon",
+    "create": "Create",
+    "newCollection": "New collection",
     "detailTitle": "Collection",
-    "detailComingSoon": "Collection {{id}} coming soon"
+    "tabs": {
+      "mine": "Mine",
+      "pickedUp": "Picked up"
+    },
+    "empty": {
+      "mine": "No collections yet. Create your first one.",
+      "pickedUp": "Nothing picked up yet."
+    },
+    "progress": "{{found}} / {{total}}",
+    "share": "Share",
+    "loadError": "Couldn't load collections",
+    "freeform": "Freeform",
+    "rarity": {
+      "common": "Common",
+      "uncommon": "Uncommon",
+      "rare": "Rare"
+    },
+    "items": {
+      "header": "What to find"
+    }
+  },
+  "categories": {
+    "nature": "Nature",
+    "urban": "Urban",
+    "animals": "Animals",
+    "food": "Food",
+    "transport": "Transport",
+    "art": "Art",
+    "sports": "Sports",
+    "visual": "Visual",
+    "seasonal": "Seasonal",
+    "travel": "Travel"
   },
   "profile": {
     "title": "Profile",
