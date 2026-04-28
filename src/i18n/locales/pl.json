@@ -95,6 +95,70 @@
     },
     "items": {
       "header": "Czego szukać"
+    },
+    "create": {
+      "headerSubtitle": "Kolekcjonuj cokolwiek, co możesz sfotografować",
+      "required": "Wymagane",
+      "optional": "opcjonalnie",
+      "cancel": "Anuluj",
+      "submit": "Utwórz kolekcję",
+      "errorTitle": "Nie udało się utworzyć kolekcji",
+      "preview": {
+        "label": "Podgląd",
+        "titlePlaceholder": "Twoja kolekcja",
+        "pickCategory": "Wybierz kategorię",
+        "itemCount": "{{count}} elementów",
+        "freeMode": "Otwarta"
+      },
+      "sections": {
+        "basics": "Podstawy",
+        "category": "Kategoria",
+        "mode": "Jak kolekcjonować",
+        "items": "Czego szukać",
+        "aiHint": "Walidacja AI",
+        "privacy": "Prywatność"
+      },
+      "fields": {
+        "title": "Tytuł",
+        "titlePlaceholder": "np. Koty warszawskich bram",
+        "description": "Opis",
+        "descriptionPlaceholder": "Co jest wyjątkowego w tej kolekcji?"
+      },
+      "modes": {
+        "list": {
+          "title": "Lista",
+          "description": "Dodaj listę rzeczy do znalezienia. Użytkownicy odhaczają je zdjęciami."
+        },
+        "free": {
+          "title": "Otwarta",
+          "description": "Bez ustalonej listy — po prostu rób zdjęcia i dodawaj do kolekcji."
+        }
+      },
+      "items": {
+        "placeholder": "Dodaj element",
+        "add": "Dodaj element",
+        "remove": "Usuń element",
+        "moveUp": "Przesuń w górę",
+        "moveDown": "Przesuń w dół"
+      },
+      "aiHint": {
+        "help": "Pomóż AI weryfikować każde zdjęcie. Opisz, co powinno być w kadrze.",
+        "placeholder": "np. Zdjęcie musi wyraźnie pokazywać kota w określonym kolorze."
+      },
+      "privacy": {
+        "public": {
+          "label": "Publiczna",
+          "description": "Każdy może odkryć"
+        },
+        "private": {
+          "label": "Prywatna",
+          "description": "Tylko dla Ciebie"
+        }
+      },
+      "emoji": {
+        "title": "Wybierz ikonę",
+        "pick": "Wybierz ikonę"
+      }
     }
   },
   "categories": {

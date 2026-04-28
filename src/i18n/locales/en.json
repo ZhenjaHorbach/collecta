@@ -95,6 +95,70 @@
     },
     "items": {
       "header": "What to find"
+    },
+    "create": {
+      "headerSubtitle": "Start collecting anything you can photograph",
+      "required": "Required",
+      "optional": "optional",
+      "cancel": "Cancel",
+      "submit": "Create collection",
+      "errorTitle": "Couldn't create collection",
+      "preview": {
+        "label": "Preview",
+        "titlePlaceholder": "Your collection",
+        "pickCategory": "Pick a category",
+        "itemCount": "{{count}} items",
+        "freeMode": "Free collection"
+      },
+      "sections": {
+        "basics": "Basics",
+        "category": "Category",
+        "mode": "How to collect",
+        "items": "Items to find",
+        "aiHint": "AI validation",
+        "privacy": "Privacy"
+      },
+      "fields": {
+        "title": "Title",
+        "titlePlaceholder": "e.g. NYC Bodega Cats",
+        "description": "Description",
+        "descriptionPlaceholder": "What makes this collection special?"
+      },
+      "modes": {
+        "list": {
+          "title": "Checklist",
+          "description": "Add items to find. Users cross them off as they photograph each."
+        },
+        "free": {
+          "title": "Free collection",
+          "description": "No fixed list — users just take photos and add to the pile."
+        }
+      },
+      "items": {
+        "placeholder": "Add an item",
+        "add": "Add item",
+        "remove": "Remove item",
+        "moveUp": "Move up",
+        "moveDown": "Move down"
+      },
+      "aiHint": {
+        "help": "Help the AI verify each photo. Describe what should be in frame.",
+        "placeholder": "e.g. The photo must clearly show a cat of the specified color."
+      },
+      "privacy": {
+        "public": {
+          "label": "Public",
+          "description": "Anyone can discover"
+        },
+        "private": {
+          "label": "Private",
+          "description": "Just you"
+        }
+      },
+      "emoji": {
+        "title": "Pick an icon",
+        "pick": "Pick an icon"
+      }
     }
   },
   "categories": {

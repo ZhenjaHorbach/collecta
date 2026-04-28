@@ -1,4 +1,5 @@
-import { useCallback, useEffect, useState } from 'react';
+import { useFocusEffect } from 'expo-router';
+import { useCallback, useState } from 'react';
 
 import { useAuth } from '@hooks/useAuth';
 import {
@@ -42,9 +43,11 @@ export function useMyCollections() {
     }
   }, [user]);
 
-  useEffect(() => {
-    void load();
-  }, [load]);
+  useFocusEffect(
+    useCallback(() => {
+      void load();
+    }, [load])
+  );
 
   return { ...state, refetch: load };
 }
