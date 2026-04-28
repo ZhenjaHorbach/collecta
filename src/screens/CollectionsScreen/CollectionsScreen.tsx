@@ -38,9 +38,11 @@ export function CollectionsScreen() {
         <TouchableOpacity
           onPress={() => router.push('/collection/create')}
           accessibilityRole="button"
-          accessibilityLabel={t('collections.create')}
+          accessibilityLabel={t('collections.newCollection')}
           className="px-4 py-2 rounded-full bg-gold">
-          <Text className="text-on-gold font-semibold text-sm">{t('collections.create')}</Text>
+          <Text className="text-on-gold font-semibold text-sm">
+            {t('collections.newCollection')}
+          </Text>
         </TouchableOpacity>
       </View>
       <View className="px-5 pb-3">

@@ -7,6 +7,16 @@ description: Use when the user asks to merge, commit, push, or open a PR on this
 
 This skill supplements the built-in git workflow. Follow the harness's default commit / PR procedure **and** these project-specific rules.
 
+## Branch check (do this first)
+
+Before staging or committing, run `git branch --show-current` and confirm the branch matches the work:
+
+- The branch name's slug should describe the change you're about to commit (e.g. don't commit Collections work to `feat/i18n-and-theming`).
+- If the current branch was clearly cut for a different feature, **stop and ask the user** which branch to use, or suggest a new `<type>/<short-slug>` branched off `main` (or off the relevant feature branch when there's a real dependency).
+- Never silently commit onto `main` — see Branch rules below.
+
+**Why:** wrong-branch commits cost a `reset --hard` + branch shuffle to undo, and if pushed they pollute someone else's PR. Spending 5 seconds checking up front is cheaper than untangling later.
+
 ## Commit message
 
 - Conventional commits only. Prefix: `feat:`, `fix:`, `chore:`, `docs:`, `refactor:`, `test:`, `style:`.

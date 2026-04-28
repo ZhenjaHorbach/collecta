@@ -1,10 +1,20 @@
-import type { Tables } from '@typings/database';
+import type { Tables, TablesInsert } from '@typings/database';
 
 import { supabase } from './supabase.service';
 
 export type Collection = Tables<'collections'>;
 export type CollectionItem = Tables<'collection_items'>;
 export type Find = Tables<'finds'>;
+
+export type CreateCollectionInput = Omit<
+  TablesInsert<'collections'>,
+  'id' | 'created_at' | 'updated_at'
+>;
+
+export type CreateItemInput = Omit<
+  TablesInsert<'collection_items'>,
+  'id' | 'collection_id' | 'created_at' | 'updated_at' | 'sort_order'
+>;
 
 export interface CollectionWithProgress extends Collection {
   items_count: number;
@@ -94,6 +104,36 @@ export async function listPickedUpCollections(userId: string): Promise<Collectio
     .filter((c): c is Collection => c !== null && c.creator_id !== userId);
 
   return attachProgress(collections, userId);
+}
+
+export async function createCollection(input: CreateCollectionInput): Promise<Collection> {
+  const { data, error } = await supabase
+    .from('collections')
+    .insert(input)
+    .select('*')
+    .single()
+    .throwOnError();
+  if (error) throw error;
+  return data;
+}
+
+export async function addCollectionItems(
+  collectionId: string,
+  items: CreateItemInput[]
+): Promise<CollectionItem[]> {
+  if (items.length === 0) return [];
+  const rows: TablesInsert<'collection_items'>[] = items.map((item, index) => ({
+    ...item,
+    collection_id: collectionId,
+    sort_order: index,
+  }));
+  const { data, error } = await supabase
+    .from('collection_items')
+    .insert(rows)
+    .select('*')
+    .throwOnError();
+  if (error) throw error;
+  return data ?? [];
 }
 
 export async function getCollection(id: string, userId: string): Promise<CollectionDetail> {
