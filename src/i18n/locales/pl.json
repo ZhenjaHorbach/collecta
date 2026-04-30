@@ -139,11 +139,46 @@
         "add": "Dodaj element",
         "remove": "Usuń element",
         "moveUp": "Przesuń w górę",
-        "moveDown": "Przesuń w dół"
+        "moveDown": "Przesuń w dół",
+        "details": "Szczegóły",
+        "detailsHide": "Ukryj szczegóły",
+        "fields": {
+          "description": "Czego szukać",
+          "descriptionPlaceholder": "Krótka wskazówka (opcjonalnie)",
+          "aiHint": "Podpowiedź dla AI",
+          "aiHintPlaceholder": "Co musi być widoczne na zdjęciu",
+          "rarity": "Rzadkość",
+          "funFact": "Ciekawostka",
+          "funFactPlaceholder": "Jedna krótka ciekawostka"
+        }
       },
       "aiHint": {
         "help": "Pomóż AI weryfikować każde zdjęcie. Opisz, co powinno być w kadrze.",
         "placeholder": "np. Zdjęcie musi wyraźnie pokazywać kota w określonym kolorze."
+      },
+      "mode": {
+        "manual": "Ręcznie",
+        "ai": "✨ Z pomocą AI"
+      },
+      "ai": {
+        "title": "Opisz swoją kolekcję",
+        "subtitle": "Claude przygotuje 10–20 elementów do edycji przed zapisaniem.",
+        "promptLabel": "Pomysł",
+        "promptPlaceholder": "np. rasy kotów, które spotykasz na ulicy — bury, Maine Coon, syjamski…",
+        "generate": "✨ Wygeneruj",
+        "regenerate": "Wygeneruj ponownie",
+        "loadingTitle": "Claude tworzy Twoją kolekcję…",
+        "loadingHint": "Zwykle zajmuje to 15–30 sekund.",
+        "draftBanner": "Wygenerowane przez Claude · edytuj i utwórz",
+        "discard": "Zacznij od nowa",
+        "errors": {
+          "rateLimited": "Dzienny limit: wykorzystano {{used}} z {{limit}}. Spróbuj jutro.",
+          "invalidOutput": "Claude zwrócił niespodziewaną odpowiedź. Sformułuj pomysł inaczej.",
+          "network": "Nie udało się połączyć z AI. Sprawdź połączenie i spróbuj ponownie.",
+          "unknown": "Coś poszło nie tak. Spróbuj ponownie.",
+          "promptTooShort": "Dodaj kilka słów więcej do pomysłu.",
+          "promptTooLong": "Pomysł jest za długi — maksymalnie 500 znaków."
+        }
       },
       "privacy": {
         "public": {
