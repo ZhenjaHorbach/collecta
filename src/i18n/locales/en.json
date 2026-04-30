@@ -220,5 +220,31 @@
     "system": "System",
     "dark": "Dark",
     "light": "Light"
+  },
+  "moderation": {
+    "report": {
+      "trigger": "Report",
+      "more": "More",
+      "title": "Report this collection",
+      "subtitle": "Pick a reason. We review every report manually.",
+      "reasonLabel": "Reason",
+      "reasons": {
+        "spam": "Spam",
+        "inappropriate": "Inappropriate content",
+        "offTopic": "Off-topic",
+        "other": "Something else"
+      },
+      "commentLabel": "Comment",
+      "commentPlaceholder": "Add detail (optional)",
+      "submit": "Send report",
+      "cancel": "Cancel",
+      "successTitle": "Report sent",
+      "successBody": "Thanks. We'll review it.",
+      "errors": {
+        "alreadyReported": "You've already reported this.",
+        "network": "Couldn't send the report. Check your connection and try again.",
+        "unknown": "Couldn't send the report. Try again."
+      }
+    }
   }
 }

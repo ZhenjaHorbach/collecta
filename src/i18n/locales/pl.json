@@ -220,5 +220,31 @@
     "system": "Systemowy",
     "dark": "Ciemny",
     "light": "Jasny"
+  },
+  "moderation": {
+    "report": {
+      "trigger": "Zgłoś",
+      "more": "Więcej",
+      "title": "Zgłoś tę kolekcję",
+      "subtitle": "Wybierz powód. Każde zgłoszenie sprawdzamy ręcznie.",
+      "reasonLabel": "Powód",
+      "reasons": {
+        "spam": "Spam",
+        "inappropriate": "Nieodpowiednia treść",
+        "offTopic": "Nie na temat",
+        "other": "Coś innego"
+      },
+      "commentLabel": "Komentarz",
+      "commentPlaceholder": "Dodaj szczegóły (opcjonalnie)",
+      "submit": "Wyślij zgłoszenie",
+      "cancel": "Anuluj",
+      "successTitle": "Zgłoszenie wysłane",
+      "successBody": "Dzięki. Sprawdzimy je.",
+      "errors": {
+        "alreadyReported": "Już to zgłosiłeś.",
+        "network": "Nie udało się wysłać zgłoszenia. Sprawdź połączenie i spróbuj ponownie.",
+        "unknown": "Nie udało się wysłać zgłoszenia. Spróbuj ponownie."
+      }
+    }
   }
 }

@@ -1,26 +1,40 @@
 import * as Linking from 'expo-linking';
 import { Image } from 'expo-image';
 import { useLocalSearchParams } from 'expo-router';
-import { useMemo } from 'react';
+import { useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { FlatList, Share, Text, TouchableOpacity, View } from 'react-native';
+import {
+  ActionSheetIOS,
+  Alert,
+  FlatList,
+  Platform,
+  Share,
+  Text,
+  TouchableOpacity,
+  View,
+} from 'react-native';
 
 import { GoBackButton } from '@components/GoBackButton';
 import { ProgressBar } from '@components/ProgressBar';
+import { ReportSheet } from '@components/ReportSheet';
 import { SafeAreaView } from '@components/SafeAreaView';
 import { Spinner } from '@components/Spinner';
 import { CATEGORY_EMOJI } from '@constants/categories';
 import { useCollection } from '@hooks/useCollection';
+import { useReport } from '@hooks/useReport';
 import type {
   CollectionDetail,
   CollectionItemWithFound,
   Find,
 } from '@services/collections.service';
+import type { ReportError, ReportReason } from '@services/moderation.service';
 
 export function CollectionDetailScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const { t } = useTranslation();
   const { data, loading, error } = useCollection(id);
+  const { submit: submitReport, submitting: reporting, reset: resetReport } = useReport();
+  const [reportSheetOpen, setReportSheetOpen] = useState(false);
 
   const headerTitle = data?.title ?? t('collections.detailTitle');
 
@@ -30,6 +44,59 @@ export function CollectionDetailScreen() {
     await Share.share({ title: data.title, message: `${data.title}\n${url}`, url });
   };
 
+  const openReportSheet = () => {
+    resetReport();
+    setReportSheetOpen(true);
+  };
+
+  const onPressMore = () => {
+    if (Platform.OS === 'ios') {
+      ActionSheetIOS.showActionSheetWithOptions(
+        {
+          options: [t('common.close'), t('moderation.report.trigger')],
+          cancelButtonIndex: 0,
+          destructiveButtonIndex: 1,
+        },
+        (selected) => {
+          if (selected === 1) openReportSheet();
+        }
+      );
+      return;
+    }
+    Alert.alert(t('moderation.report.more'), undefined, [
+      { text: t('common.close'), style: 'cancel' },
+      {
+        text: t('moderation.report.trigger'),
+        style: 'destructive',
+        onPress: openReportSheet,
+      },
+    ]);
+  };
+
+  const onSubmitReport = async (reason: ReportReason, comment: string) => {
+    if (!data) return;
+    const err = await submitReport({
+      target: 'collection',
+      targetId: data.id,
+      reason,
+      comment: comment.trim() || undefined,
+    });
+    if (!err) {
+      setReportSheetOpen(false);
+      Alert.alert(t('moderation.report.successTitle'), t('moderation.report.successBody'));
+      return;
+    }
+    if (err.code === 'already_reported') {
+      setReportSheetOpen(false);
+      Alert.alert(
+        t('moderation.report.successTitle'),
+        t('moderation.report.errors.alreadyReported')
+      );
+      return;
+    }
+    Alert.alert(t('common.unknownError'), t(reportErrorKey(err)));
+  };
+
   return (
     <SafeAreaView>
       <GoBackButton>
@@ -37,13 +104,22 @@ export function CollectionDetailScreen() {
           {headerTitle}
         </Text>
         {data ? (
-          <TouchableOpacity
-            onPress={onShare}
-            accessibilityRole="button"
-            accessibilityLabel={t('collections.share')}
-            className="w-10 h-10 rounded-xl bg-surface items-center justify-center border border-stroke">
-            <Text className="text-text text-base">↗</Text>
-          </TouchableOpacity>
+          <View className="flex-row gap-2">
+            <TouchableOpacity
+              onPress={onShare}
+              accessibilityRole="button"
+              accessibilityLabel={t('collections.share')}
+              className="w-10 h-10 rounded-xl bg-surface items-center justify-center border border-stroke">
+              <Text className="text-text text-base">↗</Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              onPress={onPressMore}
+              accessibilityRole="button"
+              accessibilityLabel={t('moderation.report.more')}
+              className="w-10 h-10 rounded-xl bg-surface items-center justify-center border border-stroke">
+              <Text className="text-text text-base">⋯</Text>
+            </TouchableOpacity>
+          </View>
         ) : null}
       </GoBackButton>
 
@@ -56,8 +132,25 @@ export function CollectionDetailScreen() {
       ) : (
         <DetailBody data={data} />
       )}
+
+      <ReportSheet
+        visible={reportSheetOpen}
+        submitting={reporting}
+        onSubmit={onSubmitReport}
+        onClose={() => setReportSheetOpen(false)}
+      />
     </SafeAreaView>
   );
+}
+
+function reportErrorKey(err: ReportError): string {
+  switch (err.code) {
+    case 'network':
+    case 'unauthorized':
+      return 'moderation.report.errors.network';
+    default:
+      return 'moderation.report.errors.unknown';
+  }
 }
 
 function DetailBody({ data }: { data: CollectionDetail }) {
