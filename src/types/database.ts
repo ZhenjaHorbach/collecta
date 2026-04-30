@@ -168,6 +168,44 @@ export type Database = {
           },
         ];
       };
+      reports: {
+        Row: {
+          created_at: string;
+          id: string;
+          reason: string | null;
+          reporter_id: string;
+          status: Database['public']['Enums']['report_status'];
+          target_id: string;
+          target_type: Database['public']['Enums']['report_target'];
+        };
+        Insert: {
+          created_at?: string;
+          id?: string;
+          reason?: string | null;
+          reporter_id: string;
+          status?: Database['public']['Enums']['report_status'];
+          target_id: string;
+          target_type: Database['public']['Enums']['report_target'];
+        };
+        Update: {
+          created_at?: string;
+          id?: string;
+          reason?: string | null;
+          reporter_id?: string;
+          status?: Database['public']['Enums']['report_status'];
+          target_id?: string;
+          target_type?: Database['public']['Enums']['report_target'];
+        };
+        Relationships: [
+          {
+            foreignKeyName: 'reports_reporter_id_fkey';
+            columns: ['reporter_id'];
+            isOneToOne: false;
+            referencedRelation: 'users';
+            referencedColumns: ['id'];
+          },
+        ];
+      };
       reactions: {
         Row: {
           created_at: string;
@@ -294,6 +332,8 @@ export type Database = {
         | 'travel';
       item_rarity: 'common' | 'uncommon' | 'rare';
       reaction_type: 'like' | 'fire' | 'wow';
+      report_status: 'pending' | 'reviewed' | 'dismissed';
+      report_target: 'collection' | 'find';
     };
     CompositeTypes: {
       [_ in never]: never;
@@ -433,6 +473,8 @@ export const Constants = {
       ],
       item_rarity: ['common', 'uncommon', 'rare'],
       reaction_type: ['like', 'fire', 'wow'],
+      report_status: ['pending', 'reviewed', 'dismissed'],
+      report_target: ['collection', 'find'],
     },
   },
 } as const;
