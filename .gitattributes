@@ -1,0 +1,6 @@
+modules/collecta-turbo-image/__fixtures__/*.heic filter=lfs diff=lfs merge=lfs -text
+src/evals/fixtures/*.jpg filter=lfs diff=lfs merge=lfs -text
+src/evals/fixtures/*.png filter=lfs diff=lfs merge=lfs -text
+src/evals/fixtures/*.heic filter=lfs diff=lfs merge=lfs -text
+modules/collecta-turbo-image/__fixtures__/*.jpg filter=lfs diff=lfs merge=lfs -text
+modules/collecta-turbo-image/__fixtures__/*.png filter=lfs diff=lfs merge=lfs -text

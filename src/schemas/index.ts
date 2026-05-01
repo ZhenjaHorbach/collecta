@@ -88,3 +88,11 @@ export const AiDraftSchema = z.object({
   items: z.array(AiDraftItemSchema).min(5).max(20),
 });
 export type AiDraft = z.infer<typeof AiDraftSchema>;
+
+export const ValidationResultSchema = z.object({
+  valid: z.boolean(),
+  confidence: z.number().min(0).max(1),
+  detected: z.string().min(1),
+  suggestion: z.string().min(1),
+});
+export type ValidationResult = z.infer<typeof ValidationResultSchema>;

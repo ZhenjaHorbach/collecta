@@ -69,7 +69,32 @@
     "comingSoon": "Mapa wkrótce"
   },
   "camera": {
-    "comingSoon": "Aparat wkrótce"
+    "comingSoon": "Aparat wkrótce",
+    "permissionTitle": "Potrzebny dostęp do aparatu",
+    "permissionBody": "Collecta używa aparatu, abyś mógł robić zdjęcia znalezisk.",
+    "permissionGrant": "Zezwól",
+    "shutter": "Zrób zdjęcie",
+    "retake": "Zrób ponownie",
+    "save": "Zapisz",
+    "compressing": "Kompresja…",
+    "uploading": "Wysyłanie…",
+    "validating": "Sprawdzamy zdjęcie…",
+    "pickItem": "Co znalazłeś?",
+    "errorCapture": "Nie udało się zrobić zdjęcia. Spróbuj ponownie.",
+    "chooseItem": "Gdzie dodać to zdjęcie?",
+    "noCollections": "Najpierw utwórz kolekcję, aby zapisywać znaleziska.",
+    "pickFromLibrary": "Wybierz z galerii",
+    "libraryPermissionDenied": "Wymagany jest dostęp do galerii, aby wybrać zdjęcie."
+  },
+  "validation": {
+    "validTitle": "Wygląda dobrze",
+    "invalidTitle": "Nie wygląda na to",
+    "uncertainTitle": "Nie udało się zweryfikować",
+    "confidence": "Pewność: {{percent}}%",
+    "detectedLabel": "Co widzimy",
+    "suggestionLabel": "Wskazówka",
+    "saveAnyway": "Zapisz mimo to",
+    "advisoryNote": "Weryfikacja AI to wskazówka — znalezisko i tak zostaje zapisane."
   },
   "collections": {
     "title": "Kolekcje",

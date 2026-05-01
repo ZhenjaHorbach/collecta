@@ -43,3 +43,15 @@ app-example
 # generated native folders
 /ios
 /android
+
+# eval reports (regenerated each run, can contain raw model output)
+/eval-results
+
+# native build artifacts (turbo modules etc.)
+build/
+.gradle/
+Pods/
+xcuserdata/
+DerivedData/
+.build/
+*.xcworkspace/xcuserdata/

@@ -69,7 +69,32 @@
     "comingSoon": "Map coming soon"
   },
   "camera": {
-    "comingSoon": "Camera coming soon"
+    "comingSoon": "Camera coming soon",
+    "permissionTitle": "Camera access needed",
+    "permissionBody": "Collecta needs your camera to take photos for finds.",
+    "permissionGrant": "Grant access",
+    "shutter": "Take photo",
+    "retake": "Retake",
+    "save": "Save",
+    "compressing": "Compressing…",
+    "uploading": "Uploading…",
+    "validating": "Checking your photo…",
+    "pickItem": "What did you find?",
+    "errorCapture": "Couldn't capture the photo. Try again.",
+    "chooseItem": "Where does this photo go?",
+    "noCollections": "Create a collection first to save your finds.",
+    "pickFromLibrary": "Choose from gallery",
+    "libraryPermissionDenied": "Gallery access is required to pick a photo."
+  },
+  "validation": {
+    "validTitle": "Looks good",
+    "invalidTitle": "Doesn't look right",
+    "uncertainTitle": "Couldn't verify",
+    "confidence": "Confidence: {{percent}}%",
+    "detectedLabel": "What we see",
+    "suggestionLabel": "Tip",
+    "saveAnyway": "Save anyway",
+    "advisoryNote": "AI checks are advisory — your find is saved either way."
   },
   "collections": {
     "title": "Collections",

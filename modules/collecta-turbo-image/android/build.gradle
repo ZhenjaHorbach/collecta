@@ -1,0 +1,55 @@
+buildscript {
+  ext.safeExtGet = { prop, fallback ->
+    rootProject.ext.has(prop) ? rootProject.ext.get(prop) : fallback
+  }
+  repositories {
+    google()
+    mavenCentral()
+  }
+  dependencies {
+    classpath "com.android.tools.build:gradle"
+    classpath "org.jetbrains.kotlin:kotlin-gradle-plugin"
+    classpath "com.facebook.react:react-native-gradle-plugin"
+  }
+}
+
+apply plugin: "com.android.library"
+apply plugin: "kotlin-android"
+apply plugin: "com.facebook.react"
+
+android {
+  namespace "com.collecta.turboimage"
+  compileSdk safeExtGet("compileSdkVersion", 35)
+
+  defaultConfig {
+    minSdkVersion safeExtGet("minSdkVersion", 24)
+    targetSdkVersion safeExtGet("targetSdkVersion", 35)
+  }
+
+  compileOptions {
+    sourceCompatibility JavaVersion.VERSION_17
+    targetCompatibility JavaVersion.VERSION_17
+  }
+
+  kotlinOptions {
+    jvmTarget = "17"
+  }
+
+  sourceSets {
+    main {
+      java.srcDirs = ["src/main/java", "build/generated/source/codegen/java"]
+    }
+  }
+}
+
+react {
+  jsRootDir = file("../src/")
+  libraryName = "RNCollectaTurboImageSpec"
+  codegenJavaPackageName = "com.collecta.turboimage"
+}
+
+dependencies {
+  implementation "com.facebook.react:react-android"
+  implementation "androidx.exifinterface:exifinterface:1.3.7"
+  implementation "org.jetbrains.kotlinx:kotlinx-coroutines-android:1.7.3"
+}

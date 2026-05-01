@@ -1,0 +1,26 @@
+{
+  "name": "collecta-turbo-image",
+  "version": "0.1.0",
+  "description": "Native image compression and EXIF stripping (TurboModule).",
+  "main": "src/index",
+  "types": "src/index.ts",
+  "files": [
+    "src",
+    "android",
+    "ios",
+    "collecta-turbo-image.podspec",
+    "README.md"
+  ],
+  "codegenConfig": {
+    "name": "RNCollectaTurboImageSpec",
+    "type": "modules",
+    "jsSrcsDir": "src",
+    "android": {
+      "javaPackageName": "com.collecta.turboimage"
+    }
+  },
+  "peerDependencies": {
+    "react": "*",
+    "react-native": "*"
+  }
+}

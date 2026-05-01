@@ -69,7 +69,32 @@
     "comingSoon": "Карта скоро появится"
   },
   "camera": {
-    "comingSoon": "Камера скоро появится"
+    "comingSoon": "Камера скоро появится",
+    "permissionTitle": "Нужен доступ к камере",
+    "permissionBody": "Collecta использует камеру, чтобы вы могли снимать находки.",
+    "permissionGrant": "Разрешить",
+    "shutter": "Снять",
+    "retake": "Переснять",
+    "save": "Сохранить",
+    "compressing": "Сжимаем…",
+    "uploading": "Загружаем…",
+    "validating": "Проверяем фото…",
+    "pickItem": "Что вы нашли?",
+    "errorCapture": "Не получилось сделать фото. Попробуйте ещё раз.",
+    "chooseItem": "Куда добавить этот снимок?",
+    "noCollections": "Сначала создайте коллекцию, чтобы сохранять находки.",
+    "pickFromLibrary": "Выбрать из галереи",
+    "libraryPermissionDenied": "Нужен доступ к галерее, чтобы выбрать фото."
+  },
+  "validation": {
+    "validTitle": "Похоже, всё верно",
+    "invalidTitle": "Не похоже на нужный объект",
+    "uncertainTitle": "Не удалось проверить",
+    "confidence": "Уверенность: {{percent}}%",
+    "detectedLabel": "Что мы видим",
+    "suggestionLabel": "Подсказка",
+    "saveAnyway": "Всё равно сохранить",
+    "advisoryNote": "Проверка ИИ — рекомендация. Находка сохраняется в любом случае."
   },
   "collections": {
     "title": "Коллекции",
