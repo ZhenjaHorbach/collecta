@@ -15,14 +15,8 @@ import { createClient } from 'npm:@supabase/supabase-js@2';
 import Anthropic from 'npm:@anthropic-ai/sdk';
 
 // @ts-ignore — Deno requires .ts extension on relative imports
-import {
-  buildPrompt,
-  extractJson,
-  validate,
-  LOCALES,
-  type GeneratedCollection,
-  type Locale,
-} from './validation';
+// prettier-ignore
+import { buildPrompt, extractJson, validate, LOCALES, type GeneratedCollection, type Locale } from './validation.ts';
 
 const SUPABASE_URL = Deno.env.get('SUPABASE_URL')!;
 const SERVICE_ROLE_KEY = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
