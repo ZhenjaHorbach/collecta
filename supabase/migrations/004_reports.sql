@@ -16,7 +16,7 @@ end $$;
 
 -- ─── reports ───────────────────────────────────────────────────────────────────
 create table if not exists public.reports (
-  id           uuid primary key default uuid_generate_v4(),
+  id           uuid primary key default gen_random_uuid(),
   reporter_id  uuid not null references public.users (id) on delete cascade,
   target_type  public.report_target not null,
   target_id    uuid not null,
