@@ -1,24 +1,10 @@
-import type { CollectionCategory } from '@constants/categories';
-import type { Database } from '@typings/database';
+import { AiDraftSchema, type AiDraft, type AiDraftItem } from '@schemas';
 
 import { supabase } from './supabase.service';
 
-export type AiGeneratedRarity = Database['public']['Enums']['item_rarity'];
-
-export interface AiGeneratedItem {
-  name: string;
-  description: string;
-  ai_hint: string;
-  rarity: AiGeneratedRarity;
-  fun_fact: string;
-}
-
-export interface AiGeneratedCollection {
-  title: string;
-  description: string;
-  category: CollectionCategory;
-  items: AiGeneratedItem[];
-}
+export type AiGeneratedRarity = AiDraft['items'][number]['rarity'];
+export type AiGeneratedItem = AiDraftItem;
+export type AiGeneratedCollection = AiDraft;
 
 export type AiGenerationLocale = 'en' | 'ru' | 'pl' | 'uk';
 
@@ -49,7 +35,7 @@ export class AiGenerationError extends Error {
 }
 
 interface FunctionResponseBody {
-  draft?: AiGeneratedCollection;
+  draft?: unknown;
   error?: string;
   used?: number;
   limit?: number;
@@ -84,5 +70,10 @@ export async function generateCollection(
   }
 
   if (!data?.draft) throw new AiGenerationError('invalid_output', data?.error);
-  return data.draft;
+
+  const parsed = AiDraftSchema.safeParse(data.draft);
+  if (!parsed.success) {
+    throw new AiGenerationError('invalid_output', parsed.error.message);
+  }
+  return parsed.data;
 }

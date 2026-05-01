@@ -96,6 +96,18 @@
     "items": {
       "header": "What to find"
     },
+    "detail": {
+      "creatorHints": {
+        "title": "AI hints",
+        "badge": "Only you",
+        "subtitle": "Visible to you as the creator. Tap an item to review what Claude suggested for validation.",
+        "fields": {
+          "description": "Description",
+          "aiHint": "AI validation hint",
+          "funFact": "Fun fact"
+        }
+      }
+    },
     "create": {
       "headerSubtitle": "Start collecting anything you can photograph",
       "required": "Required",
@@ -178,6 +190,12 @@
           "unknown": "Something went wrong. Try again.",
           "promptTooShort": "Add a few more words to describe your idea.",
           "promptTooLong": "Idea is too long — keep it under 500 characters."
+        },
+        "tips": {
+          "title": "Tips for a good prompt",
+          "tip1": "Be specific — name the type of object you want to spot.",
+          "tip2": "Add a place if it matters: country, city, neighborhood.",
+          "tip3": "10–20 items works best — that's what Claude will draft."
         }
       },
       "privacy": {
