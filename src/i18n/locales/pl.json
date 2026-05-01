@@ -96,6 +96,18 @@
     "items": {
       "header": "Czego szukać"
     },
+    "detail": {
+      "creatorHints": {
+        "title": "Podpowiedzi AI",
+        "badge": "Tylko Ty",
+        "subtitle": "Widoczne tylko dla Ciebie jako autora. Dotknij pozycji, żeby zobaczyć, co zaproponował Claude do walidacji.",
+        "fields": {
+          "description": "Opis",
+          "aiHint": "Podpowiedź dla AI",
+          "funFact": "Ciekawostka"
+        }
+      }
+    },
     "create": {
       "headerSubtitle": "Kolekcjonuj cokolwiek, co możesz sfotografować",
       "required": "Wymagane",
@@ -178,6 +190,12 @@
           "unknown": "Coś poszło nie tak. Spróbuj ponownie.",
           "promptTooShort": "Dodaj kilka słów więcej do pomysłu.",
           "promptTooLong": "Pomysł jest za długi — maksymalnie 500 znaków."
+        },
+        "tips": {
+          "title": "Wskazówki do promptu",
+          "tip1": "Bądź konkretny — wskaż, jakiego typu obiekty chcesz zbierać.",
+          "tip2": "Dodaj miejsce, jeśli ma znaczenie: kraj, miasto, dzielnica.",
+          "tip3": "10–20 pozycji to optimum — tyle wygeneruje Claude."
         }
       },
       "privacy": {

@@ -1,9 +1,13 @@
-import type { Database, TablesInsert } from '@typings/database';
+import { z } from 'zod';
+
+import { type Report } from '@schemas';
+import type { TablesInsert } from '@typings/database';
 
 import { supabase } from './supabase.service';
 
-export type ReportReason = 'spam' | 'inappropriate' | 'offTopic' | 'other';
-export type ReportTarget = Database['public']['Enums']['report_target'];
+export const ReportReasonEnum = z.enum(['spam', 'inappropriate', 'offTopic', 'other']);
+export type ReportReason = z.infer<typeof ReportReasonEnum>;
+export type ReportTarget = Report['target_type'];
 
 export type ReportErrorCode = 'already_reported' | 'unauthorized' | 'network' | 'unknown';
 
@@ -29,6 +33,7 @@ function buildReason(reason: ReportReason, comment?: string): string {
 }
 
 async function insertReport(input: ReportInput): Promise<void> {
+  ReportReasonEnum.parse(input.reason);
   const row: TablesInsert<'reports'> = {
     reporter_id: input.reporterId,
     target_type: input.targetType,

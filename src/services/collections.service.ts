@@ -1,10 +1,20 @@
-import type { Tables, TablesInsert } from '@typings/database';
+import {
+  CollectionSchema,
+  CollectionItemSchema,
+  FindSchema,
+  type Collection,
+  type CollectionItem,
+  type Find,
+} from '@schemas';
+import type { TablesInsert } from '@typings/database';
 
 import { supabase } from './supabase.service';
 
-export type Collection = Tables<'collections'>;
-export type CollectionItem = Tables<'collection_items'>;
-export type Find = Tables<'finds'>;
+export type { Collection, CollectionItem, Find };
+
+const CollectionListSchema = CollectionSchema.array();
+const CollectionItemListSchema = CollectionItemSchema.array();
+const FindListSchema = FindSchema.array();
 
 export type CreateCollectionInput = Omit<
   TablesInsert<'collections'>,
@@ -88,7 +98,7 @@ export async function listMyCollections(userId: string): Promise<CollectionWithP
     .eq('creator_id', userId)
     .order('updated_at', { ascending: false });
   if (error) throw error;
-  return attachProgress(data ?? [], userId);
+  return attachProgress(CollectionListSchema.parse(data ?? []), userId);
 }
 
 export async function listPickedUpCollections(userId: string): Promise<CollectionWithProgress[]> {
@@ -100,7 +110,7 @@ export async function listPickedUpCollections(userId: string): Promise<Collectio
   if (error) throw error;
 
   const collections = (data ?? [])
-    .map((row) => row.collections as Collection | null)
+    .map((row) => (row.collections ? CollectionSchema.parse(row.collections) : null))
     .filter((c): c is Collection => c !== null && c.creator_id !== userId);
 
   return attachProgress(collections, userId);
@@ -114,7 +124,7 @@ export async function createCollection(input: CreateCollectionInput): Promise<Co
     .single()
     .throwOnError();
   if (error) throw error;
-  return data;
+  return CollectionSchema.parse(data);
 }
 
 export async function addCollectionItems(
@@ -133,7 +143,7 @@ export async function addCollectionItems(
     .select('*')
     .throwOnError();
   if (error) throw error;
-  return data ?? [];
+  return CollectionItemListSchema.parse(data ?? []);
 }
 
 export async function getCollection(id: string, userId: string): Promise<CollectionDetail> {
@@ -148,7 +158,8 @@ export async function getCollection(id: string, userId: string): Promise<Collect
   if (collectionRes.error) throw collectionRes.error;
   if (itemsRes.error) throw itemsRes.error;
 
-  const items = itemsRes.data ?? [];
+  const collection = CollectionSchema.parse(collectionRes.data);
+  const items = CollectionItemListSchema.parse(itemsRes.data ?? []);
   const itemIds = items.map((i) => i.id);
 
   let finds: Find[] = [];
@@ -160,13 +171,13 @@ export async function getCollection(id: string, userId: string): Promise<Collect
       .in('collection_item_id', itemIds)
       .order('created_at', { ascending: false });
     if (findsErr) throw findsErr;
-    finds = findsData ?? [];
+    finds = FindListSchema.parse(findsData ?? []);
   }
 
   const foundItemIds = new Set(finds.map((f) => f.collection_item_id));
 
   return {
-    ...collectionRes.data,
+    ...collection,
     items: items.map((item) => ({ ...item, found: foundItemIds.has(item.id) })),
     finds,
   };

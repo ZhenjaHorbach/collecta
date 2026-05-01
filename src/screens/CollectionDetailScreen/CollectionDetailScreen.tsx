@@ -20,6 +20,7 @@ import { ReportSheet } from '@components/ReportSheet';
 import { SafeAreaView } from '@components/SafeAreaView';
 import { Spinner } from '@components/Spinner';
 import { CATEGORY_EMOJI } from '@constants/categories';
+import { useAuth } from '@hooks/useAuth';
 import { useCollection } from '@hooks/useCollection';
 import { useReport } from '@hooks/useReport';
 import type {
@@ -32,7 +33,9 @@ import type { ReportError, ReportReason } from '@services/moderation.service';
 export function CollectionDetailScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const { t } = useTranslation();
+  const { user } = useAuth();
   const { data, loading, error } = useCollection(id);
+  const isOwner = !!user && !!data && data.creator_id === user.id;
   const { submit: submitReport, submitting: reporting, reset: resetReport } = useReport();
   const [reportSheetOpen, setReportSheetOpen] = useState(false);
 
@@ -130,7 +133,7 @@ export function CollectionDetailScreen() {
           <Text className="text-coral text-base text-center">{t('collections.loadError')}</Text>
         </View>
       ) : (
-        <DetailBody data={data} />
+        <DetailBody data={data} isOwner={isOwner} />
       )}
 
       <ReportSheet
@@ -153,7 +156,7 @@ function reportErrorKey(err: ReportError): string {
   }
 }
 
-function DetailBody({ data }: { data: CollectionDetail }) {
+function DetailBody({ data, isOwner }: { data: CollectionDetail; isOwner: boolean }) {
   const { t } = useTranslation();
 
   const findByItem = useMemo(() => {
@@ -210,7 +213,97 @@ function DetailBody({ data }: { data: CollectionDetail }) {
         </View>
       }
       renderItem={({ item }) => <ItemCell item={item} find={findByItem.get(item.id)} />}
+      ListFooterComponent={isOwner ? <CreatorHintsPanel items={data.items} /> : null}
     />
+  );
+}
+
+function CreatorHintsPanel({ items }: { items: CollectionItemWithFound[] }) {
+  const { t } = useTranslation();
+  const withHints = items.filter(
+    (i) => i.description || i.ai_validation_prompt || i.fun_fact || i.rarity
+  );
+  if (withHints.length === 0) return null;
+
+  return (
+    <View className="mt-8">
+      <View className="flex-row items-center mb-2 gap-2">
+        <Text className="text-xs uppercase tracking-wider text-text-dim font-semibold">
+          {t('collections.detail.creatorHints.title')}
+        </Text>
+        <View className="px-2 py-0.5 rounded-full bg-gold-lo border border-gold">
+          <Text className="text-[10px] font-bold text-text uppercase">
+            {t('collections.detail.creatorHints.badge')}
+          </Text>
+        </View>
+      </View>
+      <Text className="text-xs text-text-muted mb-3 leading-5">
+        {t('collections.detail.creatorHints.subtitle')}
+      </Text>
+      <View className="gap-2">
+        {withHints.map((item) => (
+          <CreatorHintRow key={item.id} item={item} />
+        ))}
+      </View>
+    </View>
+  );
+}
+
+function CreatorHintRow({ item }: { item: CollectionItemWithFound }) {
+  const { t } = useTranslation();
+  const [open, setOpen] = useState(false);
+
+  return (
+    <View className="rounded-md bg-surface-lo border border-stroke">
+      <TouchableOpacity
+        onPress={() => setOpen((v) => !v)}
+        accessibilityRole="button"
+        accessibilityState={{ expanded: open }}
+        className="px-3 py-3 flex-row items-center gap-2">
+        <Text className="flex-1 text-sm font-semibold text-text" numberOfLines={1}>
+          {item.name}
+        </Text>
+        <View className="px-2 py-0.5 rounded-full bg-surface-hi">
+          <Text className="text-[10px] font-bold text-text-dim uppercase">
+            {t(`collections.rarity.${item.rarity}`)}
+          </Text>
+        </View>
+        <Text className="text-text-dim text-xs">{open ? '▾' : '▸'}</Text>
+      </TouchableOpacity>
+      {open ? (
+        <View className="px-3 pb-3 gap-2 border-t border-stroke">
+          {item.description ? (
+            <HintRow
+              label={t('collections.detail.creatorHints.fields.description')}
+              value={item.description}
+            />
+          ) : null}
+          {item.ai_validation_prompt ? (
+            <HintRow
+              label={t('collections.detail.creatorHints.fields.aiHint')}
+              value={item.ai_validation_prompt}
+            />
+          ) : null}
+          {item.fun_fact ? (
+            <HintRow
+              label={t('collections.detail.creatorHints.fields.funFact')}
+              value={item.fun_fact}
+            />
+          ) : null}
+        </View>
+      ) : null}
+    </View>
+  );
+}
+
+function HintRow({ label, value }: { label: string; value: string }) {
+  return (
+    <View className="mt-2">
+      <Text className="text-[10px] uppercase tracking-wider text-text-muted font-semibold mb-0.5">
+        {label}
+      </Text>
+      <Text className="text-xs text-text leading-5">{value}</Text>
+    </View>
   );
 }
 

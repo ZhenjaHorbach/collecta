@@ -75,6 +75,7 @@ export function CreateCollectionScreen() {
   const [creationMode, setCreationMode] = useState<CreationMode>('manual');
   const [aiPrompt, setAiPrompt] = useState('');
   const [aiBannerVisible, setAiBannerVisible] = useState(false);
+  const [aiAttempted, setAiAttempted] = useState(false);
 
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
@@ -110,6 +111,7 @@ export function CreateCollectionScreen() {
     const locale: AiGenerationLocale = (AI_LOCALES as readonly string[]).includes(i18n.language)
       ? (i18n.language as AiGenerationLocale)
       : 'en';
+    setAiAttempted(true);
     const draft = await generate(aiPrompt, locale);
     if (draft) applyDraft(draft);
   };
@@ -121,6 +123,7 @@ export function CreateCollectionScreen() {
     setItems([newItem()]);
     setAiHint('');
     setAiBannerVisible(false);
+    setAiAttempted(false);
     resetAi();
   };
 
@@ -246,6 +249,16 @@ export function CreateCollectionScreen() {
                   editable={!generating}
                 />
               </View>
+              {!aiAttempted && !generating && aiPrompt.trim().length === 0 ? (
+                <View className="mt-4 p-3 rounded-sm bg-surface border border-stroke gap-2">
+                  <Text className="text-xs font-bold text-text-dim uppercase tracking-wider">
+                    {t('collections.create.ai.tips.title')}
+                  </Text>
+                  <TipRow text={t('collections.create.ai.tips.tip1')} />
+                  <TipRow text={t('collections.create.ai.tips.tip2')} />
+                  <TipRow text={t('collections.create.ai.tips.tip3')} />
+                </View>
+              ) : null}
               {generating ? (
                 <View className="mt-5 items-center py-6">
                   <ActivityIndicator color={colors.gold} />
@@ -259,7 +272,11 @@ export function CreateCollectionScreen() {
               ) : (
                 <View className="mt-5">
                   <Button
-                    label={t('collections.create.ai.generate')}
+                    label={
+                      aiAttempted
+                        ? t('collections.create.ai.regenerate')
+                        : t('collections.create.ai.generate')
+                    }
                     onPress={onGenerate}
                     disabled={aiPrompt.trim().length < 3}
                   />
@@ -729,6 +746,15 @@ function aiErrorMessage(
     default:
       return t('collections.create.ai.errors.unknown');
   }
+}
+
+function TipRow({ text }: { text: string }) {
+  return (
+    <View className="flex-row gap-2">
+      <Text className="text-text-dim text-xs">·</Text>
+      <Text className="flex-1 text-xs text-text-dim leading-5">{text}</Text>
+    </View>
+  );
 }
 
 interface ItemFieldProps {
