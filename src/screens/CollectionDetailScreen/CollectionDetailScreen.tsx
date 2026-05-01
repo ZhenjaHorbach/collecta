@@ -1,6 +1,6 @@
 import * as Linking from 'expo-linking';
 import { Image } from 'expo-image';
-import { useLocalSearchParams } from 'expo-router';
+import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import {
@@ -11,6 +11,7 @@ import {
   Share,
   Text,
   TouchableOpacity,
+  useWindowDimensions,
   View,
 } from 'react-native';
 
@@ -156,8 +157,15 @@ function reportErrorKey(err: ReportError): string {
   }
 }
 
+const GRID_COLUMNS = 3;
+const GRID_PADDING = 16;
+const GRID_GAP = 8;
+
 function DetailBody({ data, isOwner }: { data: CollectionDetail; isOwner: boolean }) {
   const { t } = useTranslation();
+  const router = useRouter();
+  const { width: screenWidth } = useWindowDimensions();
+  const cellSize = (screenWidth - GRID_PADDING * 2 - GRID_GAP * (GRID_COLUMNS - 1)) / GRID_COLUMNS;
 
   const findByItem = useMemo(() => {
     const map = new Map<string, Find>();
@@ -176,9 +184,9 @@ function DetailBody({ data, isOwner }: { data: CollectionDetail; isOwner: boolea
     <FlatList
       data={data.items}
       keyExtractor={(item) => item.id}
-      numColumns={3}
-      columnWrapperStyle={{ gap: 8 }}
-      contentContainerStyle={{ padding: 16, gap: 8, paddingBottom: 120 }}
+      numColumns={GRID_COLUMNS}
+      columnWrapperStyle={{ gap: GRID_GAP }}
+      contentContainerStyle={{ padding: GRID_PADDING, gap: GRID_GAP, paddingBottom: 120 }}
       ListHeaderComponent={
         <View className="mb-4">
           <View className="bg-surface-lo rounded-lg p-5 border border-stroke">
@@ -212,7 +220,14 @@ function DetailBody({ data, isOwner }: { data: CollectionDetail; isOwner: boolea
           ) : null}
         </View>
       }
-      renderItem={({ item }) => <ItemCell item={item} find={findByItem.get(item.id)} />}
+      renderItem={({ item }) => (
+        <ItemCell
+          item={item}
+          find={findByItem.get(item.id)}
+          size={cellSize}
+          onPress={() => router.push(`/(tabs)/camera?collection_item_id=${item.id}`)}
+        />
+      )}
       ListFooterComponent={isOwner ? <CreatorHintsPanel items={data.items} /> : null}
     />
   );
@@ -307,12 +322,27 @@ function HintRow({ label, value }: { label: string; value: string }) {
   );
 }
 
-function ItemCell({ item, find }: { item: CollectionItemWithFound; find: Find | undefined }) {
+function ItemCell({
+  item,
+  find,
+  size,
+  onPress,
+}: {
+  item: CollectionItemWithFound;
+  find: Find | undefined;
+  size: number;
+  onPress: () => void;
+}) {
   const photo = find?.photo_url ?? item.example_image_url;
 
   return (
-    <View
-      className={`flex-1 aspect-square rounded-md overflow-hidden bg-surface border border-stroke ${item.found ? '' : 'opacity-40'}`}>
+    <TouchableOpacity
+      onPress={onPress}
+      accessibilityRole="button"
+      accessibilityLabel={item.name}
+      activeOpacity={0.75}
+      style={{ width: size, height: size }}
+      className={`rounded-md overflow-hidden bg-surface border border-stroke ${item.found ? '' : 'opacity-40'}`}>
       {photo ? (
         <Image source={{ uri: photo }} style={{ flex: 1 }} contentFit="cover" />
       ) : (
@@ -325,6 +355,6 @@ function ItemCell({ item, find }: { item: CollectionItemWithFound; find: Find | 
           {item.name}
         </Text>
       </View>
-    </View>
+    </TouchableOpacity>
   );
 }

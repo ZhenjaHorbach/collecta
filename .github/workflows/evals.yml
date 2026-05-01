@@ -7,6 +7,10 @@ on:
         description: 'Eval suite to run (default: all)'
         required: false
         default: 'all'
+  schedule:
+    # Mondays at 09:00 UTC — weekly canary to catch silent
+    # model/latency drift between manual runs.
+    - cron: '0 9 * * 1'
 
 jobs:
   run-ai-evals:
@@ -22,11 +26,12 @@ jobs:
 
       - name: Run eval suite
         run: |
-          npx ts-node src/evals/run.ts --suite ${{ github.event.inputs.eval_suite }}
+          npx tsx src/evals/run.ts --suite ${{ github.event.inputs.eval_suite || 'all' }}
         env:
           ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
           SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
           SUPABASE_ANON_KEY: ${{ secrets.SUPABASE_ANON_KEY }}
+          FEW_SHOT_FIXTURES_BASE_URL: ${{ secrets.FEW_SHOT_FIXTURES_BASE_URL }}
 
       - name: Upload eval report
         uses: actions/upload-artifact@v4

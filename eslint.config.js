@@ -14,4 +14,16 @@ module.exports = defineConfig([
       'bem-helper/case': 'off',
     },
   },
+  {
+    files: ['*.config.js', '*.config.cjs', 'metro.config.js', 'babel.config.js'],
+    languageOptions: {
+      globals: {
+        __dirname: 'readonly',
+        __filename: 'readonly',
+        module: 'readonly',
+        require: 'readonly',
+        process: 'readonly',
+      },
+    },
+  },
 ]);

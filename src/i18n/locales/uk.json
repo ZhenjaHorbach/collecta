@@ -69,7 +69,32 @@
     "comingSoon": "Мапа скоро з'явиться"
   },
   "camera": {
-    "comingSoon": "Камера скоро з'явиться"
+    "comingSoon": "Камера скоро з'явиться",
+    "permissionTitle": "Потрібен доступ до камери",
+    "permissionBody": "Collecta використовує камеру, щоб ви могли знімати знахідки.",
+    "permissionGrant": "Дозволити",
+    "shutter": "Зняти",
+    "retake": "Перезняти",
+    "save": "Зберегти",
+    "compressing": "Стискаємо…",
+    "uploading": "Завантажуємо…",
+    "validating": "Перевіряємо фото…",
+    "pickItem": "Що ви знайшли?",
+    "errorCapture": "Не вдалося зробити фото. Спробуйте ще раз.",
+    "chooseItem": "Куди додати цей знімок?",
+    "noCollections": "Спочатку створіть колекцію, щоб зберігати знахідки.",
+    "pickFromLibrary": "Вибрати з галереї",
+    "libraryPermissionDenied": "Потрібен доступ до галереї, щоб вибрати фото."
+  },
+  "validation": {
+    "validTitle": "Схоже, все правильно",
+    "invalidTitle": "Не схоже на потрібний об'єкт",
+    "uncertainTitle": "Не вдалося перевірити",
+    "confidence": "Впевненість: {{percent}}%",
+    "detectedLabel": "Що ми бачимо",
+    "suggestionLabel": "Підказка",
+    "saveAnyway": "Все одно зберегти",
+    "advisoryNote": "Перевірка ШІ — рекомендація. Знахідка зберігається в будь-якому разі."
   },
   "collections": {
     "title": "Колекції",
