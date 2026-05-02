@@ -1,0 +1,377 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<title>Collecta — Prototype</title>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600;9..144,700&display=swap" rel="stylesheet"/>
+<style>
+  html, body {
+    margin: 0; padding: 0;
+    background: #06080B;
+    font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Text', 'SF Pro Display', system-ui, sans-serif;
+    color: #fff;
+    -webkit-font-smoothing: antialiased;
+    min-height: 100vh;
+  }
+  *::-webkit-scrollbar { display: none; }
+  button { font-family: inherit; }
+  input::placeholder { color: rgba(244,241,234,0.38); }
+</style>
+</head>
+<body>
+<div id="root"></div>
+
+<script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
+
+<script type="text/babel" src="ios-frame.jsx"></script>
+<script type="text/babel" src="data.jsx"></script>
+<script type="text/babel" src="icons.jsx"></script>
+<script type="text/babel" src="shell.jsx"></script>
+<script type="text/babel" src="screen-feed.jsx"></script>
+<script type="text/babel" src="screen-collections.jsx"></script>
+<script type="text/babel" src="screen-detail.jsx"></script>
+<script type="text/babel" src="screen-camera.jsx"></script>
+<script type="text/babel" src="screen-profile.jsx"></script>
+<script type="text/babel" src="screen-create.jsx"></script>
+<script type="text/babel" src="screen-auth.jsx"></script>
+
+<script type="text/babel" data-presets="react">
+
+function App() {
+  // Auth flow: welcome -> signin/signup -> verify -> onboarding -> app
+  const [authStage, setAuthStage] = React.useState(() => localStorage.getItem('collecta.auth') || 'welcome');
+  const [authData, setAuthData] = React.useState({ email: '', name: '' });
+
+  React.useEffect(() => {
+    localStorage.setItem('collecta.auth', authStage);
+  }, [authStage]);
+
+  // Persistent screen across reloads
+  const [screen, setScreen] = React.useState(() => localStorage.getItem('collecta.screen') || 'feed');
+  const [prevScreen, setPrevScreen] = React.useState('feed');
+  const [detailCollection, setDetailCollection] = React.useState(null);
+  const [cameraOpen, setCameraOpen] = React.useState(false);
+  const [toast, setToast] = React.useState(null);
+  const [themeId, setThemeId] = React.useState(() => localStorage.getItem('collecta.theme') || 'midnight');
+  const [themePickerOpen, setThemePickerOpen] = React.useState(false);
+
+  // Apply theme synchronously before render
+  applyTheme(themeId);
+
+  React.useEffect(() => {
+    localStorage.setItem('collecta.screen', screen);
+  }, [screen]);
+
+  React.useEffect(() => {
+    localStorage.setItem('collecta.theme', themeId);
+  }, [themeId]);
+
+  const goTab = (id) => {
+    if (id === 'camera') {
+      setCameraOpen(true);
+      return;
+    }
+    setDetailCollection(null);
+    setScreen(id);
+  };
+
+  const openCollection = (c) => {
+    setPrevScreen(screen);
+    setDetailCollection(c);
+    setScreen('detail');
+  };
+
+  const openCreate = () => {
+    setPrevScreen(screen);
+    setScreen('create');
+  };
+
+  const onCreateDone = (data) => {
+    setScreen('collections');
+    setToast({ title: `Created ${data.title || 'new collection'}`, sub: data.mode === 'list' ? `${data.items.filter(i=>i.trim()).length} items to find` : 'Start capturing!' });
+    setTimeout(() => setToast(null), 2800);
+  };
+
+  const back = () => {
+    setDetailCollection(null);
+    setScreen(prevScreen);
+  };
+
+  const onCameraSave = () => {
+    setCameraOpen(false);
+    setScreen('collections');
+    setToast({ title: 'Saved to Cat Breeds of NYC', sub: '+60 XP · streak 13 🔥' });
+    setTimeout(() => setToast(null), 2800);
+  };
+
+  let content;
+  const isAuthed = authStage === 'done';
+
+  if (!isAuthed) {
+    if (authStage === 'welcome') {
+      content = <WelcomeScreen
+        onSignIn={() => setAuthStage('signin')}
+        onSignUp={() => setAuthStage('signup')}
+      />;
+    } else if (authStage === 'signin') {
+      content = <SignInScreen
+        onBack={() => setAuthStage('welcome')}
+        onSubmit={({ email }) => { setAuthData(d => ({ ...d, email })); setAuthStage('done'); }}
+        onForgot={() => {}}
+        onSwitchSignUp={() => setAuthStage('signup')}
+      />;
+    } else if (authStage === 'signup') {
+      content = <SignUpScreen
+        onBack={() => setAuthStage('welcome')}
+        onSubmit={({ name, email }) => { setAuthData({ name, email }); setAuthStage('verify'); }}
+        onSwitchSignIn={() => setAuthStage('signin')}
+      />;
+    } else if (authStage === 'verify') {
+      content = <VerifyScreen
+        email={authData.email || 'you@example.com'}
+        onBack={() => setAuthStage('signup')}
+        onSubmit={() => setAuthStage('onboarding')}
+        onResend={() => {}}
+      />;
+    } else if (authStage === 'onboarding') {
+      content = <OnboardingScreen
+        name={authData.name || 'there'}
+        onBack={() => setAuthStage('verify')}
+        onDone={() => setAuthStage('done')}
+      />;
+    }
+  } else if (screen === 'feed') content = <FeedScreen/>;
+  else if (screen === 'map') content = <MapScreen/>;
+  else if (screen === 'collections') content = <CollectionsScreen onOpenCollection={openCollection} onCreate={openCreate}/>;
+  else if (screen === 'detail') content = <CollectionDetailScreen collection={detailCollection} onBack={back}/>;
+  else if (screen === 'profile') content = <ProfileScreen/>;
+  else if (screen === 'create') content = <CreateCollectionScreen onBack={back} onCreate={onCreateDone}/>;
+
+  const hideTabBar = cameraOpen || screen === 'create' || !isAuthed;
+
+  return (
+    <div style={{
+      minHeight: '100vh',
+      display: 'flex', alignItems: 'center', justifyContent: 'center',
+      padding: '32px 16px',
+      background: `
+        radial-gradient(circle at 30% 10%, rgba(233,184,106,0.08), transparent 50%),
+        radial-gradient(circle at 70% 90%, rgba(107,168,212,0.06), transparent 50%),
+        ${THEME.appShellBg}
+      `,
+    }}>
+      <div style={{
+        width: 390, height: 844, borderRadius: 54,
+        background: THEME.bg, position: 'relative', overflow: 'hidden',
+        boxShadow: `
+          0 0 0 10px ${THEME.phoneBezel},
+          0 0 0 11px ${THEME.phoneBezel2},
+          0 40px 100px rgba(0,0,0,0.6),
+          0 0 60px rgba(233,184,106,0.04)
+        `,
+        fontFamily: '-apple-system, "SF Pro Text", "SF Pro Display", system-ui, sans-serif',
+      }}
+      key={themeId}
+      >
+        {/* Dynamic island */}
+        <div style={{
+          position: 'absolute', top: 11, left: '50%', transform: 'translateX(-50%)',
+          width: 120, height: 34, borderRadius: 22, background: '#000', zIndex: 100,
+        }}/>
+
+        {/* Status bar */}
+        <div style={{ position: 'absolute', top: 0, left: 0, right: 0, zIndex: 30 }}>
+          <div style={{
+            display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+            padding: '17px 32px 0', height: 54,
+          }}>
+            <div style={{ fontSize: 15, fontWeight: 600, color: THEME.text, letterSpacing: -0.2 }}>
+              9:41
+            </div>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 5 }}>
+              <svg width="17" height="11" viewBox="0 0 17 11">
+                <rect x="0" y="7" width="3" height="4" rx="0.5" fill={THEME.text}/>
+                <rect x="4.5" y="5" width="3" height="6" rx="0.5" fill={THEME.text}/>
+                <rect x="9" y="2.5" width="3" height="8.5" rx="0.5" fill={THEME.text}/>
+                <rect x="13.5" y="0" width="3" height="11" rx="0.5" fill={THEME.text}/>
+              </svg>
+              <svg width="15" height="11" viewBox="0 0 17 11">
+                <path d="M8.5 2.5 a 6 6 0 0 1 5 2.5 l -1 1 a 4.5 4.5 0 0 0 -8 0 l -1 -1 a 6 6 0 0 1 5 -2.5 z" fill={THEME.text}/>
+                <circle cx="8.5" cy="9" r="1.3" fill={THEME.text}/>
+              </svg>
+              <svg width="25" height="11" viewBox="0 0 25 11">
+                <rect x="0.5" y="0.5" width="21" height="10" rx="3" fill="none" stroke={THEME.text} strokeOpacity="0.4"/>
+                <rect x="2" y="2" width="17" height="7" rx="1.5" fill={THEME.text}/>
+                <rect x="22.5" y="4" width="1.5" height="3" rx="0.5" fill={THEME.text} opacity="0.4"/>
+              </svg>
+            </div>
+          </div>
+        </div>
+
+        {/* Screen content */}
+        <div style={{ position: 'absolute', inset: 0, overflow: 'auto' }}
+          data-screen-label={`01 ${screen}`}
+          key={screen}>
+          {content}
+        </div>
+
+        {/* Tab bar */}
+        {!hideTabBar && <TabBar current={screen === 'detail' ? 'collections' : screen} onChange={goTab}/>}
+
+        {/* Camera modal */}
+        {cameraOpen && (
+          <CameraScreen
+            onClose={() => setCameraOpen(false)}
+            onSave={onCameraSave}
+          />
+        )}
+
+        {/* Toast */}
+        {toast && (
+          <div style={{
+            position: 'absolute', bottom: 128, left: 16, right: 16, zIndex: 90,
+            padding: '12px 14px', borderRadius: 16,
+            background: 'rgba(233,184,106,0.95)', backdropFilter: 'blur(16px)',
+            display: 'flex', alignItems: 'center', gap: 10,
+            boxShadow: '0 8px 28px rgba(0,0,0,0.4)',
+            animation: 'toastIn 0.3s ease',
+          }}>
+            <div style={{
+              width: 36, height: 36, borderRadius: 10,
+              background: '#1A1410',
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+            }}>
+              <Icon name="check" size={20} color={THEME.goldHi} strokeWidth={3}/>
+            </div>
+            <div style={{ flex: 1 }}>
+              <div style={{ fontSize: 13.5, fontWeight: 700, color: '#1A1410' }}>{toast.title}</div>
+              <div style={{ fontSize: 11.5, fontWeight: 600, color: 'rgba(26,20,16,0.75)', marginTop: 1 }}>{toast.sub}</div>
+            </div>
+          </div>
+        )}
+
+        {/* Home indicator */}
+        <div style={{
+          position: 'absolute', bottom: 8, left: 0, right: 0, zIndex: 200,
+          display: 'flex', justifyContent: 'center', pointerEvents: 'none',
+        }}>
+          <div style={{
+            width: 134, height: 5, borderRadius: 100,
+            background: THEME.isLight ? 'rgba(0,0,0,0.35)' : 'rgba(255,255,255,0.35)',
+          }}/>
+        </div>
+
+        {/* Theme picker modal */}
+        {themePickerOpen && (
+          <div style={{
+            position: 'absolute', inset: 0, zIndex: 300,
+            background: 'rgba(0,0,0,0.55)', backdropFilter: 'blur(8px)',
+            display: 'flex', alignItems: 'flex-end', justifyContent: 'center',
+          }} onClick={() => setThemePickerOpen(false)}>
+            <div onClick={e => e.stopPropagation()} style={{
+              width: '100%', background: THEME.surface,
+              borderTopLeftRadius: 28, borderTopRightRadius: 28,
+              padding: '20px 20px 40px', border: `1px solid ${THEME.stroke}`,
+              animation: 'sheetUp 0.28s ease',
+            }}>
+              <div style={{
+                width: 40, height: 4, borderRadius: 2, margin: '0 auto 18px',
+                background: THEME.strokeHi,
+              }}/>
+              <div style={{
+                fontSize: 18, fontWeight: 700, color: THEME.text, marginBottom: 4,
+                fontFamily: 'Fraunces, serif', letterSpacing: -0.3,
+              }}>Choose a theme</div>
+              <div style={{ fontSize: 12.5, color: THEME.textDim, marginBottom: 18 }}>
+                Pick a palette that fits your mood.
+              </div>
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
+                {Object.entries(THEMES).map(([id, t]) => {
+                  const active = themeId === id;
+                  return (
+                    <button key={id} onClick={() => { setThemeId(id); setThemePickerOpen(false); }} style={{
+                      padding: 12, borderRadius: 16, cursor: 'pointer',
+                      background: t.bg,
+                      border: `2px solid ${active ? t.gold : 'transparent'}`,
+                      textAlign: 'left', position: 'relative',
+                      outline: `1px solid ${THEME.stroke}`,
+                    }}>
+                      <div style={{ display: 'flex', gap: 6, marginBottom: 14 }}>
+                        <div style={{ width: 22, height: 22, borderRadius: '50%', background: t.gold,
+                          boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.2)' }}/>
+                        <div style={{ width: 22, height: 22, borderRadius: '50%', background: t.surface,
+                          border: `1px solid ${t.strokeHi}` }}/>
+                        <div style={{ width: 22, height: 22, borderRadius: '50%', background: t.coral }}/>
+                      </div>
+                      <div style={{
+                        fontSize: 14, fontWeight: 700, color: t.text,
+                        fontFamily: 'Fraunces, serif',
+                      }}>{t.name}</div>
+                      <div style={{ fontSize: 11, color: t.textDim, marginTop: 2 }}>
+                        {t.isLight ? 'Light' : 'Dark'}
+                      </div>
+                      {active && (
+                        <div style={{
+                          position: 'absolute', top: 10, right: 10,
+                          width: 22, height: 22, borderRadius: '50%',
+                          background: t.gold,
+                          display: 'flex', alignItems: 'center', justifyContent: 'center',
+                        }}>
+                          <Icon name="check" size={13} color={t.bg} strokeWidth={3.5}/>
+                        </div>
+                      )}
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+          </div>
+        )}
+
+        <style>{`
+          @keyframes toastIn {
+            from { transform: translateY(20px); opacity: 0; }
+            to   { transform: translateY(0); opacity: 1; }
+          }
+          @keyframes sheetUp {
+            from { transform: translateY(100%); }
+            to   { transform: translateY(0); }
+          }
+        `}</style>
+      </div>
+
+      {/* Floating theme switcher — outside phone, always accessible */}
+      <button onClick={() => setThemePickerOpen(true)} style={{
+        position: 'fixed', bottom: 24, right: 24, zIndex: 500,
+        display: 'flex', alignItems: 'center', gap: 8,
+        padding: '10px 14px 10px 10px', borderRadius: 100,
+        background: 'rgba(20,22,28,0.82)', backdropFilter: 'blur(16px)',
+        border: '1px solid rgba(255,255,255,0.1)', cursor: 'pointer',
+        color: '#F4F1EA', fontFamily: 'inherit',
+        boxShadow: '0 8px 28px rgba(0,0,0,0.35)',
+      }}>
+        <div style={{ display: 'flex', gap: 3 }}>
+          {THEMES[themeId].swatches.map((c, i) => (
+            <div key={i} style={{
+              width: 14, height: 14, borderRadius: '50%',
+              background: c, border: '1px solid rgba(255,255,255,0.15)',
+            }}/>
+          ))}
+        </div>
+        <span style={{ fontSize: 12.5, fontWeight: 600, letterSpacing: 0.1 }}>
+          {THEMES[themeId].name}
+        </span>
+      </button>
+    </div>
+  );
+}
+
+ReactDOM.createRoot(document.getElementById('root')).render(<App/>);
+</script>
+</body>
+</html>

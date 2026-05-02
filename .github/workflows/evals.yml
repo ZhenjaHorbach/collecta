@@ -25,8 +25,7 @@ jobs:
       - run: npm ci
 
       - name: Run eval suite
-        run: |
-          npx tsx src/evals/run.ts --suite ${{ github.event.inputs.eval_suite || 'all' }}
+        run: scripts/run-evals.sh --suite ${{ github.event.inputs.eval_suite || 'all' }}
         env:
           ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
           SUPABASE_URL: ${{ secrets.SUPABASE_URL }}

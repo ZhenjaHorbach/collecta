@@ -12,7 +12,8 @@
     "format": "prettier --write .",
     "format:check": "prettier --check .",
     "test": "jest",
-    "evals": "tsx src/evals/run.ts",
+    "evals": "bash scripts/run-evals.sh",
+    "design:sync": "bash scripts/sync-design.sh",
     "types:gen": "supabase gen types typescript --project-id $SUPABASE_PROJECT_ID --schema public | awk '/^} as const/{print; exit} {print}' > src/types/database.ts",
     "prepare": "husky"
   },
