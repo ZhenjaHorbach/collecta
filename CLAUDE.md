@@ -27,6 +27,19 @@ Per-domain rules live in `.claude/rules/` — read the relevant file before edit
 - `supabase.md` — RLS, queries, migrations, storage, realtime
 - `ci.md` — branch workflow, commit conventions, CI jobs, secrets
 
+## Design references
+
+Visual mockups live in `.claude/design/collecta/` (synced from claude.ai/design via the `Sync design` GitHub Action). Read these when implementing UI:
+
+- `project/Collecta.html` — entry point, lists which `*.jsx` files compose the app
+- `project/screen-*.jsx` — per-screen layouts (feed, map+profile, collections, detail, camera, create, auth)
+- `project/shell.jsx` — theme tokens (`mapBg`, `gold`, `surface`, etc.) and the tab bar
+- `project/data.jsx` — sample data shapes
+
+These are **HTML/CSS/JS prototypes, not production code** — match the visual output, not the prototype's structure. Adapt to the project's stack (React Native, NativeWind, semantic tokens). Map prototype theme keys to our semantic tokens (`THEME.gold` → `bg-gold`, `THEME.surface` → `bg-surface`, etc.) — never copy raw hex values.
+
+The `Map` screen design lives inside `project/screen-profile.jsx` (function `MapScreen`) — not in a `screen-map.jsx` file.
+
 ## Commands
 
 Slash commands live in `.claude/commands/`:

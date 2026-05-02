@@ -24,6 +24,27 @@
 - Report uploaded as artifact, retained 30 days
 - Required before changing AI validation prompts
 
+## Sync design (`.github/workflows/sync-design.yml`)
+
+Pulls the design bundle from claude.ai/design into `.claude/design/` and opens a PR. Manual trigger only — there is no way to auto-detect when a mockup changed (Anthropic exposes no webhook).
+
+**Workflow:**
+
+1. In claude.ai/design, edit the mockup → click **Hand off** → copy the URL (`https://api.anthropic.com/v1/design/h/<hash>`).
+2. Run the sync — pick one:
+   - `npm run design:sync -- '<URL>'` — local, updates `.claude/design/` in your working tree, no PR.
+   - `gh workflow run sync-design.yml -f design_url='<URL>'` — CI, opens PR `design/sync`.
+   - GitHub UI → Actions → Sync design → Run workflow → paste URL.
+3. Review the diff (especially deletions — they mean files were removed in the design).
+4. Merge.
+
+**Constraints:**
+
+- Hand-off URLs expire in **hours**, not days. Sync immediately after generating the URL; if it 404s, regenerate in claude.ai.
+- Never commit the URL itself — it's a signed link, treat as semi-secret. Pass via workflow input or shell arg, nothing else.
+- Never hand-edit files in `.claude/design/` — the next sync overwrites them. Notes about the design go in `CLAUDE.md` or this rules file.
+- Both the workflow and `npm run design:sync` call the same `scripts/sync-design.sh` — single source of truth for what gets included/excluded.
+
 ## Supabase deploy (`.github/workflows/deploy-supabase.yml`)
 
 - Triggers automatically on push to `main` when `supabase/migrations/**` or `supabase/functions/**` change

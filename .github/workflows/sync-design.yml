@@ -1,0 +1,57 @@
+name: Sync design
+
+on:
+  workflow_dispatch:
+    inputs:
+      design_url:
+        description: 'Hand-off URL from claude.ai/design (api.anthropic.com/v1/design/h/...)'
+        required: true
+        type: string
+
+permissions:
+  contents: write
+  pull-requests: write
+
+concurrency:
+  group: sync-design
+  cancel-in-progress: true
+
+jobs:
+  sync:
+    name: Pull design bundle and open PR
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Sync design bundle
+        env:
+          URL: ${{ inputs.design_url }}
+        run: scripts/sync-design.sh "$URL" --emit-meta
+
+      - name: Read bundle metadata
+        id: meta
+        run: |
+          if [[ -f .claude/design.meta ]]; then
+            cat .claude/design.meta >> "$GITHUB_OUTPUT"
+            rm .claude/design.meta
+          fi
+
+      - name: Create pull request
+        uses: peter-evans/create-pull-request@v6
+        with:
+          branch: design/sync
+          title: 'chore(design): refresh mockups'
+          commit-message: 'chore(design): refresh mockups'
+          body: |
+            Auto-sync from claude.ai/design.
+
+            Triggered by @${{ github.actor }} via `workflow_dispatch`.
+            Source: hand-off URL passed as workflow input (not stored in repo).
+
+            **Bundle:**
+            - sha256: `${{ steps.meta.outputs.sha256 }}`
+            - bytes: ${{ steps.meta.outputs.bytes }}
+            - files: ${{ steps.meta.outputs.files }}
+          add-paths: .claude/design/**
+          labels: design,automated
+          delete-branch: true
