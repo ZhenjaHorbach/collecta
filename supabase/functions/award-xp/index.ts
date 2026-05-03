@@ -205,35 +205,12 @@ async function getUserStats(userId: string): Promise<UserStats> {
   };
 }
 
-// A "completed" collection = the user has at least one valid find for every
-// collection_item in a collection they've joined. Cheap to compute exactly per
-// user since user_collections is small; for hot leaderboards we'd cache.
+// Single round-trip via SQL function (migration 010). Replaces a previous
+// 1 + 2K client-side loop. Empty collections don't count as complete.
 async function countCompletedCollections(userId: string): Promise<number> {
-  const { data: joins } = await supabase
-    .from('user_collections')
-    .select('collection_id')
-    .eq('user_id', userId);
-  if (!joins || joins.length === 0) return 0;
-
-  let completed = 0;
-  for (const { collection_id } of joins) {
-    const { data: items } = await supabase
-      .from('collection_items')
-      .select('id')
-      .eq('collection_id', collection_id);
-    if (!items || items.length === 0) continue;
-
-    const { count: foundCount } = await supabase
-      .from('finds')
-      .select('id', { count: 'exact', head: true })
-      .eq('user_id', userId)
-      .in(
-        'collection_item_id',
-        items.map((i: { id: any }) => i.id)
-      );
-    if ((foundCount ?? 0) >= items.length) completed += 1;
-  }
-  return completed;
+  const { data, error } = await supabase.rpc('count_completed_collections', { uid: userId });
+  if (error) throw error;
+  return Number(data ?? 0);
 }
 
 interface AchievementRow {
@@ -258,8 +235,12 @@ async function checkAchievements(
   ]);
   if (!catalog) return [];
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const unlockedCodes = new Set<string>((unlocked ?? []).map((r: any) => r.achievements?.code));
+  type UnlockedRow = { achievement_id: string; achievements: { code: string } | null };
+  const unlockedCodes = new Set<string>(
+    ((unlocked ?? []) as UnlockedRow[])
+      .map((r) => r.achievements?.code)
+      .filter((c): c is string => typeof c === 'string')
+  );
 
   const out: string[] = [];
   for (const a of catalog as Array<{ code: string; condition: { kind: string; gte: number } }>) {
@@ -442,16 +423,32 @@ async function runAgentLoop(userId: string, event: XpEvent): Promise<AgentResult
     }
 
     const toolResults: unknown[] = [];
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    for (const block of message.content as any[]) {
+    interface ToolUseBlock {
+      type: 'tool_use';
+      id: string;
+      name: string;
+      input?: Record<string, unknown>;
+    }
+    type ContentBlock = ToolUseBlock | { type: string };
+    for (const block of message.content as ContentBlock[]) {
       if (block.type !== 'tool_use') continue;
-      const out = await dispatch(block.name, block.input ?? {});
+      const toolBlock = block as ToolUseBlock;
+      const out = await dispatch(toolBlock.name, toolBlock.input ?? {});
       console.log(
-        `[award-xp][step ${step}] tool=${block.name} input=${JSON.stringify(block.input)} output=${JSON.stringify(out)}`
+        `[award-xp][step ${step}] tool=${toolBlock.name} input=${JSON.stringify(toolBlock.input)} output=${JSON.stringify(out)}`
       );
 
-      // Track final state as it changes.
-      if (block.name === 'update_user_xp') {
+      // Track final state as it changes. get_user_stats seeds defaults so
+      // recheck events (which skip update_user_xp by design) still return
+      // the user's actual XP/level/streak instead of the zero-initialised
+      // values from the top of this function.
+      if (toolBlock.name === 'get_user_stats') {
+        const r = out as UserStats;
+        finalXp = r.xp;
+        finalLevel = r.level;
+        streakDays = r.streak_days;
+      }
+      if (toolBlock.name === 'update_user_xp') {
         const r = out as UpdateXpResult;
         if (prevLevelSeen === -1) prevLevelSeen = r.new_level;
         finalXp = r.new_xp;
@@ -459,7 +456,7 @@ async function runAgentLoop(userId: string, event: XpEvent): Promise<AgentResult
         streakDays = r.streak_days;
         if (r.leveled_up) leveledUp = true;
       }
-      if (block.name === 'unlock_achievement') {
+      if (toolBlock.name === 'unlock_achievement') {
         const r = out as UnlockResult;
         if (r.unlocked) {
           newAchievements.push(r);
@@ -471,7 +468,7 @@ async function runAgentLoop(userId: string, event: XpEvent): Promise<AgentResult
 
       toolResults.push({
         type: 'tool_result',
-        tool_use_id: block.id,
+        tool_use_id: toolBlock.id,
         content: JSON.stringify(out),
       });
     }
@@ -550,6 +547,17 @@ Deno.serve(async (req: Request) => {
   const event = body.event as XpEvent | undefined;
   if (!userId || !event) return jsonError(400, 'missing_fields');
   if (!(event in XP_PER_EVENT)) return jsonError(400, 'invalid_event');
+
+  // Authorize the caller — without this any logged-in user could POST
+  // { user_id: <victim>, event: 'find' } and grant another account XP and
+  // achievements. supabase.functions.invoke forwards the client's JWT in
+  // Authorization, so we decode it and assert sub === body.user_id.
+  const authHeader = req.headers.get('Authorization');
+  const token = authHeader?.replace(/^Bearer\s+/i, '') ?? null;
+  if (!token) return jsonError(401, 'unauthorized');
+  const { data: authData, error: authErr } = await supabase.auth.getUser(token);
+  if (authErr || !authData?.user) return jsonError(401, 'unauthorized');
+  if (authData.user.id !== userId) return jsonError(403, 'forbidden');
 
   let result: AgentResult;
   try {

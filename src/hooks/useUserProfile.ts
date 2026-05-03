@@ -1,5 +1,6 @@
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 
+import { subscribeProfileChanged } from '@services/achievement-toast.service';
 import { supabase } from '@services/supabase.service';
 
 interface AchievementCatalogRow {
@@ -37,17 +38,11 @@ export function useUserProfile(userId: string | null | undefined) {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<Error | null>(null);
 
-  useEffect(() => {
-    if (!userId) {
-      setProfile(null);
-      setLoading(false);
-      return;
-    }
-    let cancelled = false;
-    setLoading(true);
-    setError(null);
-
-    (async () => {
+  const fetchProfile = useCallback(
+    async (signal: { cancelled: boolean }, withSpinner: boolean): Promise<void> => {
+      if (!userId) return;
+      if (withSpinner) setLoading(true);
+      setError(null);
       try {
         const [
           { data: user, error: userErr },
@@ -81,7 +76,7 @@ export function useUserProfile(userId: string | null | undefined) {
         if (userErr) throw userErr;
         if (catalogErr) throw catalogErr;
         if (unlockedErr) throw unlockedErr;
-        if (cancelled) return;
+        if (signal.cancelled) return;
 
         const unlockedById = new Map<string, string>(
           (unlocked ?? []).map((r) => [r.achievement_id as string, r.unlocked_at as string])
@@ -109,16 +104,35 @@ export function useUserProfile(userId: string | null | undefined) {
           achievements,
         });
       } catch (e) {
-        if (!cancelled) setError(e instanceof Error ? e : new Error(String(e)));
+        if (!signal.cancelled) setError(e instanceof Error ? e : new Error(String(e)));
       } finally {
-        if (!cancelled) setLoading(false);
+        if (!signal.cancelled && withSpinner) setLoading(false);
       }
-    })();
+    },
+    [userId]
+  );
+
+  useEffect(() => {
+    if (!userId) {
+      setProfile(null);
+      setLoading(false);
+      return;
+    }
+    const signal = { cancelled: false };
+    void fetchProfile(signal, true);
+
+    // Re-fetch (silently, no spinner flash) whenever award-xp lands a new
+    // event for this user. Keeps the profile XP/level/streak/achievements
+    // in sync without a screen re-mount.
+    const unsubscribe = subscribeProfileChanged(() => {
+      void fetchProfile(signal, false);
+    });
 
     return () => {
-      cancelled = true;
+      signal.cancelled = true;
+      unsubscribe();
     };
-  }, [userId]);
+  }, [userId, fetchProfile]);
 
   return { profile, loading, error };
 }

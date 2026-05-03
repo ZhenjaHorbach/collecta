@@ -9,7 +9,7 @@
 // reconcile (achievements check unlocked codes from the DB, not from previous
 // requests).
 
-import { enqueueAchievement } from './achievement-toast.service';
+import { emitProfileChanged, enqueueAchievement } from './achievement-toast.service';
 import { supabase } from './supabase.service';
 
 export type GamificationEvent = 'find' | 'reaction' | 'collection_complete' | 'recheck';
@@ -46,6 +46,10 @@ export async function awardXp(userId: string, event: GamificationEvent): Promise
         xpReward: a.xp_reward,
       });
     }
+    // Tell any mounted useUserProfile hook to re-fetch — the user row just
+    // changed (xp/level/streak) and possibly user_achievements gained rows.
+    // Cheaper than realtime subscription, no setup overhead.
+    emitProfileChanged();
   } catch (e) {
     console.warn('[gamification] award-xp threw', e);
   }

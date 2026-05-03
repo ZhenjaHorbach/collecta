@@ -7,6 +7,7 @@ import Animated, {
   useAnimatedStyle,
   useSharedValue,
   withDelay,
+  withSequence,
   withTiming,
 } from 'react-native-reanimated';
 
@@ -31,15 +32,22 @@ export function AchievementToast({ achievement, onDismiss }: AchievementToastPro
 
   useEffect(() => {
     if (!achievement) return;
-    translateY.value = withTiming(0, { duration: 280, easing: Easing.out(Easing.cubic) });
-    opacity.value = withTiming(1, { duration: 220 });
-    translateY.value = withDelay(
-      VISIBLE_MS,
-      withTiming(-120, { duration: 240, easing: Easing.in(Easing.cubic) }, (done) => {
-        if (done) runOnJS(onDismiss)();
-      })
+    // withSequence: enter → hold → exit. Two assignments to the same shared
+    // value cancel each other in Reanimated v3 (the second .value=... aborts
+    // any in-flight animation), so wrap the whole timeline in one statement.
+    translateY.value = withSequence(
+      withTiming(0, { duration: 280, easing: Easing.out(Easing.cubic) }),
+      withDelay(
+        VISIBLE_MS,
+        withTiming(-120, { duration: 240, easing: Easing.in(Easing.cubic) }, (done) => {
+          if (done) runOnJS(onDismiss)();
+        })
+      )
     );
-    opacity.value = withDelay(VISIBLE_MS, withTiming(0, { duration: 220 }));
+    opacity.value = withSequence(
+      withTiming(1, { duration: 220 }),
+      withDelay(VISIBLE_MS, withTiming(0, { duration: 220 }))
+    );
   }, [achievement, opacity, onDismiss, translateY]);
 
   const style = useAnimatedStyle(() => ({
