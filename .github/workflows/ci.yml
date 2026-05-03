@@ -2,9 +2,14 @@ name: CI
 
 on:
   push:
-    branches: ['**']
+    branches: [main]
   pull_request:
-    branches: ['**']
+
+# Cancel superseded runs on the same branch — fine for CI checks. Never set
+# this on deploy-supabase.yml; in-flight migrations must complete.
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
 
 jobs:
   lint-and-typecheck:
