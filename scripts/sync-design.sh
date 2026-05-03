@@ -75,8 +75,8 @@ echo "==> Synced: $count files, $size"
 
 if [[ "$EMIT_META" == "1" ]]; then
   cat > "$DEST/../design.meta" <<META
-sha256: $sha
-bytes: $bytes
-files: $count
+sha256=$sha
+bytes=$bytes
+files=$count
 META
 fi
