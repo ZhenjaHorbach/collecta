@@ -1,6 +1,6 @@
 // Collecta — Home Feed screen
 
-function FeedScreen() {
+function FeedScreen({ onOpenPhoto }) {
   const [reacted, setReacted] = React.useState({});
   const toggleReact = (id, kind) => setReacted(r => ({ ...r, [id + kind]: !r[id + kind] }));
 
@@ -77,14 +77,14 @@ function FeedScreen() {
       {/* Feed cards */}
       <div style={{ display: 'flex', flexDirection: 'column', gap: 16, padding: '0 16px' }}>
         {FEED.map(post => (
-          <FeedCard key={post.id} post={post} reacted={reacted} onReact={toggleReact}/>
+          <FeedCard key={post.id} post={post} reacted={reacted} onReact={toggleReact} onOpen={() => onOpenPhoto && onOpenPhoto(post)}/>
         ))}
       </div>
     </div>
   );
 }
 
-function FeedCard({ post, reacted, onReact }) {
+function FeedCard({ post, reacted, onReact, onOpen }) {
   return (
     <div style={{
       background: THEME.surface, borderRadius: 22,
@@ -110,7 +110,7 @@ function FeedCard({ post, reacted, onReact }) {
       </div>
 
       {/* Photo */}
-      <div style={{ position: 'relative', aspectRatio: '4 / 5' }}>
+      <div onClick={onOpen} style={{ position: 'relative', aspectRatio: '4 / 5', cursor: 'pointer' }}>
         <div style={{
           position: 'absolute', inset: 0,
           background: `url(${post.photo}) center/cover, #222`,

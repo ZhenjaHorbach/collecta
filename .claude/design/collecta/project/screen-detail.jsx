@@ -1,6 +1,6 @@
 // Collecta — Collection detail screen
 
-function CollectionDetailScreen({ collection, onBack }) {
+function CollectionDetailScreen({ collection, onBack, onOpenPhoto }) {
   const c = collection || MY_COLLECTIONS[0];
   const items = c.items || [];
   const placeholders = Math.max(0, c.total - items.length);
@@ -149,11 +149,26 @@ function CollectionDetailScreen({ collection, onBack }) {
           display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 7,
         }}>
           {items.map(it => (
-            <div key={it.id} style={{
-              aspectRatio: '1', borderRadius: 12, position: 'relative',
-              background: `url(${it.photo}) center/cover, #222`,
-              border: `1px solid ${THEME.stroke}`, overflow: 'hidden',
-            }}>
+            <div
+              key={it.id}
+              onClick={() => onOpenPhoto && onOpenPhoto({
+                id: it.id,
+                user: USERS.me,
+                photo: it.photo,
+                collection: c.name,
+                collectionEmoji: c.emoji || '📌',
+                location: it.location || c.location || 'Saved spot',
+                timeAgo: it.timeAgo || '2d',
+                reactions: it.reactions || { heart: 18, fire: 4, sparkle: 2 },
+                caption: it.caption || `Found a ${it.name} for my ${c.name} collection.`,
+                itemLabel: it.name,
+              })}
+              style={{
+                aspectRatio: '1', borderRadius: 12, position: 'relative',
+                background: `url(${it.photo}) center/cover, #222`,
+                border: `1px solid ${THEME.stroke}`, overflow: 'hidden',
+                cursor: 'pointer',
+              }}>
               <div style={{
                 position: 'absolute', inset: 0,
                 background: 'linear-gradient(180deg, rgba(0,0,0,0) 50%, rgba(0,0,0,0.7))',
@@ -220,9 +235,9 @@ function CollectionDetailScreen({ collection, onBack }) {
   );
 }
 
-function IconBtn({ icon }) {
+function IconBtn({ icon, onClick }) {
   return (
-    <button style={{
+    <button onClick={onClick} style={{
       width: 38, height: 38, borderRadius: 12,
       background: 'rgba(10,13,18,0.5)', backdropFilter: 'blur(14px)',
       border: `1px solid rgba(255,255,255,0.08)`, cursor: 'pointer',

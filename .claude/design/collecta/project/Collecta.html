@@ -39,6 +39,8 @@
 <script type="text/babel" src="screen-profile.jsx"></script>
 <script type="text/babel" src="screen-create.jsx"></script>
 <script type="text/babel" src="screen-auth.jsx"></script>
+<script type="text/babel" src="screen-settings.jsx"></script>
+<script type="text/babel" src="screen-photo.jsx"></script>
 
 <script type="text/babel" data-presets="react">
 
@@ -55,6 +57,7 @@ function App() {
   const [screen, setScreen] = React.useState(() => localStorage.getItem('collecta.screen') || 'feed');
   const [prevScreen, setPrevScreen] = React.useState('feed');
   const [detailCollection, setDetailCollection] = React.useState(null);
+  const [detailPost, setDetailPost] = React.useState(null);
   const [cameraOpen, setCameraOpen] = React.useState(false);
   const [toast, setToast] = React.useState(null);
   const [themeId, setThemeId] = React.useState(() => localStorage.getItem('collecta.theme') || 'midnight');
@@ -86,9 +89,20 @@ function App() {
     setScreen('detail');
   };
 
+  const openPhoto = (p) => {
+    setPrevScreen(screen);
+    setDetailPost(p);
+    setScreen('photo');
+  };
+
   const openCreate = () => {
     setPrevScreen(screen);
     setScreen('create');
+  };
+
+  const openSettings = () => {
+    setPrevScreen(screen);
+    setScreen('settings');
   };
 
   const onCreateDone = (data) => {
@@ -98,7 +112,8 @@ function App() {
   };
 
   const back = () => {
-    setDetailCollection(null);
+    if (prevScreen !== 'detail') setDetailCollection(null);
+    setDetailPost(null);
     setScreen(prevScreen);
   };
 
@@ -145,14 +160,16 @@ function App() {
         onDone={() => setAuthStage('done')}
       />;
     }
-  } else if (screen === 'feed') content = <FeedScreen/>;
+  } else if (screen === 'feed') content = <FeedScreen onOpenPhoto={openPhoto}/>;
   else if (screen === 'map') content = <MapScreen/>;
   else if (screen === 'collections') content = <CollectionsScreen onOpenCollection={openCollection} onCreate={openCreate}/>;
-  else if (screen === 'detail') content = <CollectionDetailScreen collection={detailCollection} onBack={back}/>;
-  else if (screen === 'profile') content = <ProfileScreen/>;
+  else if (screen === 'detail') content = <CollectionDetailScreen collection={detailCollection} onBack={back} onOpenPhoto={openPhoto}/>;
+  else if (screen === 'profile') content = <ProfileScreen onOpenSettings={openSettings}/>;
   else if (screen === 'create') content = <CreateCollectionScreen onBack={back} onCreate={onCreateDone}/>;
+  else if (screen === 'settings') content = <SettingsScreen onBack={back} themeId={themeId} onThemeChange={setThemeId} onSignOut={() => { setAuthStage('welcome'); setScreen('feed'); }}/>;
+  else if (screen === 'photo') content = <PhotoDetailScreen post={detailPost} onBack={back}/>;
 
-  const hideTabBar = cameraOpen || screen === 'create' || !isAuthed;
+  const hideTabBar = cameraOpen || screen === 'create' || screen === 'settings' || screen === 'photo' || !isAuthed;
 
   return (
     <div style={{

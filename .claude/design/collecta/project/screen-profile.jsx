@@ -1,6 +1,6 @@
 // Collecta — Profile screen + Map screen
 
-function ProfileScreen() {
+function ProfileScreen({ onOpenSettings }) {
   const me = USERS.me;
   const xpPct = me.xp / me.xpNext;
   const [tab, setTab] = React.useState('collections');
@@ -21,7 +21,7 @@ function ProfileScreen() {
           display: 'flex', gap: 8,
         }}>
           <IconBtn icon="share"/>
-          <IconBtn icon="settings"/>
+          <IconBtn icon="settings" onClick={onOpenSettings}/>
         </div>
       </div>
 
