@@ -52,16 +52,17 @@ Slash commands live in `.claude/commands/`:
 
 `ios/` and `android/` are gitignored — they are regenerated from `app.json` + `app.config.ts` via Expo's Continuous Native Generation. The single source of truth for native config (Info.plist keys, permissions, AndroidManifest entries) is `app.json` → `ios.infoPlist` / `android.permissions` / plugins. `app.config.ts` extends it with values that come from `.env` (e.g. Google Maps API keys), so secrets stay out of git.
 
-### Google Maps keys
+### Google Maps key
 
-`react-native-maps` on Android **requires** a Google Maps API key (iOS uses Apple Maps by default but a key enables Google as fallback). Get keys from Google Cloud Console (enable _Maps SDK for Android_ and _Maps SDK for iOS_) and set them in `.env`:
+`react-native-maps` on Android **requires** a Google Maps API key (iOS uses Apple Maps by default but a key enables Google as fallback). Get one key from Google Cloud Console with **Maps SDK for Android** + **Maps SDK for iOS** enabled, and set in `.env`:
 
 ```
-GOOGLE_MAPS_API_KEY_ANDROID=...
-GOOGLE_MAPS_API_KEY_IOS=...
+GOOGLE_MAPS_API_KEY=AIza...
 ```
 
-Without `GOOGLE_MAPS_API_KEY_ANDROID` the Android app crashes on the Map screen with _"API key not found"_.
+`app.config.ts` passes it to both platforms. For EAS cloud builds also set as an EAS secret (`eas secret:create --name GOOGLE_MAPS_API_KEY --value ...`) — `.env` is not uploaded.
+
+Without the key the Android app crashes on the Map screen with _"API key not found"_.
 
 After pulling changes that touch `app.json` plugins, native config, or new native deps:
 
