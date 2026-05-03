@@ -48,20 +48,27 @@ Slash commands live in `.claude/commands/`:
 - `/deploy-supabase` — deploy migrations + edge functions
 - `/new-screen` — scaffold a new screen folder
 
+## AI cost tracking
+
+Every Anthropic call site must capture `message.usage` (input/output/cache_read/cache_creation tokens) and persist it. Today there's one site — `supabase/functions/validate-find/index.ts` — which writes the four token counts to the `finds` row alongside the validation result. **When adding a new call site, repeat the same pattern.** USD conversion lives in `src/utils/cost-tracker.ts` (pure functions, no DB) — never re-implement pricing inline.
+
+When a second call site lands, refactor: extract `extractUsage(message)` into `supabase/functions/_shared/anthropic-usage.ts`, and if the new call has no natural parent row (i.e. doesn't 1:1 with a `finds`-like entity), introduce an `ai_calls(id, kind, model, *_tokens, metadata)` table instead of bolting columns onto unrelated tables.
+
 ## Native projects (CNG)
 
 `ios/` and `android/` are gitignored — they are regenerated from `app.json` + `app.config.ts` via Expo's Continuous Native Generation. The single source of truth for native config (Info.plist keys, permissions, AndroidManifest entries) is `app.json` → `ios.infoPlist` / `android.permissions` / plugins. `app.config.ts` extends it with values that come from `.env` (e.g. Google Maps API keys), so secrets stay out of git.
 
-### Google Maps keys
+### Google Maps key
 
-`react-native-maps` on Android **requires** a Google Maps API key (iOS uses Apple Maps by default but a key enables Google as fallback). Get keys from Google Cloud Console (enable _Maps SDK for Android_ and _Maps SDK for iOS_) and set them in `.env`:
+`react-native-maps` on Android **requires** a Google Maps API key (iOS uses Apple Maps by default but a key enables Google as fallback). Get one key from Google Cloud Console with **Maps SDK for Android** + **Maps SDK for iOS** enabled, and set in `.env`:
 
 ```
-GOOGLE_MAPS_API_KEY_ANDROID=...
-GOOGLE_MAPS_API_KEY_IOS=...
+GOOGLE_MAPS_API_KEY=AIza...
 ```
 
-Without `GOOGLE_MAPS_API_KEY_ANDROID` the Android app crashes on the Map screen with _"API key not found"_.
+`app.config.ts` passes it to both platforms. For EAS cloud builds also set as an EAS secret (`eas secret:create --name GOOGLE_MAPS_API_KEY --value ...`) — `.env` is not uploaded.
+
+Without the key the Android app crashes on the Map screen with _"API key not found"_.
 
 After pulling changes that touch `app.json` plugins, native config, or new native deps:
 

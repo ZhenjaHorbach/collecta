@@ -24,16 +24,18 @@ const anthropic = new Anthropic({
 
 const MODEL = 'claude-haiku-4-5-20251001';
 
-const VALIDATION_PROMPT = `You are validating a photo for a collection app.
-Collection: {collection_description}
-Claimed item: {item_name}
-
-Decide whether the photo shows the claimed item, well enough that this find belongs in the collection.
+// Static instructions — frozen across all calls so they sit in the cached prefix.
+// Per-find context (collection description, item name) is rendered into the
+// final user turn instead, AFTER the breakpoint, so it stays out of the cache key.
+const SYSTEM_INSTRUCTIONS = `You are validating a photo for a collection app.
 Use the validate_photo tool to respond. Be strict but fair:
 - valid=true only when the claimed item is clearly identifiable.
 - confidence reflects how certain you are (0=guess, 1=certain).
 - detected describes what you actually see in the photo, not what the user claimed.
 - suggestion is short, kind, actionable help for the user (e.g. "get closer", "try better lighting").`;
+
+const USER_CONTEXT_TEMPLATE = `Collection: {collection_description}
+Claimed item: {item_name}`;
 
 const VALIDATE_PHOTO_TOOL = {
   name: 'validate_photo',
@@ -60,6 +62,13 @@ interface ValidationResult {
   confidence: number;
   detected: string;
   suggestion: string;
+}
+
+interface ApiUsage {
+  inputTokens: number;
+  outputTokens: number;
+  cacheReadInputTokens: number;
+  cacheCreationInputTokens: number;
 }
 
 interface FewShotExample {
@@ -109,7 +118,7 @@ function buildFewShotExamples(): FewShotExample[] {
   ];
 }
 
-function fillPrompt(template: string, vars: Record<string, string>): string {
+function fillTemplate(template: string, vars: Record<string, string>): string {
   return template.replace(/\{(\w+)\}/g, (_, key) => vars[key] ?? '');
 }
 
@@ -117,6 +126,11 @@ function imageBlock(url: string): unknown {
   return { type: 'image', source: { type: 'url', url } };
 }
 
+// Builds the messages array. Few-shot turns are static across calls (same
+// fixture URLs, same hardcoded collection/item) so they belong in the cached
+// prefix. We mark the LAST few-shot block with cache_control so tools+system+
+// few-shot are cached together; the final user turn (varying photo + per-find
+// context) stays uncached.
 function buildMessages(
   photoUrl: string,
   collectionDescription: string,
@@ -125,14 +139,15 @@ function buildMessages(
   const examples = buildFewShotExamples();
   const messages: unknown[] = [];
 
-  for (const ex of examples) {
+  examples.forEach((ex, i) => {
+    const isLast = i === examples.length - 1;
     messages.push({
       role: 'user',
       content: [
         imageBlock(ex.imageUrl),
         {
           type: 'text',
-          text: fillPrompt(VALIDATION_PROMPT, {
+          text: fillTemplate(USER_CONTEXT_TEMPLATE, {
             collection_description: ex.collectionDescription,
             item_name: ex.itemName,
           }),
@@ -144,7 +159,7 @@ function buildMessages(
       content: [
         {
           type: 'tool_use',
-          id: `example_${examples.indexOf(ex)}`,
+          id: `example_${i}`,
           name: VALIDATE_PHOTO_TOOL.name,
           input: ex.expected,
         },
@@ -155,12 +170,13 @@ function buildMessages(
       content: [
         {
           type: 'tool_result',
-          tool_use_id: `example_${examples.indexOf(ex)}`,
+          tool_use_id: `example_${i}`,
           content: 'ok',
+          ...(isLast ? { cache_control: { type: 'ephemeral' } } : {}),
         },
       ],
     });
-  }
+  });
 
   messages.push({
     role: 'user',
@@ -168,7 +184,7 @@ function buildMessages(
       imageBlock(photoUrl),
       {
         type: 'text',
-        text: fillPrompt(VALIDATION_PROMPT, {
+        text: fillTemplate(USER_CONTEXT_TEMPLATE, {
           collection_description: collectionDescription,
           item_name: itemName,
         }),
@@ -202,19 +218,39 @@ function parseToolUse(content: unknown): ValidationResult {
   };
 }
 
+interface ValidationCall {
+  result: ValidationResult;
+  usage: ApiUsage;
+}
+
 export async function validateWithClaude(
   photoUrl: string,
   collectionDescription: string,
   itemName: string
-): Promise<ValidationResult> {
+): Promise<ValidationCall> {
   const message = await anthropic.messages.create({
     model: MODEL,
     max_tokens: 1024,
     tools: [VALIDATE_PHOTO_TOOL],
     tool_choice: { type: 'tool', name: VALIDATE_PHOTO_TOOL.name },
+    system: [
+      {
+        type: 'text',
+        text: SYSTEM_INSTRUCTIONS,
+        cache_control: { type: 'ephemeral' },
+      },
+    ],
     messages: buildMessages(photoUrl, collectionDescription, itemName),
   });
-  return parseToolUse(message.content);
+  const result = parseToolUse(message.content);
+  const u = message.usage ?? {};
+  const usage: ApiUsage = {
+    inputTokens: u.input_tokens ?? 0,
+    outputTokens: u.output_tokens ?? 0,
+    cacheReadInputTokens: u.cache_read_input_tokens ?? 0,
+    cacheCreationInputTokens: u.cache_creation_input_tokens ?? 0,
+  };
+  return { result, usage };
 }
 
 interface RequestBody {
@@ -283,11 +319,28 @@ Deno.serve(async (req: Request) => {
   }
 
   let result: ValidationResult | null = null;
+  let usage: ApiUsage | null = null;
   let visionError: string | null = null;
   try {
-    result = await validateWithClaude(find.photo_url, collectionDescription, itemName);
+    const call = await validateWithClaude(find.photo_url, collectionDescription, itemName);
+    result = call.result;
+    usage = call.usage;
   } catch (err) {
     visionError = err instanceof Error ? err.message : String(err);
+  }
+
+  if (usage) {
+    const cacheHitRate =
+      usage.cacheReadInputTokens + usage.cacheCreationInputTokens > 0
+        ? usage.cacheReadInputTokens /
+          (usage.cacheReadInputTokens + usage.cacheCreationInputTokens + usage.inputTokens)
+        : 0;
+    console.log(
+      `[validate-find] usage find=${find_id} model=${MODEL} ` +
+        `input=${usage.inputTokens} output=${usage.outputTokens} ` +
+        `cache_read=${usage.cacheReadInputTokens} cache_write=${usage.cacheCreationInputTokens} ` +
+        `cache_hit_rate=${cacheHitRate.toFixed(2)}`
+    );
   }
 
   // Advisory mode: never block the find. On Vision failure, leave ai_validated null
@@ -298,6 +351,11 @@ Deno.serve(async (req: Request) => {
       ai_validated: result?.valid ?? null,
       ai_confidence: result?.confidence ?? null,
       ai_notes: result ? `${result.detected} — ${result.suggestion}` : visionError,
+      ai_model: usage ? MODEL : null,
+      ai_input_tokens: usage?.inputTokens ?? null,
+      ai_output_tokens: usage?.outputTokens ?? null,
+      ai_cache_read_tokens: usage?.cacheReadInputTokens ?? null,
+      ai_cache_creation_tokens: usage?.cacheCreationInputTokens ?? null,
     })
     .eq('id', find_id)
     .throwOnError();
