@@ -127,6 +127,38 @@ export async function createCollection(input: CreateCollectionInput): Promise<Co
   return CollectionSchema.parse(data);
 }
 
+// Single-item append for the camera "create on the fly" flow. Picks the next
+// sort_order so it lands at the bottom of the existing list without a manual
+// numbering step on the client. Anyone authenticated who owns or has joined
+// the collection can call this — RLS in 011_user_added_items.sql enforces it.
+export async function addCollectionItem(
+  collectionId: string,
+  input: CreateItemInput
+): Promise<CollectionItem> {
+  const { data: maxRow, error: maxErr } = await supabase
+    .from('collection_items')
+    .select('sort_order')
+    .eq('collection_id', collectionId)
+    .order('sort_order', { ascending: false })
+    .limit(1)
+    .maybeSingle();
+  if (maxErr) throw maxErr;
+  const nextOrder = (maxRow?.sort_order ?? -1) + 1;
+  const row: TablesInsert<'collection_items'> = {
+    ...input,
+    collection_id: collectionId,
+    sort_order: nextOrder,
+  };
+  const { data, error } = await supabase
+    .from('collection_items')
+    .insert(row)
+    .select('*')
+    .single()
+    .throwOnError();
+  if (error) throw error;
+  return CollectionItemSchema.parse(data);
+}
+
 export async function addCollectionItems(
   collectionId: string,
   items: CreateItemInput[]
@@ -144,6 +176,27 @@ export async function addCollectionItems(
     .throwOnError();
   if (error) throw error;
   return CollectionItemListSchema.parse(data ?? []);
+}
+
+export interface CollectionItemContext {
+  collection: Collection;
+  item: CollectionItem;
+}
+
+// Reverse of getCollection: takes an item id and returns it together with its
+// parent collection. Used by CaptureResultSheet (verify mode) so the chips can
+// render without two round-trips from the camera screen.
+export async function getCollectionItemContext(itemId: string): Promise<CollectionItemContext> {
+  const { data, error } = await supabase
+    .from('collection_items')
+    .select('*, collection:collections(*)')
+    .eq('id', itemId)
+    .single();
+  if (error) throw error;
+  if (!data || !data.collection) throw new Error('collection_item_not_found');
+  const item = CollectionItemSchema.parse({ ...data, collection: undefined });
+  const collection = CollectionSchema.parse(data.collection);
+  return { collection, item };
 }
 
 export async function getCollection(id: string, userId: string): Promise<CollectionDetail> {

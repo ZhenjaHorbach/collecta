@@ -166,6 +166,41 @@ const stability: EvalCase = {
   },
 };
 
+// Verify mode (PR1) covers the existing single-item path. The eval client
+// hits Anthropic directly, so this case asserts the prompt still copes when
+// the claimed item is more specific than the collection description — the
+// shape of verdict the new server-side `mode='verify'` echoes back to the
+// client must remain a clean valid/invalid call, not a hedge.
+//
+// TODO(pr3-eval): the match-in-collection / discover modes (PR3) live only
+// in the edge function — match_item / pick_collection tools, plus dynamic
+// per-user catalog payloads. Adding cases for them here would either
+// duplicate that logic in the eval client (drift risk) or require running
+// the eval against a live `validate-find` deploy with a service-role token.
+// Defer until we either spin up an HTTP-mode in run.ts or accept a small
+// always-on fixture project for evals.
+const verifySpecificItem: EvalCase = {
+  name: 'verify_specific_item_tabby',
+  async run(ctx): Promise<EvalCaseResult> {
+    const r = await safeRun(ctx, {
+      photo: ctx.fixtureUrl('cat.jpg'),
+      collection: COLLECTION_CATS,
+      item: 'Tabby Cat',
+    });
+    const passed = r.parsed && typeof r.result?.valid === 'boolean';
+    return {
+      name: this.name,
+      passed,
+      durationMs: r.durationMs,
+      parsed: r.parsed,
+      result: r.result,
+      reason: passed
+        ? undefined
+        : 'expected verify mode to return a parseable verdict for a specific item claim',
+    };
+  },
+};
+
 const edgeCase: EvalCase = {
   name: 'edge_case_sky',
   async run(ctx): Promise<EvalCaseResult> {
@@ -231,5 +266,6 @@ export const aiValidationCases: EvalCase[] = [
   crossCollection,
   stability,
   edgeCase,
+  verifySpecificItem,
   latency,
 ];
