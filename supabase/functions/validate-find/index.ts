@@ -1,9 +1,19 @@
 // Edge Function: validate-find
-// Called after a find is created. Fetches the photo, sends it to Claude Vision
-// with a forced tool_use schema, and writes the result back to finds.
+// Validates a photo against a collection item via Claude Vision and returns
+// the structured verdict. **Does not** write to the finds table — the client
+// creates the find row only after the user confirms Save, with the validation
+// result baked in. This prevents orphan rows when the user retakes or
+// discards.
 //
 // Invoke: POST /functions/v1/validate-find
-// Body: { find_id: string }
+// Body:   { photo_url: string, collection_item_id: string }
+// Reply:  200 { result: ValidationResult, model: string, usage: ApiUsage }
+//         404 { error: 'collection_item_not_found' }
+//         422 { error: 'missing_collection_description_or_item_name' }
+//         502 { error: 'vision_failed', detail: string }
+//
+// Token usage is returned alongside the result so the client can persist it
+// on the finds row at commit time (see CLAUDE.md → AI cost tracking).
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 declare const Deno: any;
@@ -254,7 +264,8 @@ export async function validateWithClaude(
 }
 
 interface RequestBody {
-  find_id: string;
+  photo_url: string;
+  collection_item_id: string;
 }
 
 Deno.serve(async (req: Request) => {
@@ -266,108 +277,80 @@ Deno.serve(async (req: Request) => {
   try {
     body = await req.json();
   } catch {
-    return new Response(JSON.stringify({ error: 'Invalid JSON' }), {
+    return new Response(JSON.stringify({ error: 'invalid_json' }), {
       status: 400,
       headers: { 'Content-Type': 'application/json' },
     });
   }
 
-  const { find_id } = body;
-  if (!find_id) {
-    return new Response(JSON.stringify({ error: 'find_id is required' }), {
+  const { photo_url, collection_item_id } = body;
+  if (!photo_url || !collection_item_id) {
+    return new Response(JSON.stringify({ error: 'photo_url_and_collection_item_id_required' }), {
       status: 400,
       headers: { 'Content-Type': 'application/json' },
     });
   }
 
-  const { data: find, error: findError } = await supabase
-    .from('finds')
+  // Fetch only the metadata needed to render the prompt — the find row
+  // doesn't exist yet, so we look up the collection_item directly.
+  const { data: item, error: itemError } = await supabase
+    .from('collection_items')
     .select(
       `
-      id,
-      photo_url,
-      collection_items (
-        name,
-        description,
-        ai_validation_prompt,
-        collections ( description )
-      )
+      name,
+      description,
+      ai_validation_prompt,
+      collections ( description )
     `
     )
-    .eq('id', find_id)
+    .eq('id', collection_item_id)
     .single();
 
-  if (findError || !find) {
-    return new Response(JSON.stringify({ error: 'Find not found' }), {
+  if (itemError || !item) {
+    return new Response(JSON.stringify({ error: 'collection_item_not_found' }), {
       status: 404,
       headers: { 'Content-Type': 'application/json' },
     });
   }
 
-  const item = find.collection_items;
-  const itemName = item?.name as string | undefined;
+  const itemName = item.name as string | undefined;
   const collectionDescription =
-    (item?.collections?.description as string | undefined) ??
-    (item?.description as string | undefined) ??
-    (item?.ai_validation_prompt as string | undefined);
+    (item.collections?.description as string | undefined) ??
+    (item.description as string | undefined) ??
+    (item.ai_validation_prompt as string | undefined);
 
   if (!itemName || !collectionDescription) {
-    return new Response(JSON.stringify({ error: 'Missing collection description or item name' }), {
+    return new Response(JSON.stringify({ error: 'missing_collection_description_or_item_name' }), {
       status: 422,
       headers: { 'Content-Type': 'application/json' },
     });
   }
 
-  let result: ValidationResult | null = null;
-  let usage: ApiUsage | null = null;
-  let visionError: string | null = null;
+  let call: ValidationCall;
   try {
-    const call = await validateWithClaude(find.photo_url, collectionDescription, itemName);
-    result = call.result;
-    usage = call.usage;
+    call = await validateWithClaude(photo_url, collectionDescription, itemName);
   } catch (err) {
-    visionError = err instanceof Error ? err.message : String(err);
-  }
-
-  if (usage) {
-    const cacheHitRate =
-      usage.cacheReadInputTokens + usage.cacheCreationInputTokens > 0
-        ? usage.cacheReadInputTokens /
-          (usage.cacheReadInputTokens + usage.cacheCreationInputTokens + usage.inputTokens)
-        : 0;
-    console.log(
-      `[validate-find] usage find=${find_id} model=${MODEL} ` +
-        `input=${usage.inputTokens} output=${usage.outputTokens} ` +
-        `cache_read=${usage.cacheReadInputTokens} cache_write=${usage.cacheCreationInputTokens} ` +
-        `cache_hit_rate=${cacheHitRate.toFixed(2)}`
-    );
-  }
-
-  // Advisory mode: never block the find. On Vision failure, leave ai_validated null
-  // so the UI can show "couldn't verify, kept anyway".
-  await supabase
-    .from('finds')
-    .update({
-      ai_validated: result?.valid ?? null,
-      ai_confidence: result?.confidence ?? null,
-      ai_notes: result ? `${result.detected} — ${result.suggestion}` : visionError,
-      ai_model: usage ? MODEL : null,
-      ai_input_tokens: usage?.inputTokens ?? null,
-      ai_output_tokens: usage?.outputTokens ?? null,
-      ai_cache_read_tokens: usage?.cacheReadInputTokens ?? null,
-      ai_cache_creation_tokens: usage?.cacheCreationInputTokens ?? null,
-    })
-    .eq('id', find_id)
-    .throwOnError();
-
-  if (!result) {
-    return new Response(JSON.stringify({ error: 'vision_failed', detail: visionError }), {
+    const detail = err instanceof Error ? err.message : String(err);
+    return new Response(JSON.stringify({ error: 'vision_failed', detail }), {
       status: 502,
       headers: { 'Content-Type': 'application/json' },
     });
   }
 
-  return new Response(JSON.stringify(result), {
+  const { result, usage } = call;
+  const cacheHitRate =
+    usage.cacheReadInputTokens + usage.cacheCreationInputTokens > 0
+      ? usage.cacheReadInputTokens /
+        (usage.cacheReadInputTokens + usage.cacheCreationInputTokens + usage.inputTokens)
+      : 0;
+  console.log(
+    `[validate-find] usage item=${collection_item_id} model=${MODEL} ` +
+      `input=${usage.inputTokens} output=${usage.outputTokens} ` +
+      `cache_read=${usage.cacheReadInputTokens} cache_write=${usage.cacheCreationInputTokens} ` +
+      `cache_hit_rate=${cacheHitRate.toFixed(2)}`
+  );
+
+  return new Response(JSON.stringify({ result, model: MODEL, usage }), {
     status: 200,
     headers: { 'Content-Type': 'application/json' },
   });

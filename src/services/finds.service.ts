@@ -11,6 +11,17 @@ export interface CreateFindInput {
   locationLat?: number | null;
   locationLng?: number | null;
   notes?: string | null;
+  // Optional AI fields baked in at create time. Set when the user commits a
+  // find that has already been validated by the edge function; left null when
+  // the find predates validation (e.g. a future offline path).
+  aiValidated?: boolean | null;
+  aiConfidence?: number | null;
+  aiNotes?: string | null;
+  aiModel?: string | null;
+  aiInputTokens?: number | null;
+  aiOutputTokens?: number | null;
+  aiCacheReadTokens?: number | null;
+  aiCacheCreationTokens?: number | null;
 }
 
 export async function createFind(input: CreateFindInput): Promise<Find> {
@@ -23,6 +34,14 @@ export async function createFind(input: CreateFindInput): Promise<Find> {
       location_lat: input.locationLat ?? null,
       location_lng: input.locationLng ?? null,
       notes: input.notes ?? null,
+      ai_validated: input.aiValidated ?? null,
+      ai_confidence: input.aiConfidence ?? null,
+      ai_notes: input.aiNotes ?? null,
+      ai_model: input.aiModel ?? null,
+      ai_input_tokens: input.aiInputTokens ?? null,
+      ai_output_tokens: input.aiOutputTokens ?? null,
+      ai_cache_read_tokens: input.aiCacheReadTokens ?? null,
+      ai_cache_creation_tokens: input.aiCacheCreationTokens ?? null,
     })
     .select()
     .single();

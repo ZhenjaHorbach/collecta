@@ -4,7 +4,8 @@
     "loading": "Loading…",
     "unknownError": "Unknown error",
     "goBack": "Go back",
-    "close": "Close"
+    "close": "Close",
+    "error": "Something went wrong"
   },
   "languages": {
     "en": "English",
@@ -93,6 +94,7 @@
     "validating": "Checking your photo…",
     "pickItem": "What did you find?",
     "errorCapture": "Couldn't capture the photo. Try again.",
+    "errorSave": "Couldn't save your find. Check your connection and try again.",
     "chooseItem": "Where does this photo go?",
     "noCollections": "Create a collection first to save your finds.",
     "pickFromLibrary": "Choose from gallery",
