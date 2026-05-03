@@ -34,6 +34,8 @@ import { createClient } from 'npm:@supabase/supabase-js@2';
 import Anthropic from 'npm:@anthropic-ai/sdk@0.32.1';
 
 // @ts-ignore — Deno requires .ts extension on relative imports
+import { authorizeRequest } from '../_shared/auth.ts';
+// @ts-ignore — Deno requires .ts extension on relative imports
 // prettier-ignore
 import { levelForXp, todayUtcIso, updateStreak, XP_PER_EVENT, type XpEvent } from '../_shared/leveling.ts';
 
@@ -550,14 +552,9 @@ Deno.serve(async (req: Request) => {
 
   // Authorize the caller — without this any logged-in user could POST
   // { user_id: <victim>, event: 'find' } and grant another account XP and
-  // achievements. supabase.functions.invoke forwards the client's JWT in
-  // Authorization, so we decode it and assert sub === body.user_id.
-  const authHeader = req.headers.get('Authorization');
-  const token = authHeader?.replace(/^Bearer\s+/i, '') ?? null;
-  if (!token) return jsonError(401, 'unauthorized');
-  const { data: authData, error: authErr } = await supabase.auth.getUser(token);
-  if (authErr || !authData?.user) return jsonError(401, 'unauthorized');
-  if (authData.user.id !== userId) return jsonError(403, 'forbidden');
+  // achievements. See .claude/rules/supabase.md → "Edge function caller auth".
+  const auth = await authorizeRequest(req, userId);
+  if (!auth.ok) return jsonError(auth.status, auth.error);
 
   let result: AgentResult;
   try {
