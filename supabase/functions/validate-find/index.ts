@@ -656,7 +656,30 @@ Decision rules — read carefully:
   return { result, usage: readUsage(message.usage) };
 }
 
+// Membership check used by match-in-collection: discover already routes
+// through listJoinedCollections so the user can only see collections they
+// own or joined. Without this gate, any authenticated caller could feed an
+// arbitrary collection_id and read its item names back via candidate_items.
+async function userCanAccessCollection(userId: string, collectionId: string): Promise<boolean> {
+  const ownerRes = await supabase
+    .from('collections')
+    .select('id')
+    .eq('id', collectionId)
+    .eq('creator_id', userId)
+    .maybeSingle();
+  if (ownerRes.data) return true;
+
+  const memberRes = await supabase
+    .from('user_collections')
+    .select('collection_id')
+    .eq('user_id', userId)
+    .eq('collection_id', collectionId)
+    .maybeSingle();
+  return !!memberRes.data;
+}
+
 async function handleMatchInCollection(
+  userId: string,
   body: RequestBody
 ): Promise<{ ok: true; data: SuccessResponse } | { ok: false; status: number; error: unknown }> {
   const collectionId = body.collection_id;
@@ -666,6 +689,10 @@ async function handleMatchInCollection(
       status: 400,
       error: { error: 'collection_id_required_for_match_in_collection' },
     };
+  }
+
+  if (!(await userCanAccessCollection(userId, collectionId))) {
+    return { ok: false, status: 403, error: { error: 'forbidden' } };
   }
 
   const collectionRes = await supabase
@@ -982,7 +1009,7 @@ Deno.serve(async (req: Request) => {
   }
 
   if (mode === 'match-in-collection') {
-    const out = await handleMatchInCollection(body);
+    const out = await handleMatchInCollection(auth.userId, body);
     return out.ok ? jsonResponse(200, out.data) : jsonResponse(out.status, out.error);
   }
 

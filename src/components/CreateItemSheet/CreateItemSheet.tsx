@@ -88,7 +88,10 @@ export function CreateItemSheet({
               </Text>
               <TextInput
                 value={name}
-                onChangeText={setName}
+                onChangeText={(next) => {
+                  setName(next);
+                  if (error) setError(null);
+                }}
                 placeholder={t('validation.createItem.namePlaceholder')}
                 placeholderTextColor={colors.textMuted}
                 maxLength={200}

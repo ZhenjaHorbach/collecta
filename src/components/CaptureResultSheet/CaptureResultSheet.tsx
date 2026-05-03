@@ -5,6 +5,7 @@ import { SafeAreaView as RNSafeAreaView } from 'react-native-safe-area-context';
 
 import { GoBackButton } from '@components/GoBackButton';
 import { useColors } from '@hooks/useColors';
+import { XP_PER_FIND } from '@utils/streak.utils';
 
 import type { ValidationResult } from '@schemas';
 
@@ -47,8 +48,6 @@ export interface CaptureResultSheetProps {
   onPickManually?: () => void;
   onCreateItem?: () => void;
 }
-
-const FIND_XP_REWARD = 10;
 
 // Verdict tone derived once from status + valid: gold for a confident match,
 // coral for a clear mismatch, dim for "we couldn't tell". Save-CTA wording
@@ -138,7 +137,7 @@ function VerifyBranch(props: CaptureResultSheetProps): React.ReactElement {
 
         <NoteInput value={props.note} onChange={props.onNoteChange} />
 
-        <XpPreview xp={FIND_XP_REWARD} />
+        <XpPreview xp={XP_PER_FIND} />
 
         {props.result?.suggestion ? (
           <Text className="text-text-dim text-xs">{props.result.suggestion}</Text>

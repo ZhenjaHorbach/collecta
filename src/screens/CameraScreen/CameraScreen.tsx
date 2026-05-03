@@ -266,7 +266,7 @@ export function CameraScreen() {
       const ImagePicker = await import('expo-image-picker');
       const perm = await ImagePicker.requestMediaLibraryPermissionsAsync();
       if (!perm.granted) {
-        console.warn('[onPickFromLibrary] permission denied');
+        Alert.alert(t('camera.permissionTitle'), t('camera.libraryPermissionDenied'));
         return;
       }
       const result = await ImagePicker.launchImageLibraryAsync({
@@ -286,7 +286,7 @@ export function CameraScreen() {
     } catch (e) {
       console.warn('[onPickFromLibrary] failed', e);
     }
-  }, [captureWithMode]);
+  }, [captureWithMode, t]);
 
   const onRetake = useCallback((): void => discard(), [discard]);
 
@@ -318,12 +318,15 @@ export function CameraScreen() {
   // manual override + resolvedContext so the new validation's matched item
   // is allowed to auto-fill.
   const onPickCandidateCollection = useCallback(
-    (collectionId: string): void => {
+    async (collectionId: string): Promise<void> => {
       const raw = rawPhotoUri;
       if (!raw || !user) return;
       setManualOverride(false);
       setResolvedContext(null);
-      void capture.discard();
+      // Await discard so its terminal setState(INITIAL) lands before the next
+      // capture starts mutating state. Fire-and-forget here was correct only
+      // by accident of React batching — fragile under future refactors.
+      await capture.discard();
       void capture.capture({
         rawPhotoUri: raw,
         userId: user.id,
@@ -468,6 +471,8 @@ export function CameraScreen() {
         {sheet}
         <ManualPickModal
           visible={manualPickVisible}
+          collections={allCollections}
+          loading={collectionsLoading}
           onClose={() => setManualPickVisible(false)}
           onPick={(itemId) => {
             setManualPickVisible(false);
@@ -500,7 +505,7 @@ export function CameraScreen() {
         <GoBackButton icon="close" onPress={onClose} />
         <View className="flex-1 items-center justify-center gap-4 p-6">
           <Text className="text-text text-base text-center">{t('camera.errorCapture')}</Text>
-          {capture.error ? (
+          {__DEV__ && capture.error ? (
             <Text className="text-coral text-xs text-center" selectable>
               {capture.error}
             </Text>
@@ -578,11 +583,13 @@ export function CameraScreen() {
 // can overlay the result sheet without unmounting it.
 interface ManualPickModalProps {
   visible: boolean;
+  collections: CollectionWithProgress[];
+  loading: boolean;
   onClose: () => void;
   onPick: (itemId: string) => void;
 }
 
-function ManualPickModal({ visible, onClose, onPick }: ManualPickModalProps) {
+function ManualPickModal({ visible, collections, loading, onClose, onPick }: ManualPickModalProps) {
   // Backdrop is a separate absolute-fill Pressable so the content View has no
   // Pressable ancestor — nested Pressable around a FlatList swallows the
   // child press responders and the rows stop being tappable. Plain View on
@@ -597,7 +604,12 @@ function ManualPickModal({ visible, onClose, onPick }: ManualPickModalProps) {
           className="absolute top-0 left-0 right-0 bottom-0 bg-overlay"
         />
         <View className="bg-bg rounded-t-xl" style={{ maxHeight: '80%' }}>
-          <ItemPickerSheet onPick={onPick} onClose={onClose} />
+          <ItemPickerSheet
+            collections={collections}
+            loading={loading}
+            onPick={onPick}
+            onClose={onClose}
+          />
         </View>
       </View>
     </Modal>
@@ -605,44 +617,16 @@ function ManualPickModal({ visible, onClose, onPick }: ManualPickModalProps) {
 }
 
 interface ItemPickerSheetProps {
+  collections: CollectionWithProgress[];
+  loading: boolean;
   onPick: (itemId: string) => void;
   onClose: () => void;
 }
 
-function ItemPickerSheet({ onPick, onClose }: ItemPickerSheetProps) {
+function ItemPickerSheet({ collections, loading, onPick, onClose }: ItemPickerSheetProps) {
   const { t } = useTranslation();
   const { user } = useAuth();
-  const [collections, setCollections] = useState<CollectionWithProgress[]>([]);
-  const [loading, setLoading] = useState(true);
   const [expandedId, setExpandedId] = useState<string | null>(null);
-
-  useEffect(() => {
-    if (!user) return;
-    let cancelled = false;
-    void (async () => {
-      try {
-        const [mine, pickedUp] = await Promise.all([
-          listMyCollections(user.id),
-          listPickedUpCollections(user.id),
-        ]);
-        if (!cancelled) {
-          const merged = [...mine, ...pickedUp];
-          const seen = new Set<string>();
-          const unique = merged.filter((c) => {
-            if (seen.has(c.id)) return false;
-            seen.add(c.id);
-            return true;
-          });
-          setCollections(unique);
-        }
-      } finally {
-        if (!cancelled) setLoading(false);
-      }
-    })();
-    return () => {
-      cancelled = true;
-    };
-  }, [user]);
 
   return (
     <View className="bg-surface rounded-t-xl p-4 gap-3" style={{ maxHeight: 420 }}>

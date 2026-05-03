@@ -13,7 +13,7 @@ All color tokens are **semantic** and auto-adapt per theme. Writing the same cla
 
 **Text** `text-text`, `text-text-dim` (secondary), `text-text-muted` (placeholder)
 
-**Gold accent** `bg-gold`, `bg-gold-hi`, `bg-gold-lo`, `text-on-gold` — CTAs, progress, achievements
+**Gold accent** `bg-gold`, `bg-gold-hi`, `bg-gold-lo`, `bg-gold-glow` (low-alpha tint for badge/preview backgrounds), `text-on-gold` — CTAs, progress, achievements
 
 **Semantic** `coral` (errors), `mint` (success), `sky` (info / links)
 
