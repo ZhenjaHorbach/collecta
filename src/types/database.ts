@@ -113,8 +113,13 @@ export type Database = {
       };
       finds: {
         Row: {
+          ai_cache_creation_tokens: number | null;
+          ai_cache_read_tokens: number | null;
           ai_confidence: number | null;
+          ai_input_tokens: number | null;
+          ai_model: string | null;
           ai_notes: string | null;
+          ai_output_tokens: number | null;
           ai_validated: boolean | null;
           collection_item_id: string;
           created_at: string;
@@ -126,8 +131,13 @@ export type Database = {
           user_id: string;
         };
         Insert: {
+          ai_cache_creation_tokens?: number | null;
+          ai_cache_read_tokens?: number | null;
           ai_confidence?: number | null;
+          ai_input_tokens?: number | null;
+          ai_model?: string | null;
           ai_notes?: string | null;
+          ai_output_tokens?: number | null;
           ai_validated?: boolean | null;
           collection_item_id: string;
           created_at?: string;
@@ -139,8 +149,13 @@ export type Database = {
           user_id: string;
         };
         Update: {
+          ai_cache_creation_tokens?: number | null;
+          ai_cache_read_tokens?: number | null;
           ai_confidence?: number | null;
+          ai_input_tokens?: number | null;
+          ai_model?: string | null;
           ai_notes?: string | null;
+          ai_output_tokens?: number | null;
           ai_validated?: boolean | null;
           collection_item_id?: string;
           created_at?: string;

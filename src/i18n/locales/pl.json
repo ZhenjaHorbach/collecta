@@ -4,7 +4,8 @@
     "loading": "Ładowanie…",
     "unknownError": "Nieznany błąd",
     "goBack": "Wstecz",
-    "close": "Zamknij"
+    "close": "Zamknij",
+    "error": "Coś poszło nie tak"
   },
   "languages": {
     "en": "English",
@@ -99,6 +100,7 @@
     "validating": "Sprawdzamy zdjęcie…",
     "pickItem": "Co znalazłeś?",
     "errorCapture": "Nie udało się zrobić zdjęcia. Spróbuj ponownie.",
+    "errorSave": "Nie udało się zapisać znaleziska. Sprawdź połączenie i spróbuj ponownie.",
     "chooseItem": "Gdzie dodać to zdjęcie?",
     "noCollections": "Najpierw utwórz kolekcję, aby zapisywać znaleziska.",
     "pickFromLibrary": "Wybierz z galerii",

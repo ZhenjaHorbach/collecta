@@ -5,6 +5,7 @@ import { router, useFocusEffect, useLocalSearchParams } from 'expo-router';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import {
+  Alert,
   FlatList,
   Pressable,
   ScrollView,
@@ -34,7 +35,6 @@ import { extractGpsFromExif } from '@utils/exif.utils';
 const STAGE_TO_LABEL_KEY: Partial<Record<CaptureStage, string>> = {
   compressing: 'camera.compressing',
   uploading: 'camera.uploading',
-  creating: 'camera.uploading',
   validating: 'camera.validating',
 };
 
@@ -85,23 +85,30 @@ export function CameraScreen() {
     };
   }, [cameraReady]);
 
-  const reset = useCallback((): void => {
+  const clearLocal = useCallback((): void => {
     setPhotoUri(null);
     setRawPhotoUri(null);
     setPendingLocation(null);
     setChosenItemId(initialItemId);
-    capture.reset();
-  }, [initialItemId, capture]);
+  }, [initialItemId]);
 
-  const resetRef = useRef(reset);
+  // Discards: throws away the in-flight photo (storage + local state). Used
+  // for Retake and screen-blur cleanup. Safe to call at any stage — no-op when
+  // nothing is pending. discard() is async/best-effort; we don't await here.
+  const discard = useCallback((): void => {
+    clearLocal();
+    void capture.discard();
+  }, [clearLocal, capture]);
+
+  const discardRef = useRef(discard);
   useEffect(() => {
-    resetRef.current = reset;
-  }, [reset]);
+    discardRef.current = discard;
+  }, [discard]);
 
   useFocusEffect(
     useCallback(() => {
       return () => {
-        resetRef.current();
+        discardRef.current();
       };
     }, [])
   );
@@ -125,9 +132,9 @@ export function CameraScreen() {
   }, [cameraSettled, deviceLocation]);
 
   const onClose = useCallback((): void => {
-    reset();
+    discard();
     router.back();
-  }, [reset]);
+  }, [discard]);
 
   const onPickFromLibrary = useCallback(async (): Promise<void> => {
     try {
@@ -182,13 +189,22 @@ export function CameraScreen() {
     });
   }, [rawPhotoUri, photoUri, user, chosenItemId, capture, pendingLocation]);
 
-  const onRetake = useCallback((): void => {
-    setPhotoUri(null);
-    setRawPhotoUri(null);
-    setPendingLocation(null);
-    setChosenItemId(initialItemId);
-    capture.reset();
-  }, [initialItemId, capture]);
+  const onRetake = useCallback((): void => discard(), [discard]);
+
+  // Save: commit the validated photo to a finds row and pop the screen.
+  // commit() throws on DB failure — we surface as Alert and stay on the
+  // result screen so the user can retry without re-validating.
+  const onSave = useCallback(async (): Promise<void> => {
+    if (!user) return;
+    try {
+      await capture.commit({ userId: user.id });
+      clearLocal();
+      router.back();
+    } catch (e) {
+      console.warn('[onSave] commit failed', e);
+      Alert.alert(t('common.error'), t('camera.errorSave'));
+    }
+  }, [user, capture, clearLocal, t]);
 
   if (!permission) return <Spinner />;
 
@@ -229,8 +245,7 @@ export function CameraScreen() {
             status={capture.validationStatus ?? 'vision_failed'}
             result={capture.validation}
             onSave={() => {
-              reset();
-              router.back();
+              void onSave();
             }}
             onRetake={onRetake}
           />
