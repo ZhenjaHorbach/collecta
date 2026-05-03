@@ -10,7 +10,10 @@
     "newArchEnabled": true,
     "ios": {
       "supportsTablet": true,
-      "bundleIdentifier": "com.horbachevgen.collecta"
+      "bundleIdentifier": "com.horbachevgen.collecta",
+      "infoPlist": {
+        "NSLocationWhenInUseUsageDescription": "Collecta uses your location to show nearby finds on the map."
+      }
     },
     "android": {
       "adaptiveIcon": {
@@ -44,6 +47,12 @@
           "dark": {
             "backgroundColor": "#000000"
           }
+        }
+      ],
+      [
+        "expo-location",
+        {
+          "locationWhenInUsePermission": "Collecta uses your location to show nearby finds on the map."
         }
       ],
       "@journeyapps/react-native-quick-sqlite",

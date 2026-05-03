@@ -66,7 +66,19 @@
     "comingSoon": "Home feed coming soon"
   },
   "map": {
-    "comingSoon": "Map coming soon"
+    "comingSoon": "Map coming soon",
+    "searchPlaceholder": "Search finds near you…",
+    "filterAll": "All",
+    "nearYou": "Near you",
+    "noNearby": "No finds nearby yet",
+    "permissionDenied": "Enable location to see finds near you",
+    "minutesAgo_one": "{{count}} min ago",
+    "minutesAgo_other": "{{count}} min ago",
+    "hoursAgo_one": "{{count}} hr ago",
+    "hoursAgo_other": "{{count}} hrs ago",
+    "daysAgo_one": "{{count}} day ago",
+    "daysAgo_other": "{{count}} days ago",
+    "justNow": "just now"
   },
   "camera": {
     "comingSoon": "Camera coming soon",
@@ -98,41 +110,6 @@
   },
   "collections": {
     "title": "Collections",
-    "create": "Create",
-    "newCollection": "New collection",
-    "detailTitle": "Collection",
-    "tabs": {
-      "mine": "Mine",
-      "pickedUp": "Picked up"
-    },
-    "empty": {
-      "mine": "No collections yet. Create your first one.",
-      "pickedUp": "Nothing picked up yet."
-    },
-    "progress": "{{found}} / {{total}}",
-    "share": "Share",
-    "loadError": "Couldn't load collections",
-    "freeform": "Freeform",
-    "rarity": {
-      "common": "Common",
-      "uncommon": "Uncommon",
-      "rare": "Rare"
-    },
-    "items": {
-      "header": "What to find"
-    },
-    "detail": {
-      "creatorHints": {
-        "title": "AI hints",
-        "badge": "Only you",
-        "subtitle": "Visible to you as the creator. Tap an item to review what Claude suggested for validation.",
-        "fields": {
-          "description": "Description",
-          "aiHint": "AI validation hint",
-          "funFact": "Fun fact"
-        }
-      }
-    },
     "create": {
       "headerSubtitle": "Start collecting anything you can photograph",
       "required": "Required",
@@ -236,6 +213,40 @@
       "emoji": {
         "title": "Pick an icon",
         "pick": "Pick an icon"
+      }
+    },
+    "newCollection": "New collection",
+    "detailTitle": "Collection",
+    "tabs": {
+      "mine": "Mine",
+      "pickedUp": "Picked up"
+    },
+    "empty": {
+      "mine": "No collections yet. Create your first one.",
+      "pickedUp": "Nothing picked up yet."
+    },
+    "progress": "{{found}} / {{total}}",
+    "share": "Share",
+    "loadError": "Couldn't load collections",
+    "freeform": "Freeform",
+    "rarity": {
+      "common": "Common",
+      "uncommon": "Uncommon",
+      "rare": "Rare"
+    },
+    "items": {
+      "header": "What to find"
+    },
+    "detail": {
+      "creatorHints": {
+        "title": "AI hints",
+        "badge": "Only you",
+        "subtitle": "Visible to you as the creator. Tap an item to review what Claude suggested for validation.",
+        "fields": {
+          "description": "Description",
+          "aiHint": "AI validation hint",
+          "funFact": "Fun fact"
+        }
       }
     }
   },

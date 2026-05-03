@@ -21,6 +21,7 @@ import { Spinner } from '@components/Spinner';
 import { ValidationResultSheet } from '@components/ValidationResultSheet';
 import { useAuth } from '@hooks/useAuth';
 import { useCapture, type CaptureStage } from '@hooks/useCapture';
+import { useUserLocation } from '@hooks/useUserLocation';
 import {
   getCollection,
   listMyCollections,
@@ -28,6 +29,7 @@ import {
   type CollectionDetail,
   type CollectionWithProgress,
 } from '@services/collections.service';
+import { extractGpsFromExif } from '@utils/exif.utils';
 
 const STAGE_TO_LABEL_KEY: Partial<Record<CaptureStage, string>> = {
   compressing: 'camera.compressing',
@@ -45,11 +47,14 @@ export function CameraScreen() {
   const [permission, requestPermission] = useCameraPermissions();
   const [photoUri, setPhotoUri] = useState<string | null>(null);
   const [rawPhotoUri, setRawPhotoUri] = useState<string | null>(null);
+  const [pendingLocation, setPendingLocation] = useState<{ lat: number; lng: number } | null>(null);
   const [chosenItemId, setChosenItemId] = useState<string | null>(initialItemId);
   const [cameraReady, setCameraReady] = useState(false);
   const [cameraSettled, setCameraSettled] = useState(false);
   const cameraRef = useRef<CameraView>(null);
   const capture = useCapture();
+  // Triggers location-permission prompt on Camera mount; result is read at shutter.
+  const { location: deviceLocation } = useUserLocation();
 
   useEffect(() => {
     if (!cameraReady) {
@@ -63,7 +68,12 @@ export function CameraScreen() {
       try {
         await new Promise((r) => setTimeout(r, 600));
         if (cancelled) return;
-        await cam.takePictureAsync({ quality: 0.1, exif: false, skipProcessing: true });
+        await cam.takePictureAsync({
+          quality: 0.1,
+          exif: false,
+          skipProcessing: true,
+          shutterSound: false,
+        });
       } catch (e) {
         console.warn('[warmup] failed', e);
       }
@@ -78,6 +88,7 @@ export function CameraScreen() {
   const reset = useCallback((): void => {
     setPhotoUri(null);
     setRawPhotoUri(null);
+    setPendingLocation(null);
     setChosenItemId(initialItemId);
     capture.reset();
   }, [initialItemId, capture]);
@@ -107,10 +118,11 @@ export function CameraScreen() {
 
       setPhotoUri(stableUri);
       setRawPhotoUri(stableUri);
+      setPendingLocation(deviceLocation);
     } catch (e) {
       console.warn('[onShutter] takePictureAsync failed', e);
     }
-  }, [cameraSettled]);
+  }, [cameraSettled, deviceLocation]);
 
   const onClose = useCallback((): void => {
     reset();
@@ -128,7 +140,7 @@ export function CameraScreen() {
       const result = await ImagePicker.launchImageLibraryAsync({
         mediaTypes: ['images'],
         quality: 1,
-        exif: false,
+        exif: true,
       });
       if (result.canceled || !result.assets?.[0]) return;
       const picked = result.assets[0];
@@ -136,6 +148,7 @@ export function CameraScreen() {
       await FileSystem.copyAsync({ from: picked.uri, to: stableUri });
       setPhotoUri(stableUri);
       setRawPhotoUri(stableUri);
+      setPendingLocation(extractGpsFromExif(picked.exif));
     } catch (e) {
       console.warn('[onPickFromLibrary] failed', e);
     }
@@ -150,9 +163,11 @@ export function CameraScreen() {
         rawPhotoUri: upload,
         userId: user.id,
         collectionItemId: itemId,
+        locationLat: pendingLocation?.lat ?? null,
+        locationLng: pendingLocation?.lng ?? null,
       });
     },
-    [rawPhotoUri, photoUri, user, capture]
+    [rawPhotoUri, photoUri, user, capture, pendingLocation]
   );
 
   const onSavePreselected = useCallback((): void => {
@@ -162,12 +177,15 @@ export function CameraScreen() {
       rawPhotoUri: upload,
       userId: user.id,
       collectionItemId: chosenItemId,
+      locationLat: pendingLocation?.lat ?? null,
+      locationLng: pendingLocation?.lng ?? null,
     });
-  }, [rawPhotoUri, photoUri, user, chosenItemId, capture]);
+  }, [rawPhotoUri, photoUri, user, chosenItemId, capture, pendingLocation]);
 
   const onRetake = useCallback((): void => {
     setPhotoUri(null);
     setRawPhotoUri(null);
+    setPendingLocation(null);
     setChosenItemId(initialItemId);
     capture.reset();
   }, [initialItemId, capture]);

@@ -66,7 +66,25 @@
     "comingSoon": "Лента скоро появится"
   },
   "map": {
-    "comingSoon": "Карта скоро появится"
+    "comingSoon": "Карта скоро появится",
+    "searchPlaceholder": "Найти находки рядом…",
+    "filterAll": "Все",
+    "nearYou": "Рядом с тобой",
+    "noNearby": "Поблизости пока ничего нет",
+    "permissionDenied": "Разреши доступ к локации, чтобы видеть находки рядом",
+    "minutesAgo_one": "{{count}} мин назад",
+    "minutesAgo_few": "{{count}} мин назад",
+    "minutesAgo_many": "{{count}} мин назад",
+    "minutesAgo_other": "{{count}} мин назад",
+    "hoursAgo_one": "{{count}} час назад",
+    "hoursAgo_few": "{{count}} часа назад",
+    "hoursAgo_many": "{{count}} часов назад",
+    "hoursAgo_other": "{{count}} часа назад",
+    "daysAgo_one": "{{count}} день назад",
+    "daysAgo_few": "{{count}} дня назад",
+    "daysAgo_many": "{{count}} дней назад",
+    "daysAgo_other": "{{count}} дня назад",
+    "justNow": "только что"
   },
   "camera": {
     "comingSoon": "Камера скоро появится",
@@ -98,41 +116,6 @@
   },
   "collections": {
     "title": "Коллекции",
-    "create": "Создать",
-    "newCollection": "Новая коллекция",
-    "detailTitle": "Коллекция",
-    "tabs": {
-      "mine": "Мои",
-      "pickedUp": "Подхваченные"
-    },
-    "empty": {
-      "mine": "Пока ни одной коллекции. Создай первую.",
-      "pickedUp": "Пока ничего не подхвачено."
-    },
-    "progress": "{{found}} / {{total}}",
-    "share": "Поделиться",
-    "loadError": "Не удалось загрузить коллекции",
-    "freeform": "Свободная",
-    "rarity": {
-      "common": "Обычное",
-      "uncommon": "Необычное",
-      "rare": "Редкое"
-    },
-    "items": {
-      "header": "Что искать"
-    },
-    "detail": {
-      "creatorHints": {
-        "title": "AI-подсказки",
-        "badge": "Только ты",
-        "subtitle": "Видны только тебе как автору. Нажми на пункт, чтобы посмотреть, что Claude предложил для валидации.",
-        "fields": {
-          "description": "Описание",
-          "aiHint": "Подсказка для AI",
-          "funFact": "Интересный факт"
-        }
-      }
-    },
     "create": {
       "headerSubtitle": "Коллекционируй что угодно, что можно сфотографировать",
       "required": "Обязательно",
@@ -236,6 +219,40 @@
       "emoji": {
         "title": "Выбери иконку",
         "pick": "Выбрать иконку"
+      }
+    },
+    "newCollection": "Новая коллекция",
+    "detailTitle": "Коллекция",
+    "tabs": {
+      "mine": "Мои",
+      "pickedUp": "Подхваченные"
+    },
+    "empty": {
+      "mine": "Пока ни одной коллекции. Создай первую.",
+      "pickedUp": "Пока ничего не подхвачено."
+    },
+    "progress": "{{found}} / {{total}}",
+    "share": "Поделиться",
+    "loadError": "Не удалось загрузить коллекции",
+    "freeform": "Свободная",
+    "rarity": {
+      "common": "Обычное",
+      "uncommon": "Необычное",
+      "rare": "Редкое"
+    },
+    "items": {
+      "header": "Что искать"
+    },
+    "detail": {
+      "creatorHints": {
+        "title": "AI-подсказки",
+        "badge": "Только ты",
+        "subtitle": "Видны только тебе как автору. Нажми на пункт, чтобы посмотреть, что Claude предложил для валидации.",
+        "fields": {
+          "description": "Описание",
+          "aiHint": "Подсказка для AI",
+          "funFact": "Интересный факт"
+        }
       }
     }
   },

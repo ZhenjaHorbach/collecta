@@ -66,7 +66,25 @@
     "comingSoon": "Aktualności wkrótce"
   },
   "map": {
-    "comingSoon": "Mapa wkrótce"
+    "comingSoon": "Mapa wkrótce",
+    "searchPlaceholder": "Szukaj znalezisk obok…",
+    "filterAll": "Wszystkie",
+    "nearYou": "Obok ciebie",
+    "noNearby": "W pobliżu nic jeszcze nie ma",
+    "permissionDenied": "Włącz lokalizację, aby zobaczyć znaleziska obok",
+    "minutesAgo_one": "{{count}} min temu",
+    "minutesAgo_few": "{{count}} min temu",
+    "minutesAgo_many": "{{count}} min temu",
+    "minutesAgo_other": "{{count}} min temu",
+    "hoursAgo_one": "{{count}} godz temu",
+    "hoursAgo_few": "{{count}} godz temu",
+    "hoursAgo_many": "{{count}} godz temu",
+    "hoursAgo_other": "{{count}} godz temu",
+    "daysAgo_one": "{{count}} dzień temu",
+    "daysAgo_few": "{{count}} dni temu",
+    "daysAgo_many": "{{count}} dni temu",
+    "daysAgo_other": "{{count}} dni temu",
+    "justNow": "przed chwilą"
   },
   "camera": {
     "comingSoon": "Aparat wkrótce",
@@ -98,41 +116,6 @@
   },
   "collections": {
     "title": "Kolekcje",
-    "create": "Utwórz",
-    "newCollection": "Nowa kolekcja",
-    "detailTitle": "Kolekcja",
-    "tabs": {
-      "mine": "Moje",
-      "pickedUp": "Dołączone"
-    },
-    "empty": {
-      "mine": "Nie masz jeszcze kolekcji. Utwórz pierwszą.",
-      "pickedUp": "Nic jeszcze nie dołączono."
-    },
-    "progress": "{{found}} / {{total}}",
-    "share": "Udostępnij",
-    "loadError": "Nie udało się wczytać kolekcji",
-    "freeform": "Otwarta",
-    "rarity": {
-      "common": "Zwykłe",
-      "uncommon": "Rzadkie",
-      "rare": "Bardzo rzadkie"
-    },
-    "items": {
-      "header": "Czego szukać"
-    },
-    "detail": {
-      "creatorHints": {
-        "title": "Podpowiedzi AI",
-        "badge": "Tylko Ty",
-        "subtitle": "Widoczne tylko dla Ciebie jako autora. Dotknij pozycji, żeby zobaczyć, co zaproponował Claude do walidacji.",
-        "fields": {
-          "description": "Opis",
-          "aiHint": "Podpowiedź dla AI",
-          "funFact": "Ciekawostka"
-        }
-      }
-    },
     "create": {
       "headerSubtitle": "Kolekcjonuj cokolwiek, co możesz sfotografować",
       "required": "Wymagane",
@@ -236,6 +219,40 @@
       "emoji": {
         "title": "Wybierz ikonę",
         "pick": "Wybierz ikonę"
+      }
+    },
+    "newCollection": "Nowa kolekcja",
+    "detailTitle": "Kolekcja",
+    "tabs": {
+      "mine": "Moje",
+      "pickedUp": "Dołączone"
+    },
+    "empty": {
+      "mine": "Nie masz jeszcze kolekcji. Utwórz pierwszą.",
+      "pickedUp": "Nic jeszcze nie dołączono."
+    },
+    "progress": "{{found}} / {{total}}",
+    "share": "Udostępnij",
+    "loadError": "Nie udało się wczytać kolekcji",
+    "freeform": "Otwarta",
+    "rarity": {
+      "common": "Zwykłe",
+      "uncommon": "Rzadkie",
+      "rare": "Bardzo rzadkie"
+    },
+    "items": {
+      "header": "Czego szukać"
+    },
+    "detail": {
+      "creatorHints": {
+        "title": "Podpowiedzi AI",
+        "badge": "Tylko Ty",
+        "subtitle": "Widoczne tylko dla Ciebie jako autora. Dotknij pozycji, żeby zobaczyć, co zaproponował Claude do walidacji.",
+        "fields": {
+          "description": "Opis",
+          "aiHint": "Podpowiedź dla AI",
+          "funFact": "Ciekawostka"
+        }
       }
     }
   },

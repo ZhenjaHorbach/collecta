@@ -48,6 +48,30 @@ Slash commands live in `.claude/commands/`:
 - `/deploy-supabase` — deploy migrations + edge functions
 - `/new-screen` — scaffold a new screen folder
 
+## Native projects (CNG)
+
+`ios/` and `android/` are gitignored — they are regenerated from `app.json` + `app.config.ts` via Expo's Continuous Native Generation. The single source of truth for native config (Info.plist keys, permissions, AndroidManifest entries) is `app.json` → `ios.infoPlist` / `android.permissions` / plugins. `app.config.ts` extends it with values that come from `.env` (e.g. Google Maps API keys), so secrets stay out of git.
+
+### Google Maps keys
+
+`react-native-maps` on Android **requires** a Google Maps API key (iOS uses Apple Maps by default but a key enables Google as fallback). Get keys from Google Cloud Console (enable _Maps SDK for Android_ and _Maps SDK for iOS_) and set them in `.env`:
+
+```
+GOOGLE_MAPS_API_KEY_ANDROID=...
+GOOGLE_MAPS_API_KEY_IOS=...
+```
+
+Without `GOOGLE_MAPS_API_KEY_ANDROID` the Android app crashes on the Map screen with _"API key not found"_.
+
+After pulling changes that touch `app.json` plugins, native config, or new native deps:
+
+```
+npx expo prebuild --clean   # wipes ios/ and android/, regenerates from app.json
+npx expo run:ios            # or run:android
+```
+
+EAS Build runs `prebuild` automatically — cloud builds always reflect `app.json`. Never hand-edit files inside `ios/` or `android/`; the change won't survive `prebuild --clean` and won't reach teammates or CI.
+
 ## Directory structure
 
 Each screen and component lives in its own folder with an `index.ts` re-export.

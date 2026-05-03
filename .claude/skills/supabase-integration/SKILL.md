@@ -1,3 +1,8 @@
+---
+name: supabase-integration
+description: Code patterns for calling Supabase from Collecta — typed queries, auth, realtime subscriptions, storage uploads/signed URLs, and PowerSync offline sync. Use when writing or editing code in `src/services/` or hooks that talk to Supabase. Pair with the `.claude/rules/supabase.md` policy rules.
+---
+
 # Supabase Integration Patterns
 
 ## Client setup

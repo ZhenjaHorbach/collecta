@@ -99,13 +99,13 @@ import UIKit
       return
     }
 
-    var props: [CFString: Any] = [kCGImageDestinationLossyCompressionQuality: quality]
-    if stripExif {
-      props[kCGImagePropertyExifDictionary] = NSNull()
-      props[kCGImagePropertyGPSDictionary] = NSNull()
-      props[kCGImagePropertyTIFFDictionary] = NSNull()
-      props[kCGImagePropertyIPTCDictionary] = NSNull()
-    }
+    // stripExif is implicitly satisfied: UIGraphicsImageRenderer produces a
+    // metadata-free bitmap, so the encoded output never carries EXIF/GPS/TIFF
+    // even without explicit removal. Passing NSNull for those keys here causes
+    // ImageIO to silently drop the image data and write a 20-byte header-only
+    // JPEG, which Anthropic Vision then rejects with "Could not process image".
+    _ = stripExif
+    let props: [CFString: Any] = [kCGImageDestinationLossyCompressionQuality: quality]
 
     CGImageDestinationAddImage(dest, cg, props as CFDictionary)
     guard CGImageDestinationFinalize(dest) else {
