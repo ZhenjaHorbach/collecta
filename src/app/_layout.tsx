@@ -1,6 +1,7 @@
 import '../../global.css';
 import '@i18n';
 
+import { AchievementToastHost } from '@components/AchievementToast';
 import { AuthGuard } from '@components/AuthGuard';
 import { useTheme } from '@hooks/useTheme';
 import { useThemeVars } from '@hooks/useThemeVars';
@@ -39,8 +40,13 @@ export default function RootLayout() {
                 name="collection/create"
                 options={{ headerShown: false, presentation: 'modal' }}
               />
+              <Stack.Screen
+                name="settings"
+                options={{ headerShown: false, presentation: 'modal' }}
+              />
             </Stack>
           </AuthGuard>
+          <AchievementToastHost />
           <StatusBar style={isDark ? 'light' : 'dark'} />
         </View>
       </ThemeProvider>

@@ -1,6 +1,8 @@
 import { mkdir, writeFile } from 'node:fs/promises';
 import { dirname, resolve } from 'node:path';
 
+import { achievementCalibrationCases } from './achievement-calibration.eval';
+import { achievementGeneratorCases } from './achievement-generator.eval';
 import { aiValidationCases } from './ai-validation.eval';
 import { callValidate } from './client';
 import { buildReport } from './report';
@@ -8,6 +10,8 @@ import type { EvalCase, EvalContext } from './types';
 
 const SUITES: Record<string, EvalCase[]> = {
   'ai-validation': aiValidationCases,
+  'achievement-generator': achievementGeneratorCases,
+  'achievement-calibration': achievementCalibrationCases,
 };
 
 interface CliArgs {
@@ -27,15 +31,20 @@ function parseArgs(): CliArgs {
   return { suite, out };
 }
 
+// Lazy: throws on first call, not on construction. Achievement suites don't
+// touch fixtures, so they shouldn't require FEW_SHOT_FIXTURES_BASE_URL just
+// to run.
 function fixtureUrlFactory(): (name: string) => string {
-  const base = process.env.FEW_SHOT_FIXTURES_BASE_URL;
-  if (!base) {
-    throw new Error(
-      'FEW_SHOT_FIXTURES_BASE_URL is required for evals. ' +
-        'Upload src/evals/fixtures/* to a public Supabase Storage bucket and set the env var to the base URL.'
-    );
-  }
-  return (name) => `${base.replace(/\/$/, '')}/${name}`;
+  return (name) => {
+    const base = process.env.FEW_SHOT_FIXTURES_BASE_URL;
+    if (!base) {
+      throw new Error(
+        'FEW_SHOT_FIXTURES_BASE_URL is required for vision evals. ' +
+          'Upload src/evals/fixtures/* to a public Supabase Storage bucket and set the env var to the base URL.'
+      );
+    }
+    return `${base.replace(/\/$/, '')}/${name}`;
+  };
 }
 
 async function main(): Promise<void> {

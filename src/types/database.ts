@@ -303,8 +303,12 @@ export type Database = {
           created_at: string;
           display_name: string;
           id: string;
+          last_find_date: string | null;
+          level: number;
+          streak_days: number;
           updated_at: string;
           username: string;
+          xp: number;
         };
         Insert: {
           avatar_url?: string | null;
@@ -312,8 +316,12 @@ export type Database = {
           created_at?: string;
           display_name: string;
           id: string;
+          last_find_date?: string | null;
+          level?: number;
+          streak_days?: number;
           updated_at?: string;
           username: string;
+          xp?: number;
         };
         Update: {
           avatar_url?: string | null;
@@ -321,10 +329,98 @@ export type Database = {
           created_at?: string;
           display_name?: string;
           id?: string;
+          last_find_date?: string | null;
+          level?: number;
+          streak_days?: number;
           updated_at?: string;
           username?: string;
+          xp?: number;
         };
         Relationships: [];
+      };
+      achievements: {
+        Row: {
+          code: string;
+          condition: Json;
+          created_at: string;
+          description: string;
+          icon: string;
+          id: string;
+          sort_order: number;
+          title: string;
+          xp_reward: number;
+        };
+        Insert: {
+          code: string;
+          condition: Json;
+          created_at?: string;
+          description: string;
+          icon: string;
+          id?: string;
+          sort_order?: number;
+          title: string;
+          xp_reward?: number;
+        };
+        Update: {
+          code?: string;
+          condition?: Json;
+          created_at?: string;
+          description?: string;
+          icon?: string;
+          id?: string;
+          sort_order?: number;
+          title?: string;
+          xp_reward?: number;
+        };
+        Relationships: [];
+      };
+      user_achievements: {
+        Row: {
+          achievement_id: string;
+          ai_cache_creation_tokens: number | null;
+          ai_cache_read_tokens: number | null;
+          ai_input_tokens: number | null;
+          ai_model: string | null;
+          ai_output_tokens: number | null;
+          unlocked_at: string;
+          user_id: string;
+        };
+        Insert: {
+          achievement_id: string;
+          ai_cache_creation_tokens?: number | null;
+          ai_cache_read_tokens?: number | null;
+          ai_input_tokens?: number | null;
+          ai_model?: string | null;
+          ai_output_tokens?: number | null;
+          unlocked_at?: string;
+          user_id: string;
+        };
+        Update: {
+          achievement_id?: string;
+          ai_cache_creation_tokens?: number | null;
+          ai_cache_read_tokens?: number | null;
+          ai_input_tokens?: number | null;
+          ai_model?: string | null;
+          ai_output_tokens?: number | null;
+          unlocked_at?: string;
+          user_id?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: 'user_achievements_achievement_id_fkey';
+            columns: ['achievement_id'];
+            isOneToOne: false;
+            referencedRelation: 'achievements';
+            referencedColumns: ['id'];
+          },
+          {
+            foreignKeyName: 'user_achievements_user_id_fkey';
+            columns: ['user_id'];
+            isOneToOne: false;
+            referencedRelation: 'users';
+            referencedColumns: ['id'];
+          },
+        ];
       };
     };
     Views: {

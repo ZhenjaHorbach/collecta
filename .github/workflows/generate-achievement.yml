@@ -1,0 +1,84 @@
+name: Generate weekly achievement
+
+on:
+  schedule:
+    # Mondays at 09:00 UTC — weekly canary to catch silent
+    # model/latency drift between manual runs.
+    - cron: '0 9 * * 1'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  pull-requests: write
+
+concurrency:
+  group: generate-achievement
+  cancel-in-progress: false
+
+jobs:
+  propose:
+    name: Propose new achievement
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+      - run: npm ci
+
+      - name: Generate migration
+        id: gen
+        env:
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_ANON_KEY: ${{ secrets.SUPABASE_ANON_KEY }}
+        run: |
+          OUTPUT=$(scripts/generate-achievement.sh)
+          echo "$OUTPUT" | tee /tmp/gen.json
+          echo "json<<EOF" >> "$GITHUB_OUTPUT"
+          echo "$OUTPUT" >> "$GITHUB_OUTPUT"
+          echo "EOF" >> "$GITHUB_OUTPUT"
+
+      - name: Extract proposal fields
+        id: meta
+        run: |
+          FILE=$(jq -r .file /tmp/gen.json)
+          CODE=$(jq -r .achievement.code /tmp/gen.json)
+          TITLE=$(jq -r .achievement.title /tmp/gen.json)
+          ICON=$(jq -r .achievement.icon /tmp/gen.json)
+          KIND=$(jq -r .achievement.condition.kind /tmp/gen.json)
+          GTE=$(jq -r .achievement.condition.gte /tmp/gen.json)
+          XP=$(jq -r .achievement.xp_reward /tmp/gen.json)
+          DESC=$(jq -r .achievement.description /tmp/gen.json)
+          {
+            echo "file=$FILE"
+            echo "code=$CODE"
+            echo "title=$TITLE"
+            echo "icon=$ICON"
+            echo "kind=$KIND"
+            echo "gte=$GTE"
+            echo "xp=$XP"
+            echo "desc=$DESC"
+          } >> "$GITHUB_OUTPUT"
+
+      - name: Create pull request
+        uses: peter-evans/create-pull-request@v6
+        with:
+          branch: achievement/${{ steps.meta.outputs.code }}
+          title: 'feat(gamification): add achievement ${{ steps.meta.outputs.icon }} ${{ steps.meta.outputs.title }}'
+          commit-message: 'feat(gamification): add achievement ${{ steps.meta.outputs.code }}'
+          body: |
+            Auto-proposed by Claude. Review the migration before merging — once on `main`, `deploy-supabase.yml` applies it to production.
+
+            **Proposal**
+            - **code**: `${{ steps.meta.outputs.code }}`
+            - **title**: ${{ steps.meta.outputs.icon }} ${{ steps.meta.outputs.title }}
+            - **description**: ${{ steps.meta.outputs.desc }}
+            - **trigger**: `${{ steps.meta.outputs.kind }} ≥ ${{ steps.meta.outputs.gte }}`
+            - **reward**: +${{ steps.meta.outputs.xp }} XP
+
+            Triggered by `${{ github.event_name }}` from @${{ github.actor }}.
+          add-paths: supabase/migrations/**
+          labels: gamification,automated
+          delete-branch: true

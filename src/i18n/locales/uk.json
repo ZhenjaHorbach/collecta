@@ -276,7 +276,25 @@
     "language": "Мова",
     "chooseLanguage": "Оберіть мову",
     "theme": "Тема",
-    "chooseTheme": "Оберіть оформлення"
+    "chooseTheme": "Оберіть оформлення",
+    "settings": "Налаштування",
+    "levelBadge": "LV {{level}}",
+    "levelLine": "Рівень {{level}}",
+    "xpFraction": "{{current}} / {{total}} XP",
+    "xpToNextHighlight": "{{xp}} XP",
+    "xpToNextSuffix": "до рівня {{level}}",
+    "stats": {
+      "collections": "Колекцій",
+      "finds": "Знахідок",
+      "streak": "Днів поспіль"
+    },
+    "achievements": {
+      "title": "Досягнення",
+      "fraction": "{{unlocked}} з {{total}}"
+    },
+    "toast": {
+      "unlocked": "Досягнення отримано"
+    }
   },
   "theme": {
     "system": "Системна",

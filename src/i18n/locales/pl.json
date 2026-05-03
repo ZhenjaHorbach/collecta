@@ -276,7 +276,25 @@
     "language": "Język",
     "chooseLanguage": "Wybierz język",
     "theme": "Motyw",
-    "chooseTheme": "Wybierz wygląd"
+    "chooseTheme": "Wybierz wygląd",
+    "settings": "Ustawienia",
+    "levelBadge": "LV {{level}}",
+    "levelLine": "Poziom {{level}}",
+    "xpFraction": "{{current}} / {{total}} XP",
+    "xpToNextHighlight": "{{xp}} XP",
+    "xpToNextSuffix": "do poziomu {{level}}",
+    "stats": {
+      "collections": "Kolekcje",
+      "finds": "Znaleziska",
+      "streak": "Dni z rzędu"
+    },
+    "achievements": {
+      "title": "Osiągnięcia",
+      "fraction": "{{unlocked}} z {{total}}"
+    },
+    "toast": {
+      "unlocked": "Osiągnięcie odblokowane"
+    }
   },
   "theme": {
     "system": "Systemowy",

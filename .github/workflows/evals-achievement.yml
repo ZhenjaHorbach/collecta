@@ -1,0 +1,83 @@
+name: Achievement generator evals
+
+# Structural evals catch prompt regressions in the weekly achievement
+# generator (wrong shape, forbidden kind, dup against catalog). One Claude
+# call per CI run via memoisation, so cost is bounded.
+#
+# Paths filter: only run when the script or prompt changes — random PRs in
+# unrelated areas wouldn't affect generator output.
+#
+# Calibration (20+ runs, self-grading, cost) is workflow_dispatch-only —
+# expensive, report-only artefact, used to spot-check the prompt manually.
+
+on:
+  pull_request:
+    paths:
+      - 'scripts/generate-achievement.ts'
+      - 'prompts/generate-achievement.md'
+      - 'src/evals/achievement-generator.eval.ts'
+      - 'src/evals/achievement-calibration.eval.ts'
+  workflow_dispatch:
+    inputs:
+      include_calibration:
+        description: 'Also run the calibration suite (20 generations + self-grade)'
+        required: false
+        default: 'false'
+
+permissions:
+  contents: read
+
+jobs:
+  structural:
+    name: Structural evals
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+      - run: npm ci
+
+      - name: Run structural suite
+        env:
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_ANON_KEY: ${{ secrets.SUPABASE_ANON_KEY }}
+        run: scripts/run-evals.sh --suite achievement-generator
+
+      - name: Upload report
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: achievement-generator-report-${{ github.run_number }}
+          path: eval-results/
+          retention-days: 30
+
+  calibration:
+    name: Calibration suite
+    if: github.event_name == 'workflow_dispatch' && github.event.inputs.include_calibration == 'true'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+      - run: npm ci
+
+      - name: Run calibration suite
+        env:
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_ANON_KEY: ${{ secrets.SUPABASE_ANON_KEY }}
+          ACHIEVEMENT_CALIBRATION_RUNS: '20'
+        run: scripts/run-evals.sh --suite achievement-calibration
+
+      - name: Upload report
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: achievement-calibration-report-${{ github.run_number }}
+          path: eval-results/
+          retention-days: 30

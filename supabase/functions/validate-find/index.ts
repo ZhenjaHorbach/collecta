@@ -23,6 +23,9 @@ import { createClient } from 'npm:@supabase/supabase-js@2';
 // @ts-ignore — Deno npm specifier
 import Anthropic from 'npm:@anthropic-ai/sdk@0.32.1';
 
+// @ts-ignore — Deno requires .ts extension on relative imports
+import { authenticateRequest } from '../_shared/auth.ts';
+
 const supabase = createClient(
   Deno.env.get('SUPABASE_URL')!,
   Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
@@ -271,6 +274,17 @@ interface RequestBody {
 Deno.serve(async (req: Request) => {
   if (req.method !== 'POST') {
     return new Response('Method Not Allowed', { status: 405 });
+  }
+
+  // Authenticate the caller — Vision calls cost real money. Without this,
+  // any anonymous request can burn Anthropic budget on arbitrary photo URLs.
+  // See .claude/rules/supabase.md → "Edge function caller auth".
+  const auth = await authenticateRequest(req);
+  if (!auth.ok) {
+    return new Response(JSON.stringify({ error: auth.error }), {
+      status: auth.status,
+      headers: { 'Content-Type': 'application/json' },
+    });
   }
 
   let body: RequestBody;

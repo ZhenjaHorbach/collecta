@@ -15,6 +15,8 @@ import { createClient } from 'npm:@supabase/supabase-js@2';
 import Anthropic from 'npm:@anthropic-ai/sdk';
 
 // @ts-ignore — Deno requires .ts extension on relative imports
+import { authenticateRequest } from '../_shared/auth.ts';
+// @ts-ignore — Deno requires .ts extension on relative imports
 // prettier-ignore
 import { buildPrompt, extractJson, validate, LOCALES, type GeneratedCollection, type Locale } from './validation.ts';
 
@@ -36,15 +38,6 @@ function json(status: number, body: Record<string, unknown>): Response {
   });
 }
 
-async function getUserId(req: Request): Promise<string | null> {
-  const authHeader = req.headers.get('Authorization') ?? '';
-  const token = authHeader.replace(/^Bearer\s+/i, '').trim();
-  if (!token) return null;
-  const { data, error } = await admin.auth.getUser(token);
-  if (error || !data.user) return null;
-  return data.user.id;
-}
-
 async function checkRateLimit(userId: string): Promise<{ ok: boolean; used: number }> {
   const since = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString();
   const { count, error } = await admin
@@ -63,8 +56,9 @@ Deno.serve(async (req: Request) => {
     return json(405, { error: 'Method Not Allowed' });
   }
 
-  const userId = await getUserId(req);
-  if (!userId) return json(401, { error: 'Unauthorized' });
+  const auth = await authenticateRequest(req);
+  if (!auth.ok) return json(auth.status, { error: auth.error });
+  const userId = auth.userId;
 
   let body: { prompt?: unknown; locale?: unknown };
   try {

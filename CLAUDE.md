@@ -48,6 +48,10 @@ Slash commands live in `.claude/commands/`:
 - `/deploy-supabase` — deploy migrations + edge functions
 - `/new-screen` — scaffold a new screen folder
 
+## Scripts
+
+Every script in `scripts/` is invoked through a `.sh` wrapper — workflows and humans both call the `.sh`, never `npx tsx` or `node` directly. The wrapper loads `.env` (CI uses workflow `env:`), validates required vars with `::error::`, and `exec`s the sibling `.ts`. Adding a script: write `<name>.ts` + `<name>.sh`, `chmod +x` the sh, reference the sh from workflows. Mirror `scripts/run-evals.sh`, `scripts/sync-design.sh`, `scripts/generate-achievement.sh`.
+
 ## AI cost tracking
 
 Every Anthropic call site must capture `message.usage` (input/output/cache_read/cache_creation tokens) and persist it. Today there's one site — `supabase/functions/validate-find/index.ts` — which writes the four token counts to the `finds` row alongside the validation result. **When adding a new call site, repeat the same pattern.** USD conversion lives in `src/utils/cost-tracker.ts` (pure functions, no DB) — never re-implement pricing inline.

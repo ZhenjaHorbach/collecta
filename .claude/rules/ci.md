@@ -17,12 +17,22 @@
 2. `test` — Jest with coverage, `--passWithNoTests` during early dev
 3. `build-check` — `expo-doctor` + EAS dry-run for both platforms
 
-## Evals (`.github/workflows/evals.yml`)
+## Evals
 
-- Manual trigger only (`workflow_dispatch`)
-- Runs Claude Vision eval suite against test images
-- Report uploaded as artifact, retained 30 days
-- Required before changing AI validation prompts
+Two domain-specific workflows — never combined into one "all evals" job.
+
+### `.github/workflows/evals-vision.yml`
+
+- `workflow_dispatch` + Monday 09:00 UTC canary
+- Runs the `ai-validation` suite against the golden image set in `src/evals/fixtures/`
+- Required before changing the `validate-find` prompt or fixtures
+- Report uploaded as artifact, 30-day retention
+
+### `.github/workflows/evals-achievement.yml`
+
+- `pull_request` with `paths:` filter on `scripts/generate-achievement.{ts,sh}`, the prompt, or eval files
+- Structural suite always runs on matching PRs (~1 Claude call, mem­oised)
+- Calibration suite (~20 Claude calls) only via `workflow_dispatch` with `include_calibration=true`
 
 ## Sync design (`.github/workflows/sync-design.yml`)
 
