@@ -270,7 +270,25 @@
     "language": "Language",
     "chooseLanguage": "Choose language",
     "theme": "Theme",
-    "chooseTheme": "Choose appearance"
+    "chooseTheme": "Choose appearance",
+    "settings": "Settings",
+    "levelBadge": "LV {{level}}",
+    "levelLine": "Level {{level}}",
+    "xpFraction": "{{current}} / {{total}} XP",
+    "xpToNextHighlight": "{{xp}} XP",
+    "xpToNextSuffix": "to Level {{level}}",
+    "stats": {
+      "collections": "Collections",
+      "finds": "Finds",
+      "streak": "Day streak"
+    },
+    "achievements": {
+      "title": "Achievements",
+      "fraction": "{{unlocked}} of {{total}}"
+    },
+    "toast": {
+      "unlocked": "Achievement unlocked"
+    }
   },
   "theme": {
     "system": "System",

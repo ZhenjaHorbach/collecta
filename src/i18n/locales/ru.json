@@ -276,7 +276,25 @@
     "language": "Язык",
     "chooseLanguage": "Выберите язык",
     "theme": "Тема",
-    "chooseTheme": "Выберите оформление"
+    "chooseTheme": "Выберите оформление",
+    "settings": "Настройки",
+    "levelBadge": "LV {{level}}",
+    "levelLine": "Уровень {{level}}",
+    "xpFraction": "{{current}} / {{total}} XP",
+    "xpToNextHighlight": "{{xp}} XP",
+    "xpToNextSuffix": "до уровня {{level}}",
+    "stats": {
+      "collections": "Коллекций",
+      "finds": "Находок",
+      "streak": "Дней подряд"
+    },
+    "achievements": {
+      "title": "Достижения",
+      "fraction": "{{unlocked}} из {{total}}"
+    },
+    "toast": {
+      "unlocked": "Достижение получено"
+    }
   },
   "theme": {
     "system": "Системная",

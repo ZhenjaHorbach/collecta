@@ -55,3 +55,6 @@ xcuserdata/
 DerivedData/
 .build/
 *.xcworkspace/xcuserdata/
+
+# supabase temp files
+supabase/.temp

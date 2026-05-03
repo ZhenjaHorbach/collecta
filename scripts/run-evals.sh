@@ -17,6 +17,15 @@ set -euo pipefail
 REPO_ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 cd "$REPO_ROOT"
 
+# Load .env for local runs. CI passes vars via workflow `env:` and won't have
+# this file (.env is gitignored).
+if [[ -f .env ]]; then
+  set -a
+  # shellcheck disable=SC1091
+  source .env
+  set +a
+fi
+
 if [[ -z "${ANTHROPIC_API_KEY:-}" ]]; then
   echo "::error::ANTHROPIC_API_KEY is required" >&2
   exit 1

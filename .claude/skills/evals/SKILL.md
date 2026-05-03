@@ -92,7 +92,7 @@ npm run evals -- --suite ai-validation --out /tmp/report.json
 RUN_EVALS=1 npm test __tests__/evals/ai-validation.eval.ts
 ```
 
-CI: `.github/workflows/evals.yml` — manual `workflow_dispatch` only. Never on every push (cost). Required before merging any change to `validate-find/index.ts` or eval client.
+CI: `.github/workflows/evals-vision.yml` — manual `workflow_dispatch` only. Never on every push (cost). Required before merging any change to `validate-find/index.ts` or eval client.
 
 ## What NOT to do
 

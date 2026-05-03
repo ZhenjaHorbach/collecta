@@ -2,6 +2,8 @@ import type { CollectionCategory } from '@constants/categories';
 import { MAP_VIEWPORT_LIMIT } from '@constants/map';
 import { FindSchema, type Find } from '@schemas';
 
+import { deleteFindPhoto } from './find-photo.service';
+import { awardXp } from './gamification.service';
 import { supabase } from './supabase.service';
 
 export interface CreateFindInput {
@@ -25,29 +27,71 @@ export interface CreateFindInput {
 }
 
 export async function createFind(input: CreateFindInput): Promise<Find> {
+  const payload = {
+    photo_url: input.photoUrl,
+    location_lat: input.locationLat ?? null,
+    location_lng: input.locationLng ?? null,
+    notes: input.notes ?? null,
+    ai_validated: input.aiValidated ?? null,
+    ai_confidence: input.aiConfidence ?? null,
+    ai_notes: input.aiNotes ?? null,
+    ai_model: input.aiModel ?? null,
+    ai_input_tokens: input.aiInputTokens ?? null,
+    ai_output_tokens: input.aiOutputTokens ?? null,
+    ai_cache_read_tokens: input.aiCacheReadTokens ?? null,
+    ai_cache_creation_tokens: input.aiCacheCreationTokens ?? null,
+  };
+
+  // One find per (user, collection_item) — see migration 009. A re-photo
+  // updates the existing row instead of creating a second pin on the map.
+  const { data: existing } = await supabase
+    .from('finds')
+    .select('id, photo_url')
+    .eq('user_id', input.userId)
+    .eq('collection_item_id', input.collectionItemId)
+    .maybeSingle();
+
+  if (existing) {
+    const { data, error } = await supabase
+      .from('finds')
+      .update(payload)
+      .eq('id', existing.id)
+      .select()
+      .single();
+    if (error) throw error;
+
+    // Old photo becomes orphan storage; best-effort cleanup. Skipped when
+    // the URL didn't change (defensive — shouldn't happen since uploads
+    // always mint a new key).
+    if (existing.photo_url && existing.photo_url !== input.photoUrl) {
+      void deleteFindPhoto(existing.photo_url).catch((e) =>
+        console.warn('[finds] orphan photo cleanup', e)
+      );
+    }
+    // XP and streak were already counted on the first save, but re-run the
+    // achievement matcher: an unlock might have been missed if the agent
+    // call failed earlier, or if the user joined a new collection between
+    // saves and only now qualifies for `first_collection_complete`.
+    void awardXp(input.userId, 'recheck');
+    return FindSchema.parse(data);
+  }
+
   const { data, error } = await supabase
     .from('finds')
     .insert({
       user_id: input.userId,
       collection_item_id: input.collectionItemId,
-      photo_url: input.photoUrl,
-      location_lat: input.locationLat ?? null,
-      location_lng: input.locationLng ?? null,
-      notes: input.notes ?? null,
-      ai_validated: input.aiValidated ?? null,
-      ai_confidence: input.aiConfidence ?? null,
-      ai_notes: input.aiNotes ?? null,
-      ai_model: input.aiModel ?? null,
-      ai_input_tokens: input.aiInputTokens ?? null,
-      ai_output_tokens: input.aiOutputTokens ?? null,
-      ai_cache_read_tokens: input.aiCacheReadTokens ?? null,
-      ai_cache_creation_tokens: input.aiCacheCreationTokens ?? null,
+      ...payload,
     })
     .select()
     .single();
-
   if (error) throw error;
-  return FindSchema.parse(data);
+  const find = FindSchema.parse(data);
+  // Fire-and-forget: gamification must not block the find save. The agent
+  // loop (XP + achievement checks) runs server-side and emits toasts via the
+  // achievement-toast bus.
+  void awardXp(input.userId, 'find');
+  return find;
 }
 
 export interface MapFind {

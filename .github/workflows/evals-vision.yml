@@ -1,20 +1,28 @@
-name: AI Evals
+name: Vision validation evals
+
+# Validates the validate-find edge function against the golden image set
+# (cat / dog / blurry / brutalist etc.). Catches drift in Claude Vision
+# accuracy and format compliance.
+#
+# Default suite is `ai-validation` only — `all` would also pull in the
+# achievement-* suites which belong to a different domain and live in
+# .github/workflows/evals-achievement.yml.
 
 on:
   workflow_dispatch:
     inputs:
       eval_suite:
-        description: 'Eval suite to run (default: all)'
+        description: 'Eval suite to run'
         required: false
-        default: 'all'
+        default: 'ai-validation'
   schedule:
     # Mondays at 09:00 UTC — weekly canary to catch silent
     # model/latency drift between manual runs.
     - cron: '0 9 * * 1'
 
 jobs:
-  run-ai-evals:
-    name: Run Claude Vision Evals
+  vision-validation:
+    name: Run validate-find vision evals
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -25,7 +33,7 @@ jobs:
       - run: npm ci
 
       - name: Run eval suite
-        run: scripts/run-evals.sh --suite ${{ github.event.inputs.eval_suite || 'all' }}
+        run: scripts/run-evals.sh --suite ${{ github.event.inputs.eval_suite || 'ai-validation' }}
         env:
           ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
           SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
@@ -36,6 +44,6 @@ jobs:
         uses: actions/upload-artifact@v4
         if: always()
         with:
-          name: eval-report-${{ github.run_number }}
+          name: vision-eval-report-${{ github.run_number }}
           path: eval-results/
           retention-days: 30

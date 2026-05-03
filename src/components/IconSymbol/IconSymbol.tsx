@@ -17,6 +17,7 @@ const MAPPING = {
   'camera.fill': 'photo-camera',
   'square.grid.2x2.fill': 'apps',
   'person.fill': 'person',
+  gear: 'settings',
 } as IconMapping;
 
 export function IconSymbol({
