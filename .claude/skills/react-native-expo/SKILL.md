@@ -1,3 +1,8 @@
+---
+name: react-native-expo
+description: Project-specific React Native + Expo patterns for Collecta — Expo Router navigation, expo-camera, react-native-maps, permissions, list performance, and New Architecture constraints. Use when adding/modifying screens, camera/maps/permission flows, or list rendering.
+---
+
 # React Native + Expo Patterns
 
 ## Navigation (Expo Router)

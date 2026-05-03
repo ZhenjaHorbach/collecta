@@ -42,13 +42,21 @@ Before staging or committing, run `git branch --show-current` and confirm the br
 
 ## Pre-push checks
 
-Run before `git push` and report results:
+Mirror exactly what CI (`.github/workflows/ci.yml`) runs, in this order, and report each result:
 
-1. `npx tsc --noEmit`
-2. `npx expo lint`
-3. `npm test -- --passWithNoTests` (skip only if user explicitly says to)
+1. `npm run format:check`
+2. `npx eslint . --max-warnings 0`
+3. `npx tsc --noEmit`
+4. `npm test -- --passWithNoTests` (skip only if user explicitly says to)
 
-If any fail, stop and surface the failure — do not push.
+**Why all four must match CI:** `lint-staged` in `.husky/pre-commit` auto-fixes Prettier on staged `.ts/.tsx/.js/.json/.md`, which masks formatting drift in files you didn't touch (post-merge state, hand-edited YAML/SQL/Swift, files committed with `--no-verify` elsewhere). `format:check` runs on the whole tree and catches those — skipping it locally guarantees CI red.
+
+If a check fails, stop and surface it — do not push. Recovery:
+
+- `format:check` fails → `npm run format` → re-stage the modified files → **new** commit (not `--amend`)
+- `eslint` fails → fix the warning/error → re-stage → new commit
+- `tsc` fails → fix the type error → re-stage → new commit
+- `test` fails → fix the test or the code → re-stage → new commit
 
 ## Push
 

@@ -66,7 +66,25 @@
     "comingSoon": "Стрічка скоро з'явиться"
   },
   "map": {
-    "comingSoon": "Мапа скоро з'явиться"
+    "comingSoon": "Мапа скоро з'явиться",
+    "searchPlaceholder": "Знайти знахідки поруч…",
+    "filterAll": "Усі",
+    "nearYou": "Поруч з тобою",
+    "noNearby": "Поблизу поки нічого немає",
+    "permissionDenied": "Дозволь доступ до локації, щоб бачити знахідки поруч",
+    "minutesAgo_one": "{{count}} хв тому",
+    "minutesAgo_few": "{{count}} хв тому",
+    "minutesAgo_many": "{{count}} хв тому",
+    "minutesAgo_other": "{{count}} хв тому",
+    "hoursAgo_one": "{{count}} год тому",
+    "hoursAgo_few": "{{count}} год тому",
+    "hoursAgo_many": "{{count}} год тому",
+    "hoursAgo_other": "{{count}} год тому",
+    "daysAgo_one": "{{count}} день тому",
+    "daysAgo_few": "{{count}} дні тому",
+    "daysAgo_many": "{{count}} днів тому",
+    "daysAgo_other": "{{count}} дні тому",
+    "justNow": "щойно"
   },
   "camera": {
     "comingSoon": "Камера скоро з'явиться",
@@ -98,41 +116,6 @@
   },
   "collections": {
     "title": "Колекції",
-    "create": "Створити",
-    "newCollection": "Нова колекція",
-    "detailTitle": "Колекція",
-    "tabs": {
-      "mine": "Мої",
-      "pickedUp": "Підхоплені"
-    },
-    "empty": {
-      "mine": "Ще немає колекцій. Створи першу.",
-      "pickedUp": "Поки нічого не підхоплено."
-    },
-    "progress": "{{found}} / {{total}}",
-    "share": "Поділитися",
-    "loadError": "Не вдалося завантажити колекції",
-    "freeform": "Вільна",
-    "rarity": {
-      "common": "Звичайне",
-      "uncommon": "Незвичайне",
-      "rare": "Рідкісне"
-    },
-    "items": {
-      "header": "Що шукати"
-    },
-    "detail": {
-      "creatorHints": {
-        "title": "AI-підказки",
-        "badge": "Лише ти",
-        "subtitle": "Видно лише тобі як автору. Торкнись пункту, щоб переглянути, що Claude запропонував для валідації.",
-        "fields": {
-          "description": "Опис",
-          "aiHint": "Підказка для AI",
-          "funFact": "Цікавий факт"
-        }
-      }
-    },
     "create": {
       "headerSubtitle": "Колекціонуй усе, що можна сфотографувати",
       "required": "Обов'язково",
@@ -236,6 +219,40 @@
       "emoji": {
         "title": "Обери іконку",
         "pick": "Обрати іконку"
+      }
+    },
+    "newCollection": "Нова колекція",
+    "detailTitle": "Колекція",
+    "tabs": {
+      "mine": "Мої",
+      "pickedUp": "Підхоплені"
+    },
+    "empty": {
+      "mine": "Ще немає колекцій. Створи першу.",
+      "pickedUp": "Поки нічого не підхоплено."
+    },
+    "progress": "{{found}} / {{total}}",
+    "share": "Поділитися",
+    "loadError": "Не вдалося завантажити колекції",
+    "freeform": "Вільна",
+    "rarity": {
+      "common": "Звичайне",
+      "uncommon": "Незвичайне",
+      "rare": "Рідкісне"
+    },
+    "items": {
+      "header": "Що шукати"
+    },
+    "detail": {
+      "creatorHints": {
+        "title": "AI-підказки",
+        "badge": "Лише ти",
+        "subtitle": "Видно лише тобі як автору. Торкнись пункту, щоб переглянути, що Claude запропонував для валідації.",
+        "fields": {
+          "description": "Опис",
+          "aiHint": "Підказка для AI",
+          "funFact": "Цікавий факт"
+        }
       }
     }
   },
