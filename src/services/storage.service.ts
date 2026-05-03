@@ -27,4 +27,5 @@ export const StorageKeys = {
   onboardingDone: 'onboarding_done',
   lastSyncedAt: 'last_synced_at',
   draftFind: 'draft_find',
+  activeCollectionId: 'active_collection_id',
 } as const;

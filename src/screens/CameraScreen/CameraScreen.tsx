@@ -1,12 +1,13 @@
 import { CameraView, useCameraPermissions } from 'expo-camera';
 import * as FileSystem from 'expo-file-system/legacy';
-import { Image as ExpoImage } from 'expo-image';
+
 import { router, useFocusEffect, useLocalSearchParams } from 'expo-router';
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import {
   Alert,
   FlatList,
+  Modal,
   Pressable,
   ScrollView,
   StyleSheet,
@@ -16,27 +17,27 @@ import {
 } from 'react-native';
 import { SafeAreaView as RNSafeAreaView } from 'react-native-safe-area-context';
 
+import { ActiveCollectionChip, ChooseCollectionSheet } from '@components/ActiveCollectionChip';
+import { AnalyzingOverlay } from '@components/AnalyzingOverlay';
+import { CaptureResultSheet } from '@components/CaptureResultSheet';
+import { CreateItemSheet } from '@components/CreateItemSheet';
 import { GoBackButton } from '@components/GoBackButton';
 import { SafeAreaView } from '@components/SafeAreaView';
 import { Spinner } from '@components/Spinner';
-import { ValidationResultSheet } from '@components/ValidationResultSheet';
+import { useActiveCollection } from '@hooks/useActiveCollection';
 import { useAuth } from '@hooks/useAuth';
-import { useCapture, type CaptureStage } from '@hooks/useCapture';
+import { useCapture } from '@hooks/useCapture';
 import { useUserLocation } from '@hooks/useUserLocation';
 import {
   getCollection,
+  getCollectionItemContext,
   listMyCollections,
   listPickedUpCollections,
   type CollectionDetail,
+  type CollectionItemContext,
   type CollectionWithProgress,
 } from '@services/collections.service';
 import { extractGpsFromExif } from '@utils/exif.utils';
-
-const STAGE_TO_LABEL_KEY: Partial<Record<CaptureStage, string>> = {
-  compressing: 'camera.compressing',
-  uploading: 'camera.uploading',
-  validating: 'camera.validating',
-};
 
 export function CameraScreen() {
   const { t } = useTranslation();
@@ -48,13 +49,112 @@ export function CameraScreen() {
   const [photoUri, setPhotoUri] = useState<string | null>(null);
   const [rawPhotoUri, setRawPhotoUri] = useState<string | null>(null);
   const [pendingLocation, setPendingLocation] = useState<{ lat: number; lng: number } | null>(null);
-  const [chosenItemId, setChosenItemId] = useState<string | null>(initialItemId);
   const [cameraReady, setCameraReady] = useState(false);
   const [cameraSettled, setCameraSettled] = useState(false);
+  // Resolved collection + item — populated either from the verify entry-point
+  // (?collection_item_id=…) or after the user resolves an ambiguous match,
+  // picks manually, or creates a new item. When set, the result sheet renders
+  // its confident layout against this pair regardless of which mode the
+  // capture started in.
+  const [resolvedContext, setResolvedContext] = useState<CollectionItemContext | null>(null);
+  // Tracks whether the user explicitly picked / created the resolved item
+  // (vs. it being auto-filled from AI matchedItemId). Manual picks must NOT
+  // be overwritten by the auto-resolve effect, and they promote the result
+  // sheet to the confident layout regardless of the original verdict.
+  const [manualOverride, setManualOverride] = useState(false);
+  const [note, setNote] = useState('');
+  const [chooseCollectionVisible, setChooseCollectionVisible] = useState(false);
+  const [manualPickVisible, setManualPickVisible] = useState(false);
+  const [createItemVisible, setCreateItemVisible] = useState(false);
+  const [allCollections, setAllCollections] = useState<CollectionWithProgress[]>([]);
+  const [collectionsLoading, setCollectionsLoading] = useState(true);
   const cameraRef = useRef<CameraView>(null);
   const capture = useCapture();
+  const { activeCollectionId, setActive } = useActiveCollection();
   // Triggers location-permission prompt on Camera mount; result is read at shutter.
   const { location: deviceLocation } = useUserLocation();
+
+  const activeCollection = useMemo(
+    () => allCollections.find((c) => c.id === activeCollectionId) ?? null,
+    [allCollections, activeCollectionId]
+  );
+
+  // One-time fetch of joined+own collections, used by the viewfinder chip
+  // picker and the manual-pick drill-down. Refreshes on user change only.
+  useEffect(() => {
+    if (!user) return;
+    let cancelled = false;
+    void (async () => {
+      try {
+        const [mine, pickedUp] = await Promise.all([
+          listMyCollections(user.id),
+          listPickedUpCollections(user.id),
+        ]);
+        if (!cancelled) {
+          const merged = [...mine, ...pickedUp];
+          const seen = new Set<string>();
+          setAllCollections(
+            merged.filter((c) => {
+              if (seen.has(c.id)) return false;
+              seen.add(c.id);
+              return true;
+            })
+          );
+        }
+      } catch (e) {
+        console.warn('[CameraScreen] listCollections failed', e);
+      } finally {
+        if (!cancelled) setCollectionsLoading(false);
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [user]);
+
+  useEffect(() => {
+    if (!initialItemId) {
+      setResolvedContext(null);
+      return;
+    }
+    let cancelled = false;
+    void (async () => {
+      try {
+        const ctx = await getCollectionItemContext(initialItemId);
+        if (!cancelled) setResolvedContext(ctx);
+      } catch (e) {
+        console.warn('[CameraScreen] getCollectionItemContext failed', e);
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [initialItemId]);
+
+  // After a non-verify capture lands a confident matched_item_id, fetch its
+  // collection+item so the confident layout has the chips it needs without
+  // each branch having to do its own lookup. Bails out the moment the user
+  // manually overrides — otherwise it would keep snapping back to the AI's
+  // pick whenever they choose a different item.
+  const matchedItemId = capture.matchedItemId;
+  useEffect(() => {
+    if (initialItemId) return; // verify entry already handles its own context
+    if (manualOverride) return;
+    if (!matchedItemId) return;
+    if (resolvedContext?.item.id === matchedItemId) return;
+    let cancelled = false;
+    void (async () => {
+      try {
+        const ctx = await getCollectionItemContext(matchedItemId);
+        if (!cancelled) setResolvedContext(ctx);
+      } catch (e) {
+        console.warn('[CameraScreen] resolve matched item failed', e);
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [initialItemId, manualOverride, matchedItemId, resolvedContext?.item.id]);
 
   useEffect(() => {
     if (!cameraReady) {
@@ -89,7 +189,9 @@ export function CameraScreen() {
     setPhotoUri(null);
     setRawPhotoUri(null);
     setPendingLocation(null);
-    setChosenItemId(initialItemId);
+    setNote('');
+    setManualOverride(false);
+    if (!initialItemId) setResolvedContext(null);
   }, [initialItemId]);
 
   // Discards: throws away the in-flight photo (storage + local state). Used
@@ -113,6 +215,25 @@ export function CameraScreen() {
     }, [])
   );
 
+  const captureWithMode = useCallback(
+    (rawUri: string, location: { lat: number; lng: number } | null) => {
+      if (!user) return;
+      // Mode is inferred server-side from which ids we send:
+      //  - initialItemId: verify
+      //  - activeCollectionId only: match-in-collection
+      //  - neither: discover
+      void capture.capture({
+        rawPhotoUri: rawUri,
+        userId: user.id,
+        collectionItemId: initialItemId ?? undefined,
+        collectionId: !initialItemId && activeCollectionId ? activeCollectionId : undefined,
+        locationLat: location?.lat ?? null,
+        locationLng: location?.lng ?? null,
+      });
+    },
+    [user, capture, initialItemId, activeCollectionId]
+  );
+
   const onShutter = useCallback(async (): Promise<void> => {
     const cam = cameraRef.current;
     if (!cam || !cameraSettled) return;
@@ -126,10 +247,14 @@ export function CameraScreen() {
       setPhotoUri(stableUri);
       setRawPhotoUri(stableUri);
       setPendingLocation(deviceLocation);
+
+      // Skip the intermediate preview entirely — analyzing fires straight from
+      // the shutter for every entry mode (matches the design).
+      captureWithMode(stableUri, deviceLocation);
     } catch (e) {
       console.warn('[onShutter] takePictureAsync failed', e);
     }
-  }, [cameraSettled, deviceLocation]);
+  }, [cameraSettled, deviceLocation, captureWithMode]);
 
   const onClose = useCallback((): void => {
     discard();
@@ -141,7 +266,7 @@ export function CameraScreen() {
       const ImagePicker = await import('expo-image-picker');
       const perm = await ImagePicker.requestMediaLibraryPermissionsAsync();
       if (!perm.granted) {
-        console.warn('[onPickFromLibrary] permission denied');
+        Alert.alert(t('camera.permissionTitle'), t('camera.libraryPermissionDenied'));
         return;
       }
       const result = await ImagePicker.launchImageLibraryAsync({
@@ -153,58 +278,102 @@ export function CameraScreen() {
       const picked = result.assets[0];
       const stableUri = `${FileSystem.documentDirectory}photo_${Date.now()}.jpg`;
       await FileSystem.copyAsync({ from: picked.uri, to: stableUri });
+      const exifLoc = extractGpsFromExif(picked.exif);
       setPhotoUri(stableUri);
       setRawPhotoUri(stableUri);
-      setPendingLocation(extractGpsFromExif(picked.exif));
+      setPendingLocation(exifLoc);
+      captureWithMode(stableUri, exifLoc);
     } catch (e) {
       console.warn('[onPickFromLibrary] failed', e);
     }
+  }, [captureWithMode, t]);
+
+  const onRetake = useCallback((): void => discard(), [discard]);
+
+  // Resolve a chosen item (from candidates, manual drill-down, or freshly
+  // created) into resolvedContext so the result sheet flips to the confident
+  // layout. No new Vision call — we keep the original photo + usage tokens.
+  // Sets manualOverride so the auto-resolve effect doesn't snap back to the
+  // AI's original matched_item_id.
+  const resolveItemId = useCallback(async (itemId: string): Promise<void> => {
+    try {
+      const ctx = await getCollectionItemContext(itemId);
+      setManualOverride(true);
+      setResolvedContext(ctx);
+    } catch (e) {
+      console.warn('[CameraScreen] resolveItemId failed', e);
+    }
   }, []);
 
-  const onPickItem = useCallback(
+  const onPickCandidateItem = useCallback(
     (itemId: string): void => {
-      const upload = rawPhotoUri ?? photoUri;
-      if (!upload || !user) return;
-      setChosenItemId(itemId);
+      void resolveItemId(itemId);
+    },
+    [resolveItemId]
+  );
+
+  // Discover branch picked a collection candidate — re-run capture in
+  // match-in-collection mode against the same photo. Discards the existing
+  // pending photo so we don't leak storage; reuses rawPhotoUri. Resets
+  // manual override + resolvedContext so the new validation's matched item
+  // is allowed to auto-fill.
+  const onPickCandidateCollection = useCallback(
+    async (collectionId: string): Promise<void> => {
+      const raw = rawPhotoUri;
+      if (!raw || !user) return;
+      setManualOverride(false);
+      setResolvedContext(null);
+      // Await discard so its terminal setState(INITIAL) lands before the next
+      // capture starts mutating state. Fire-and-forget here was correct only
+      // by accident of React batching — fragile under future refactors.
+      await capture.discard();
       void capture.capture({
-        rawPhotoUri: upload,
+        rawPhotoUri: raw,
         userId: user.id,
-        collectionItemId: itemId,
+        collectionId,
         locationLat: pendingLocation?.lat ?? null,
         locationLng: pendingLocation?.lng ?? null,
       });
     },
-    [rawPhotoUri, photoUri, user, capture, pendingLocation]
+    [rawPhotoUri, user, capture, pendingLocation]
   );
 
-  const onSavePreselected = useCallback((): void => {
-    const upload = rawPhotoUri ?? photoUri;
-    if (!upload || !user || !chosenItemId) return;
-    void capture.capture({
-      rawPhotoUri: upload,
-      userId: user.id,
-      collectionItemId: chosenItemId,
-      locationLat: pendingLocation?.lat ?? null,
-      locationLng: pendingLocation?.lng ?? null,
-    });
-  }, [rawPhotoUri, photoUri, user, chosenItemId, capture, pendingLocation]);
+  const onPickManually = useCallback((): void => {
+    setManualPickVisible(true);
+  }, []);
 
-  const onRetake = useCallback((): void => discard(), [discard]);
+  const onCreateItem = useCallback((): void => {
+    setCreateItemVisible(true);
+  }, []);
+
+  const onItemCreated = useCallback(
+    (item: { id: string }): void => {
+      setCreateItemVisible(false);
+      void resolveItemId(item.id);
+    },
+    [resolveItemId]
+  );
 
   // Save: commit the validated photo to a finds row and pop the screen.
   // commit() throws on DB failure — we surface as Alert and stay on the
-  // result screen so the user can retry without re-validating.
+  // result screen so the user can retry without re-validating. When the user
+  // resolved an item AFTER validation (ambiguous / manual / create flows),
+  // resolvedContext.item.id overrides the pending id baked in by useCapture.
   const onSave = useCallback(async (): Promise<void> => {
     if (!user) return;
     try {
-      await capture.commit({ userId: user.id });
+      await capture.commit({
+        userId: user.id,
+        notes: note.trim() ? note.trim() : null,
+        collectionItemIdOverride: resolvedContext?.item.id,
+      });
       clearLocal();
       router.back();
     } catch (e) {
       console.warn('[onSave] commit failed', e);
       Alert.alert(t('common.error'), t('camera.errorSave'));
     }
-  }, [user, capture, clearLocal, t]);
+  }, [user, capture, clearLocal, note, resolvedContext, t]);
 
   if (!permission) return <Spinner />;
 
@@ -226,31 +395,106 @@ export function CameraScreen() {
   }
 
   if (capture.stage !== 'idle' && capture.stage !== 'done' && capture.stage !== 'error') {
-    const labelKey = STAGE_TO_LABEL_KEY[capture.stage];
+    if (photoUri) {
+      return <AnalyzingOverlay photoUri={photoUri} stage={capture.stage} />;
+    }
     return (
       <SafeAreaView>
         <View className="flex-1 items-center justify-center gap-4">
           <Spinner />
-          {labelKey && <Text className="text-text-dim">{t(labelKey)}</Text>}
         </View>
       </SafeAreaView>
     );
   }
 
-  if (capture.stage === 'done') {
+  if (capture.stage === 'done' && photoUri) {
+    const sheetMode = initialItemId
+      ? 'verify'
+      : capture.mode === 'match-in-collection'
+        ? 'match-in-collection'
+        : 'discover';
+
+    const sheet = (
+      <CaptureResultSheet
+        mode={sheetMode}
+        status={capture.validationStatus ?? 'vision_failed'}
+        result={capture.validation}
+        manuallyResolved={manualOverride}
+        photoUri={photoUri}
+        collection={
+          resolvedContext
+            ? {
+                id: resolvedContext.collection.id,
+                title: resolvedContext.collection.title,
+                icon: resolvedContext.collection.icon,
+              }
+            : activeCollection
+              ? {
+                  id: activeCollection.id,
+                  title: activeCollection.title,
+                  icon: activeCollection.icon,
+                }
+              : null
+        }
+        item={
+          resolvedContext
+            ? {
+                id: resolvedContext.item.id,
+                name: resolvedContext.item.name,
+                rarity: resolvedContext.item.rarity,
+              }
+            : null
+        }
+        candidateItems={capture.candidateItems}
+        candidateCollections={capture.candidateCollections}
+        location={pendingLocation}
+        note={note}
+        onNoteChange={setNote}
+        onSave={() => {
+          void onSave();
+        }}
+        onRetake={onRetake}
+        onClose={onClose}
+        onPickItem={onPickCandidateItem}
+        onPickCollection={onPickCandidateCollection}
+        onPickManually={onPickManually}
+        onCreateItem={
+          // Only offer create when we know which collection to insert into:
+          // active chip OR a discover-picked collection.
+          activeCollectionId || capture.matchedCollectionId ? onCreateItem : undefined
+        }
+      />
+    );
+
     return (
-      <SafeAreaView>
-        <View className="flex-1 justify-end p-4">
-          <ValidationResultSheet
-            status={capture.validationStatus ?? 'vision_failed'}
-            result={capture.validation}
-            onSave={() => {
-              void onSave();
-            }}
-            onRetake={onRetake}
-          />
-        </View>
-      </SafeAreaView>
+      <View className="flex-1 bg-bg">
+        {sheet}
+        <ManualPickModal
+          visible={manualPickVisible}
+          collections={allCollections}
+          loading={collectionsLoading}
+          onClose={() => setManualPickVisible(false)}
+          onPick={(itemId) => {
+            setManualPickVisible(false);
+            void resolveItemId(itemId);
+          }}
+        />
+        {(() => {
+          const targetCollectionId = activeCollectionId ?? capture.matchedCollectionId ?? null;
+          const targetCollection = allCollections.find((c) => c.id === targetCollectionId) ?? null;
+          if (!targetCollectionId || !targetCollection) return null;
+          return (
+            <CreateItemSheet
+              visible={createItemVisible}
+              collectionId={targetCollectionId}
+              collectionTitle={targetCollection.title}
+              defaultName={capture.validation?.detected ?? ''}
+              onClose={() => setCreateItemVisible(false)}
+              onCreated={onItemCreated}
+            />
+          );
+        })()}
+      </View>
     );
   }
 
@@ -261,7 +505,7 @@ export function CameraScreen() {
         <GoBackButton icon="close" onPress={onClose} />
         <View className="flex-1 items-center justify-center gap-4 p-6">
           <Text className="text-text text-base text-center">{t('camera.errorCapture')}</Text>
-          {capture.error ? (
+          {__DEV__ && capture.error ? (
             <Text className="text-coral text-xs text-center" selectable>
               {capture.error}
             </Text>
@@ -271,19 +515,6 @@ export function CameraScreen() {
           </Pressable>
         </View>
       </SafeAreaView>
-    );
-  }
-
-  if (photoUri) {
-    return (
-      <PhotoPreview
-        photoUri={photoUri}
-        hasPreselectedItem={!!initialItemId}
-        onClose={onClose}
-        onRetake={onRetake}
-        onSavePreselected={onSavePreselected}
-        onPick={onPickItem}
-      />
     );
   }
 
@@ -297,7 +528,23 @@ export function CameraScreen() {
       />
       <RNSafeAreaView style={StyleSheet.absoluteFill} pointerEvents="box-none">
         <View className="flex-1 justify-between p-4" pointerEvents="box-none">
-          <GoBackButton icon="close" onPress={onClose} />
+          <View className="gap-3" pointerEvents="box-none">
+            <GoBackButton icon="close" onPress={onClose} />
+            {!initialItemId ? (
+              <ActiveCollectionChip
+                collection={
+                  activeCollection
+                    ? {
+                        id: activeCollection.id,
+                        title: activeCollection.title,
+                        icon: activeCollection.icon,
+                      }
+                    : null
+                }
+                onPress={() => setChooseCollectionVisible(true)}
+              />
+            ) : null}
+          </View>
           <View className="items-center pb-8 gap-4" pointerEvents="box-none">
             {cameraSettled ? (
               <TouchableOpacity
@@ -317,116 +564,78 @@ export function CameraScreen() {
           </View>
         </View>
       </RNSafeAreaView>
+
+      <ChooseCollectionSheet
+        visible={chooseCollectionVisible}
+        collections={allCollections}
+        loading={collectionsLoading}
+        activeCollectionId={activeCollectionId}
+        onPick={setActive}
+        onClose={() => setChooseCollectionVisible(false)}
+      />
     </View>
   );
 }
 
-interface PhotoPreviewProps {
-  photoUri: string;
-  hasPreselectedItem: boolean;
+// Manual drill-down: collection list → expanded items. Used when AI fails
+// (no-match) or the user explicitly rejects all candidates. Reuses the same
+// listing the legacy auto-detect path used; rendered here as a Modal so it
+// can overlay the result sheet without unmounting it.
+interface ManualPickModalProps {
+  visible: boolean;
+  collections: CollectionWithProgress[];
+  loading: boolean;
   onClose: () => void;
-  onRetake: () => void;
-  onSavePreselected: () => void;
   onPick: (itemId: string) => void;
 }
 
-function PhotoPreview({
-  photoUri,
-  hasPreselectedItem,
-  onClose,
-  onRetake,
-  onSavePreselected,
-  onPick,
-}: PhotoPreviewProps) {
-  const { t } = useTranslation();
-
+function ManualPickModal({ visible, collections, loading, onClose, onPick }: ManualPickModalProps) {
+  // Backdrop is a separate absolute-fill Pressable so the content View has no
+  // Pressable ancestor — nested Pressable around a FlatList swallows the
+  // child press responders and the rows stop being tappable. Plain View on
+  // the content side keeps inner taps working.
   return (
-    <View style={{ flex: 1, backgroundColor: 'black' }}>
-      <ExpoImage
-        source={{ uri: photoUri }}
-        style={{ flex: 1 }}
-        contentFit="cover"
-        recyclingKey={photoUri}
-      />
-      <RNSafeAreaView
-        edges={['top']}
-        pointerEvents="box-none"
-        style={{ position: 'absolute', top: 0, left: 0, right: 0 }}>
-        <GoBackButton icon="close" onPress={onClose} />
-      </RNSafeAreaView>
-      <RNSafeAreaView
-        edges={['bottom']}
-        style={{ position: 'absolute', bottom: 0, left: 0, right: 0 }}
-        className="bg-surface">
-        {hasPreselectedItem ? (
-          <View className="flex-row gap-3 p-4">
-            <Pressable
-              onPress={onRetake}
-              className="flex-1 bg-surface-hi rounded-md p-4 items-center">
-              <Text className="text-text">{t('camera.retake')}</Text>
-            </Pressable>
-            <Pressable
-              onPress={onSavePreselected}
-              className="flex-1 bg-gold rounded-md p-4 items-center">
-              <Text className="text-on-gold font-semibold">{t('camera.save')}</Text>
-            </Pressable>
-          </View>
-        ) : (
-          <ItemPickerSheet onPick={onPick} onRetake={onRetake} />
-        )}
-      </RNSafeAreaView>
-    </View>
+    <Modal visible={visible} animationType="slide" transparent onRequestClose={onClose}>
+      <View className="flex-1 justify-end">
+        <Pressable
+          onPress={onClose}
+          accessibilityRole="button"
+          accessibilityLabel="Close"
+          className="absolute top-0 left-0 right-0 bottom-0 bg-overlay"
+        />
+        <View className="bg-bg rounded-t-xl" style={{ maxHeight: '80%' }}>
+          <ItemPickerSheet
+            collections={collections}
+            loading={loading}
+            onPick={onPick}
+            onClose={onClose}
+          />
+        </View>
+      </View>
+    </Modal>
   );
 }
 
 interface ItemPickerSheetProps {
+  collections: CollectionWithProgress[];
+  loading: boolean;
   onPick: (itemId: string) => void;
-  onRetake: () => void;
+  onClose: () => void;
 }
 
-function ItemPickerSheet({ onPick, onRetake }: ItemPickerSheetProps) {
+function ItemPickerSheet({ collections, loading, onPick, onClose }: ItemPickerSheetProps) {
   const { t } = useTranslation();
   const { user } = useAuth();
-  const [collections, setCollections] = useState<CollectionWithProgress[]>([]);
-  const [loading, setLoading] = useState(true);
   const [expandedId, setExpandedId] = useState<string | null>(null);
-
-  useEffect(() => {
-    if (!user) return;
-    let cancelled = false;
-    void (async () => {
-      try {
-        const [mine, pickedUp] = await Promise.all([
-          listMyCollections(user.id),
-          listPickedUpCollections(user.id),
-        ]);
-        if (!cancelled) {
-          const merged = [...mine, ...pickedUp];
-          const seen = new Set<string>();
-          const unique = merged.filter((c) => {
-            if (seen.has(c.id)) return false;
-            seen.add(c.id);
-            return true;
-          });
-          setCollections(unique);
-        }
-      } finally {
-        if (!cancelled) setLoading(false);
-      }
-    })();
-    return () => {
-      cancelled = true;
-    };
-  }, [user]);
 
   return (
     <View className="bg-surface rounded-t-xl p-4 gap-3" style={{ maxHeight: 420 }}>
       <View className="flex-row items-center justify-between">
         <Text className="text-text text-base font-semibold flex-1">{t('camera.chooseItem')}</Text>
         <Pressable
-          onPress={onRetake}
+          onPress={onClose}
           className="px-3 py-2 rounded-full bg-surface-hi border border-stroke">
-          <Text className="text-text text-xs">{t('camera.retake')}</Text>
+          <Text className="text-text text-xs">{t('common.close')}</Text>
         </Pressable>
       </View>
       {loading ? (

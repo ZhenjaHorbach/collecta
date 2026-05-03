@@ -1,3 +1,10 @@
+// Mirrors XP_PER_EVENT in supabase/functions/_shared/leveling.ts. Duplicated
+// intentionally — Deno can't import from src/. Keep the values in sync; if
+// you change one, change the other (see .claude/rules/gamification.md).
+export const XP_PER_FIND = 10;
+export const XP_PER_REACTION = 5;
+export const XP_PER_COLLECTION_COMPLETE = 25;
+
 // Streak is advanced lazily inside the award-xp edge function on every find.
 // That means a user who skipped 3 days will still have the OLD streak_days in
 // the DB until their next find. For UI purposes we shouldn't lie — if the last

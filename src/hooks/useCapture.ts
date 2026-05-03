@@ -4,7 +4,9 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import {
   validateFind,
   type ApiUsage,
+  type ValidateFindMode,
   type ValidateFindOutcome,
+  type ValidationCandidate,
 } from '@services/ai-validation.service';
 import { deleteFindPhoto, uploadFindPhoto } from '@services/find-photo.service';
 import { createFind } from '@services/finds.service';
@@ -15,7 +17,10 @@ export type CaptureStage = 'idle' | 'compressing' | 'uploading' | 'validating' |
 
 interface PendingFind {
   photoUrl: string;
-  collectionItemId: string;
+  // The item we'll commit against. In verify mode the caller supplies it up
+  // front; in PR3 modes (match-in-collection / discover) it is filled in from
+  // the validation outcome's matched_item_id once the AI picks one.
+  collectionItemId: string | null;
   locationLat: number | null;
   locationLng: number | null;
   // AI metadata captured during validation; passed to createFind on commit
@@ -29,6 +34,11 @@ interface CaptureState {
   pending: PendingFind | null;
   validation: ValidationResult | null;
   validationStatus: ValidateFindOutcome['status'] | null;
+  mode: ValidateFindMode | null;
+  matchedCollectionId: string | null;
+  matchedItemId: string | null;
+  candidateItems: ValidationCandidate[];
+  candidateCollections: ValidationCandidate[];
   error: string | null;
 }
 
@@ -37,13 +47,22 @@ const INITIAL: CaptureState = {
   pending: null,
   validation: null,
   validationStatus: null,
+  mode: null,
+  matchedCollectionId: null,
+  matchedItemId: null,
+  candidateItems: [],
+  candidateCollections: [],
   error: null,
 };
 
 interface CaptureInput {
   rawPhotoUri: string;
   userId: string;
-  collectionItemId: string;
+  // Provide whichever the caller knows. PR1: callers always supply
+  // collectionItemId (verify mode). PR3 will start sending collectionId-only
+  // (match-in-collection) and neither (discover).
+  collectionItemId?: string | null;
+  collectionId?: string | null;
   locationLat?: number | null;
   locationLng?: number | null;
 }
@@ -51,6 +70,11 @@ interface CaptureInput {
 interface CommitInput {
   userId: string;
   notes?: string | null;
+  // Override the collectionItemId baked into pending. Used by the camera
+  // ambiguous / manual-pick / create-on-the-fly flows where the user resolves
+  // the item *after* validation. Falls back to pending.collectionItemId when
+  // omitted.
+  collectionItemIdOverride?: string;
 }
 
 // Capture flow:
@@ -91,7 +115,7 @@ export function useCapture() {
       const photoUrl = await uploadFindPhoto(compressed.uri, input.userId);
       const initialPending: PendingFind = {
         photoUrl,
-        collectionItemId: input.collectionItemId,
+        collectionItemId: input.collectionItemId ?? null,
         locationLat: input.locationLat ?? null,
         locationLng: input.locationLng ?? null,
         aiModel: null,
@@ -100,10 +124,18 @@ export function useCapture() {
 
       at('validating');
       setState((s) => ({ ...s, stage: 'validating', pending: initialPending }));
-      const outcome = await validateFind(photoUrl, input.collectionItemId);
+      const outcome = await validateFind({
+        photoUrl,
+        collectionItemId: input.collectionItemId ?? undefined,
+        collectionId: input.collectionId ?? undefined,
+      });
 
+      // If the server picked an item for us (PR3 modes), prefer that for the
+      // eventual commit. Verify mode echoes the caller-supplied id back, so
+      // this fallback chain is correct in all modes.
       const pending: PendingFind = {
         ...initialPending,
+        collectionItemId: outcome.matchedItemId ?? initialPending.collectionItemId ?? null,
         aiModel: outcome.model,
         aiUsage: outcome.usage,
       };
@@ -112,16 +144,19 @@ export function useCapture() {
         pending,
         validation: outcome.result,
         validationStatus: outcome.status,
+        mode: outcome.mode,
+        matchedCollectionId: outcome.matchedCollectionId,
+        matchedItemId: outcome.matchedItemId,
+        candidateItems: outcome.candidateItems,
+        candidateCollections: outcome.candidateCollections,
         error: outcome.error,
       });
     } catch (err) {
       const msg = err instanceof Error ? err.message : String(err);
       console.warn(`[capture] failed at stage=${currentStage}`, err);
       setState({
+        ...INITIAL,
         stage: 'error',
-        pending: null,
-        validation: null,
-        validationStatus: null,
         error: `[${currentStage}] ${msg}`,
       });
     }
@@ -136,9 +171,13 @@ export function useCapture() {
       const pending = pendingRef.current;
       const validation = state.validation;
       if (!pending) throw new Error('Nothing to commit — no pending photo.');
+      const collectionItemId = input.collectionItemIdOverride ?? pending.collectionItemId;
+      if (!collectionItemId) {
+        throw new Error('Nothing to commit — no collection item resolved yet.');
+      }
       const find = await createFind({
         userId: input.userId,
-        collectionItemId: pending.collectionItemId,
+        collectionItemId,
         photoUrl: pending.photoUrl,
         locationLat: pending.locationLat,
         locationLng: pending.locationLng,
