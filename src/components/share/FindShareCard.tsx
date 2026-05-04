@@ -4,8 +4,6 @@ import { useTranslation } from 'react-i18next';
 import { Text, View } from 'react-native';
 import QRCode from 'react-native-qrcode-svg';
 
-import { useColors } from '@hooks/useColors';
-
 export interface FindShareCardProps {
   photoUrl: string;
   itemName: string;
@@ -15,43 +13,29 @@ export interface FindShareCardProps {
   url: string;
 }
 
+// Renders off-screen for view-shot capture. Fixed dimensions so the captured
+// PNG is consistent regardless of viewport.
+//
+// QR code wrappers use literal #fff/#000 — the deep-linking skill requires
+// scanner-friendly contrast that doesn't shift with the active theme.
 export const FindShareCard = forwardRef<View, FindShareCardProps>(function FindShareCard(
   { photoUrl, itemName, collectionTitle, collectionEmoji, creatorDisplayName, url },
   ref
 ) {
-  const colors = useColors();
   const { t } = useTranslation();
 
   return (
-    <View
-      ref={ref}
-      collapsable={false}
-      style={{
-        width: 540,
-        height: 800,
-        backgroundColor: colors.bg,
-      }}>
+    <View ref={ref} collapsable={false} className="w-[540px] h-[800px] bg-bg">
       <Image source={{ uri: photoUrl }} style={{ width: '100%', height: 540 }} contentFit="cover" />
-      <View style={{ padding: 28, gap: 16, flex: 1, justifyContent: 'space-between' }}>
-        <View style={{ gap: 8 }}>
-          <View
-            style={{
-              alignSelf: 'flex-start',
-              paddingHorizontal: 10,
-              paddingVertical: 4,
-              borderRadius: 100,
-              backgroundColor: colors.goldGlow,
-              borderWidth: 1,
-              borderColor: colors.gold,
-            }}>
-            <Text style={{ color: colors.gold, fontSize: 11, fontWeight: '800', letterSpacing: 1 }}>
+      <View className="p-7 gap-4 flex-1 justify-between">
+        <View className="gap-2">
+          <View className="self-start px-2.5 py-1 rounded-full bg-gold-glow border border-gold">
+            <Text className="text-gold text-[11px] font-extrabold tracking-widest">
               {t('share.foundOnCollecta')}
             </Text>
           </View>
-          <Text style={{ fontSize: 32, lineHeight: 38, fontWeight: '800', color: colors.text }}>
-            {itemName}
-          </Text>
-          <Text style={{ fontSize: 16, color: colors.textDim }}>
+          <Text className="text-[32px] leading-[38px] font-extrabold text-text">{itemName}</Text>
+          <Text className="text-base text-text-dim">
             {collectionEmoji ? `${collectionEmoji} ` : ''}
             {t('share.collectionByAuthor', {
               collection: collectionTitle,
@@ -60,15 +44,13 @@ export const FindShareCard = forwardRef<View, FindShareCardProps>(function FindS
           </Text>
         </View>
 
-        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 14 }}>
+        <View className="flex-row items-center gap-3.5">
           <View style={{ backgroundColor: '#fff', padding: 6, borderRadius: 10 }}>
             <QRCode value={url} size={80} backgroundColor="#fff" color="#000" />
           </View>
-          <View style={{ flex: 1 }}>
-            <Text style={{ fontSize: 13, color: colors.textDim, marginBottom: 2 }}>
-              {t('share.scanFind')}
-            </Text>
-            <Text style={{ fontSize: 12, color: colors.text }} numberOfLines={2}>
+          <View className="flex-1">
+            <Text className="text-[13px] text-text-dim mb-0.5">{t('share.scanFind')}</Text>
+            <Text className="text-xs text-text" numberOfLines={2}>
               {url}
             </Text>
           </View>

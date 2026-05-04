@@ -1,6 +1,7 @@
 import { compressImage } from 'collecta-turbo-image';
 import { useCallback, useEffect, useRef, useState } from 'react';
 
+import { CAPTURE_IMAGE_HI_RES, CAPTURE_IMAGE_STANDARD } from '@constants/capture';
 import {
   validateFind,
   type ApiUsage,
@@ -106,11 +107,11 @@ export function useCapture() {
       // High-res toggle (SettingsScreen → Capture). Off by default — it
       // doubles upload size and most photos don't need it. Read inline so
       // changes take effect on the next capture without remounting.
-      const highRes = readSetting('highResUploads');
+      const preset = readSetting('highResUploads') ? CAPTURE_IMAGE_HI_RES : CAPTURE_IMAGE_STANDARD;
       const compressed = await compressImage({
         uri: input.rawPhotoUri,
-        maxWidth: highRes ? 3200 : 1920,
-        quality: highRes ? 0.92 : 0.7,
+        maxWidth: preset.maxWidth,
+        quality: preset.quality,
         stripExif: true,
         format: 'jpeg',
       });

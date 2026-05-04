@@ -32,21 +32,11 @@ import { useReport } from '@hooks/useReport';
 import { useReverseGeocode } from '@hooks/useReverseGeocode';
 import type { ReportError, ReportReason } from '@services/moderation.service';
 import { shareCardImage } from '@services/share.service';
+import { formatFindDateTime } from '@utils/datetime.utils';
 import { formatCoords } from '@utils/geocode.utils';
 import { buildFindUrl } from '@utils/links.utils';
 
 type TranslateFn = ReturnType<typeof useTranslation>['t'];
-
-function formatDateTime(t: TranslateFn, iso: string): string {
-  const d = new Date(iso);
-  const date = d.toLocaleDateString(undefined, {
-    year: 'numeric',
-    month: 'short',
-    day: 'numeric',
-  });
-  const time = d.toLocaleTimeString(undefined, { hour: '2-digit', minute: '2-digit' });
-  return t('find.meta.atTime', { time: `${date}, ${time}` });
-}
 
 export function FindDetailScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
@@ -317,7 +307,7 @@ function DetailBody({ data, initialReactions, router, shareCardRef, t }: DetailB
           />
           <MetaCard
             label={t('find.meta.captured')}
-            primary={formatDateTime(t, find.created_at)}
+            primary={formatFindDateTime(find.created_at)}
             secondary={null}
           />
         </View>
@@ -338,9 +328,7 @@ function DetailBody({ data, initialReactions, router, shareCardRef, t }: DetailB
         ) : null}
       </View>
 
-      <View
-        pointerEvents="none"
-        style={{ position: 'absolute', left: -9999, top: -9999, opacity: 0 }}>
+      <View pointerEvents="none" className="absolute -left-[9999px] -top-[9999px] opacity-0">
         <FindShareCard
           ref={shareCardRef}
           photoUrl={find.photo_url}
@@ -386,9 +374,9 @@ function HeroPhoto({ photoUrl, aiPercent, aiLabel }: HeroPhotoProps) {
   }));
 
   return (
-    <View style={{ aspectRatio: 1 / 1.1, overflow: 'hidden' }} className="bg-surface">
+    <View className="aspect-[1/1.1] overflow-hidden bg-surface">
       <GestureDetector gesture={pinch}>
-        <Animated.View style={[{ width: '100%', height: '100%' }, animatedStyle]}>
+        <Animated.View className="w-full h-full" style={animatedStyle}>
           <Image
             source={{ uri: photoUrl }}
             style={{ width: '100%', height: '100%' }}

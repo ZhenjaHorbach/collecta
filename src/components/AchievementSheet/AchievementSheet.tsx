@@ -2,15 +2,11 @@ import { useTranslation } from 'react-i18next';
 import { Modal, Pressable, Text, View } from 'react-native';
 
 import type { ProfileAchievement } from '@hooks/useUserProfile';
+import { formatDate } from '@utils/datetime.utils';
 
 export interface AchievementSheetProps {
   achievement: ProfileAchievement | null;
   onClose: () => void;
-}
-
-function formatDate(iso: string): string {
-  const d = new Date(iso);
-  return d.toLocaleDateString(undefined, { year: 'numeric', month: 'short', day: 'numeric' });
 }
 
 export function AchievementSheet({ achievement, onClose }: AchievementSheetProps) {

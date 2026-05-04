@@ -428,8 +428,7 @@
       "location": "Де знайдено",
       "captured": "Знято",
       "noLocation": "Локація невідома",
-      "coords": "{{lat}}, {{lng}}",
-      "atTime": "{{time}}"
+      "coords": "{{lat}}, {{lng}}"
     },
     "openInMap": "Відкрити на мапі",
     "share": "Поділитися",

@@ -4,8 +4,6 @@ import { useTranslation } from 'react-i18next';
 import { Text, View } from 'react-native';
 import QRCode from 'react-native-qrcode-svg';
 
-import { useColors } from '@hooks/useColors';
-
 export interface CollectionShareCardProps {
   title: string;
   emoji: string | null;
@@ -18,39 +16,19 @@ export interface CollectionShareCardProps {
 // PNG is consistent regardless of viewport. Width 540 → 1080 at scale 2.
 export const CollectionShareCard = forwardRef<View, CollectionShareCardProps>(
   function CollectionShareCard({ title, emoji, coverUrl, itemsCount, url }, ref) {
-    const colors = useColors();
     const { t } = useTranslation();
 
     return (
-      <View
-        ref={ref}
-        collapsable={false}
-        style={{
-          width: 540,
-          height: 720,
-          backgroundColor: colors.bg,
-          padding: 32,
-          gap: 20,
-          justifyContent: 'space-between',
-        }}>
-        <View style={{ gap: 16 }}>
-          <View
-            style={{
-              alignSelf: 'flex-start',
-              paddingHorizontal: 12,
-              paddingVertical: 6,
-              borderRadius: 100,
-              backgroundColor: colors.gold,
-            }}>
-            <Text style={{ color: colors.onGold, fontSize: 14, fontWeight: '800' }}>
-              {t('share.brand')}
-            </Text>
+      <View ref={ref} collapsable={false} className="w-[540px] h-[720px] bg-bg p-8 justify-between">
+        <View className="gap-4">
+          <View className="self-start px-3 py-1.5 rounded-full bg-gold">
+            <Text className="text-on-gold text-sm font-extrabold">{t('share.brand')}</Text>
           </View>
-          <Text style={{ fontSize: 44, lineHeight: 50, fontWeight: '800', color: colors.text }}>
+          <Text className="text-[44px] leading-[50px] font-extrabold text-text">
             {emoji ? `${emoji} ` : ''}
             {title}
           </Text>
-          <Text style={{ fontSize: 18, color: colors.textDim }}>
+          <Text className="text-lg text-text-dim">
             {t('share.itemsToFind', { count: itemsCount })}
           </Text>
         </View>
@@ -62,28 +40,18 @@ export const CollectionShareCard = forwardRef<View, CollectionShareCardProps>(
             contentFit="cover"
           />
         ) : (
-          <View
-            style={{
-              width: '100%',
-              height: 280,
-              borderRadius: 24,
-              backgroundColor: colors.surface,
-              alignItems: 'center',
-              justifyContent: 'center',
-            }}>
-            <Text style={{ fontSize: 96 }}>{emoji ?? '📦'}</Text>
+          <View className="w-full h-[280px] rounded-lg bg-surface items-center justify-center">
+            <Text className="text-[96px]">{emoji ?? '📦'}</Text>
           </View>
         )}
 
-        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 16 }}>
+        <View className="flex-row items-center gap-4">
           <View style={{ backgroundColor: '#fff', padding: 8, borderRadius: 12 }}>
             <QRCode value={url} size={88} backgroundColor="#fff" color="#000" />
           </View>
-          <View style={{ flex: 1 }}>
-            <Text style={{ fontSize: 14, color: colors.textDim, marginBottom: 4 }}>
-              {t('share.scanCollection')}
-            </Text>
-            <Text style={{ fontSize: 13, color: colors.text }} numberOfLines={2}>
+          <View className="flex-1">
+            <Text className="text-sm text-text-dim mb-1">{t('share.scanCollection')}</Text>
+            <Text className="text-[13px] text-text" numberOfLines={2}>
               {url}
             </Text>
           </View>

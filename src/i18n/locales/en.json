@@ -418,8 +418,7 @@
       "location": "Location",
       "captured": "Captured",
       "noLocation": "Location unknown",
-      "coords": "{{lat}}, {{lng}}",
-      "atTime": "{{time}}"
+      "coords": "{{lat}}, {{lng}}"
     },
     "openInMap": "Open in map",
     "share": "Share",
