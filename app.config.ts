@@ -15,4 +15,8 @@ export default (): ExpoConfig => ({
     ...base.android,
     config: { ...base.android?.config, googleMaps: { apiKey: mapsKey } },
   },
+  extra: {
+    ...base.extra,
+    googleMapsApiKey: mapsKey,
+  },
 });

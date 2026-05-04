@@ -93,6 +93,8 @@
     "nearYou": "Obok ciebie",
     "noNearby": "W pobliżu nic jeszcze nie ma",
     "permissionDenied": "Włącz lokalizację, aby zobaczyć znaleziska obok",
+    "webMissingKeyTitle": "Mapa niedostępna",
+    "webMissingKeyBody": "Klucz Google Maps API nie jest skonfigurowany dla wersji web.",
     "minutesAgo_one": "{{count}} min temu",
     "minutesAgo_few": "{{count}} min temu",
     "minutesAgo_many": "{{count}} min temu",

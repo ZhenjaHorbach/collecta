@@ -91,6 +91,8 @@
     "nearYou": "Near you",
     "noNearby": "No finds nearby yet",
     "permissionDenied": "Enable location to see finds near you",
+    "webMissingKeyTitle": "Map unavailable",
+    "webMissingKeyBody": "Google Maps API key isn't configured for the web build.",
     "minutesAgo_one": "{{count}} min ago",
     "minutesAgo_other": "{{count}} min ago",
     "hoursAgo_one": "{{count}} hr ago",

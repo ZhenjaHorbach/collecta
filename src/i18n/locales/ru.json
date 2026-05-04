@@ -93,6 +93,8 @@
     "nearYou": "Рядом с тобой",
     "noNearby": "Поблизости пока ничего нет",
     "permissionDenied": "Разреши доступ к локации, чтобы видеть находки рядом",
+    "webMissingKeyTitle": "Карта недоступна",
+    "webMissingKeyBody": "Не настроен Google Maps API key для web-сборки.",
     "minutesAgo_one": "{{count}} мин назад",
     "minutesAgo_few": "{{count}} мин назад",
     "minutesAgo_many": "{{count}} мин назад",
