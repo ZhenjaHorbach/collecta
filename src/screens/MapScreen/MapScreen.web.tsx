@@ -3,7 +3,7 @@ import { APIProvider, Map, Marker } from '@vis.gl/react-google-maps';
 import { router, useLocalSearchParams } from 'expo-router';
 import { useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Pressable, ScrollView, Text, TextInput, View } from 'react-native';
+import { Pressable, ScrollView, Text, TextInput, useWindowDimensions, View } from 'react-native';
 
 import { NearbyFindCard } from '@components/NearbyFindCard';
 import { SafeAreaView } from '@components/SafeAreaView';
@@ -33,15 +33,17 @@ import { haversineKm } from '@utils/geo.utils';
 // Cloud Console scope it to our origins.
 const apiKey = process.env.EXPO_PUBLIC_GOOGLE_MAPS_API_KEY;
 
-// Same conversion as the native screen — viewport delta drives the bounds
-// query that hydrates the markers.
+// Approximate viewport bounds from Google Maps zoom level. 256 is the tile
+// size in pixels Google uses; doubling per zoom level gives degrees-per-pixel.
+// Caller passes actual viewport dimensions so the hydration query reflects
+// what's on screen — too narrow on mobile-width windows would under-fetch
+// edge markers, too wide would over-fetch and waste bandwidth.
 function regionToBounds(
   center: { lat: number; lng: number },
   zoom: number,
-  width = 1024,
-  height = 768
+  width: number,
+  height: number
 ): ViewportBounds {
-  // Rough degrees-per-pixel from zoom; precise enough for hydration cap.
   const scale = Math.pow(2, zoom);
   const lngDelta = (width / 256 / scale) * 360;
   const latDelta = (height / 256 / scale) * 180;
@@ -93,9 +95,15 @@ export function MapScreen() {
       lng: DEFAULT_MAP_REGION.longitude,
     };
   const initialZoom = focused ? 16 : 13;
+  // Re-key on focus changes so `<Map defaultCenter>` (one-shot like the
+  // native `initialRegion`) recentres when ?lat=&lng= comes in from
+  // FindDetailScreen → "Open in map" while the tab is already mounted.
+  const focusKey = focused ? `${focused.lat},${focused.lng}` : 'self';
 
   return (
     <MapBody
+      key={focusKey}
+      apiKey={apiKey}
       initialCenter={initialCenter}
       initialZoom={initialZoom}
       viewerLocation={location}
@@ -106,6 +114,7 @@ export function MapScreen() {
 }
 
 interface MapBodyProps {
+  apiKey: string;
   initialCenter: { lat: number; lng: number };
   initialZoom: number;
   viewerLocation: { lat: number; lng: number } | null;
@@ -113,13 +122,17 @@ interface MapBodyProps {
   colors: ReturnType<typeof useColors>;
 }
 
-function MapBody({ initialCenter, initialZoom, viewerLocation, t, colors }: MapBodyProps) {
+function MapBody({ apiKey, initialCenter, initialZoom, viewerLocation, t, colors }: MapBodyProps) {
+  const { width, height } = useWindowDimensions();
   const [center, setCenter] = useState(initialCenter);
   const [zoom, setZoom] = useState(initialZoom);
   const [activeCategory, setActiveCategory] = useState<CollectionCategory | 'all'>('all');
   const [searchQuery, setSearchQuery] = useState('');
 
-  const bounds = useMemo<ViewportBounds>(() => regionToBounds(center, zoom), [center, zoom]);
+  const bounds = useMemo<ViewportBounds>(
+    () => regionToBounds(center, zoom, width, height),
+    [center, zoom, width, height]
+  );
   const { finds } = useMapFinds(bounds);
 
   const visibleFinds = useMemo(() => {
@@ -144,7 +157,7 @@ function MapBody({ initialCenter, initialZoom, viewerLocation, t, colors }: MapB
 
   return (
     <View className="flex-1 bg-bg">
-      <APIProvider apiKey={apiKey!}>
+      <APIProvider apiKey={apiKey}>
         <View className="absolute top-0 left-0 right-0 bottom-0">
           <Map
             defaultCenter={initialCenter}
