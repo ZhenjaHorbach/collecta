@@ -64,7 +64,22 @@
   },
   "feed": {
     "title": "Aktualności",
-    "comingSoon": "Aktualności wkrótce"
+    "comingSoon": "Aktualności wkrótce",
+    "empty": "Tu jeszcze pusto — zrób swoje pierwsze zdjęcie.",
+    "sharedBadge_one": "{{count}} wspólna",
+    "sharedBadge_few": "{{count}} wspólne",
+    "sharedBadge_many": "{{count}} wspólnych",
+    "sharedBadge_other": "{{count}} wspólnych",
+    "openProfile": "Otwórz profil użytkownika {{name}}",
+    "openCollection": "Otwórz kolekcję {{title}}"
+  },
+  "reactions": {
+    "like": "Lubię",
+    "fire": "Ogień",
+    "wow": "Wow",
+    "aria": {
+      "toggle": "Przełącz reakcję {{label}}"
+    }
   },
   "map": {
     "comingSoon": "Mapa wkrótce",
@@ -342,6 +357,13 @@
     },
     "toast": {
       "unlocked": "Osiągnięcie odblokowane"
+    },
+    "signOut": {
+      "action": "Wyloguj się",
+      "confirmTitle": "Wylogować się?",
+      "confirmBody": "Aby dalej zbierać, musisz się zalogować ponownie.",
+      "confirm": "Wyloguj",
+      "cancel": "Anuluj"
     }
   },
   "theme": {

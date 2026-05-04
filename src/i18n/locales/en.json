@@ -64,7 +64,20 @@
   },
   "feed": {
     "title": "Feed",
-    "comingSoon": "Home feed coming soon"
+    "comingSoon": "Home feed coming soon",
+    "empty": "Nothing here yet — go take your first photo.",
+    "sharedBadge_one": "{{count}} shared",
+    "sharedBadge_other": "{{count}} shared",
+    "openProfile": "Open {{name}}'s profile",
+    "openCollection": "Open collection {{title}}"
+  },
+  "reactions": {
+    "like": "Like",
+    "fire": "Fire",
+    "wow": "Wow",
+    "aria": {
+      "toggle": "Toggle {{label}} reaction"
+    }
   },
   "map": {
     "comingSoon": "Map coming soon",
@@ -336,6 +349,13 @@
     },
     "toast": {
       "unlocked": "Achievement unlocked"
+    },
+    "signOut": {
+      "action": "Sign out",
+      "confirmTitle": "Sign out?",
+      "confirmBody": "You'll need to sign in again to keep collecting.",
+      "confirm": "Sign out",
+      "cancel": "Cancel"
     }
   },
   "theme": {

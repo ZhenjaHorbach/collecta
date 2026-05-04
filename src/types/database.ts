@@ -427,7 +427,30 @@ export type Database = {
       [_ in never]: never;
     };
     Functions: {
-      [_ in never]: never;
+      get_personalized_feed: {
+        Args: {
+          viewer_user_id: string;
+          viewer_lat: number | null;
+          viewer_lng: number | null;
+          page_size?: number;
+          page_offset?: number;
+        };
+        Returns: {
+          find_id: string;
+          user_id: string;
+          collection_id: string;
+          collection_item_id: string;
+          photo_url: string;
+          location_lat: number | null;
+          location_lng: number | null;
+          notes: string | null;
+          created_at: string;
+          shared_collections: number;
+          geo_score: number;
+          reactions_count: number;
+          score: number;
+        }[];
+      };
     };
     Enums: {
       collection_category:

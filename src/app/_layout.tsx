@@ -36,6 +36,7 @@ export default function RootLayout() {
               <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
               <Stack.Screen name="auth" options={{ headerShown: false }} />
               <Stack.Screen name="collection/[id]" options={{ headerShown: false }} />
+              <Stack.Screen name="user/[id]" options={{ headerShown: false }} />
               <Stack.Screen
                 name="collection/create"
                 options={{ headerShown: false, presentation: 'modal' }}

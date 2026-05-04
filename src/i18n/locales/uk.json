@@ -64,7 +64,22 @@
   },
   "feed": {
     "title": "Стрічка",
-    "comingSoon": "Стрічка скоро з'явиться"
+    "comingSoon": "Стрічка скоро з'явиться",
+    "empty": "Тут поки порожньо — зроби свою першу знахідку.",
+    "sharedBadge_one": "{{count}} спільна",
+    "sharedBadge_few": "{{count}} спільні",
+    "sharedBadge_many": "{{count}} спільних",
+    "sharedBadge_other": "{{count}} спільних",
+    "openProfile": "Відкрити профіль {{name}}",
+    "openCollection": "Відкрити колекцію «{{title}}»"
+  },
+  "reactions": {
+    "like": "Лайк",
+    "fire": "Вогонь",
+    "wow": "Вау",
+    "aria": {
+      "toggle": "Перемкнути реакцію «{{label}}»"
+    }
   },
   "map": {
     "comingSoon": "Мапа скоро з'явиться",
@@ -342,6 +357,13 @@
     },
     "toast": {
       "unlocked": "Досягнення отримано"
+    },
+    "signOut": {
+      "action": "Вийти",
+      "confirmTitle": "Вийти з акаунту?",
+      "confirmBody": "Щоб продовжити колекціонувати, потрібно буде знову увійти.",
+      "confirm": "Вийти",
+      "cancel": "Скасувати"
     }
   },
   "theme": {
