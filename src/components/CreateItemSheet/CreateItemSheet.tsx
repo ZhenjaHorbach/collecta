@@ -68,7 +68,7 @@ export function CreateItemSheet({
   return (
     <Modal visible={visible} animationType="slide" transparent onRequestClose={onClose}>
       <View className="flex-1 justify-end bg-overlay">
-        <View className="bg-bg rounded-t-xl p-5 gap-4" style={{ maxHeight: '85%' }}>
+        <View className="bg-bg rounded-t-xl p-5 gap-4 max-h-[85%]">
           <View className="flex-row items-center justify-between">
             <Text className="text-text text-base font-semibold">
               {t('validation.createItem.title')}

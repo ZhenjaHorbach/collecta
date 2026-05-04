@@ -190,7 +190,7 @@ function PhotoHeader({
     tone === 'positive' ? 'text-gold' : tone === 'negative' ? 'text-coral' : 'text-text-dim';
 
   return (
-    <View className="relative" style={{ height: 340 }}>
+    <View className="relative h-[340px]">
       <ExpoImage
         source={{ uri: photoUri }}
         style={{ width: '100%', height: '100%' }}

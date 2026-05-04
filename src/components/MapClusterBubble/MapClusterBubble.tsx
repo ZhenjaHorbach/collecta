@@ -1,4 +1,3 @@
-import { useColors } from '@hooks/useColors';
 import { Text, View } from 'react-native';
 
 export interface MapClusterBubbleProps {
@@ -6,20 +5,9 @@ export interface MapClusterBubbleProps {
 }
 
 export function MapClusterBubble({ count }: MapClusterBubbleProps) {
-  const colors = useColors();
   return (
-    <View
-      className="items-center justify-center rounded-xl bg-surface-hi"
-      style={{
-        minWidth: 44,
-        height: 44,
-        paddingHorizontal: 12,
-        borderWidth: 2,
-        borderColor: colors.gold,
-      }}>
-      <Text className="text-text font-bold" style={{ fontSize: 14 }}>
-        {count}
-      </Text>
+    <View className="items-center justify-center rounded-xl bg-surface-hi border-2 border-gold min-w-[44px] h-11 px-3">
+      <Text className="text-text font-bold text-sm">{count}</Text>
     </View>
   );
 }

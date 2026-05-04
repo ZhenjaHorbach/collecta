@@ -1,6 +1,17 @@
 {
   "$schema": "https://json.schemastore.org/claude-code-settings.json",
   "hooks": {
+    "PreToolUse": [
+      {
+        "matcher": "Edit|Write",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "jq -r '.tool_input.file_path // empty' | grep -qE 'src/.*\\.tsx$' && echo '{\"hookSpecificOutput\":{\"hookEventName\":\"PreToolUse\",\"additionalContext\":\"Reminder (.claude/rules/styling.md): use NativeWind className with semantic tokens. Inline style={} is allowed ONLY for: (1) Reanimated animatedStyle, (2) dynamic runtime values, (3) third-party components without className support, (4) style={themeVars} on the root layout. Never hex/rgba inline; never bg-white / text-amber-500. Never dark: prefixes — tokens swap automatically.\"}}' || true"
+          }
+        ]
+      }
+    ],
     "PostToolUse": [
       {
         "matcher": "Edit|Write",
