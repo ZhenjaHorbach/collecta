@@ -66,15 +66,17 @@ When a second call site lands, refactor: extract `extractUsage(message)` into `s
 
 ### Google Maps key
 
-`react-native-maps` on Android **requires** a Google Maps API key (iOS uses Apple Maps by default but a key enables Google as fallback). Get one key from Google Cloud Console with **Maps SDK for Android** + **Maps SDK for iOS** enabled, and set in `.env`:
+The same key drives Android (`react-native-maps`), iOS (`react-native-maps`, optional — falls back to Apple Maps), and web (`@vis.gl/react-google-maps`). Get one key from Google Cloud Console with **Maps SDK for Android** + **Maps SDK for iOS** + **Maps JavaScript API** enabled, and set in `.env`:
 
 ```
-GOOGLE_MAPS_API_KEY=AIza...
+EXPO_PUBLIC_GOOGLE_MAPS_API_KEY=AIza...
 ```
 
-`app.config.ts` passes it to both platforms. For EAS cloud builds also set as an EAS secret (`eas secret:create --name GOOGLE_MAPS_API_KEY --value ...`) — `.env` is not uploaded.
+The `EXPO_PUBLIC_*` prefix is required so Metro inlines the value into the web bundle. `app.config.ts` reads the same env var and passes it to the iOS / Android platform-specific config blocks. For EAS cloud builds set as an EAS secret with the same name (`eas secret:create --name EXPO_PUBLIC_GOOGLE_MAPS_API_KEY --value ...`) — `.env` is not uploaded.
 
-Without the key the Android app crashes on the Map screen with _"API key not found"_.
+**Security:** the key ships in the web bundle (unavoidable for browser-side maps). Lock it down in Google Cloud Console with **HTTP referrer restrictions** scoped to your origins (`localhost/*`, the prod web domain) **before** deploying web.
+
+Without the key the Android app crashes on the Map screen with _"API key not found"_; the web map renders a "Map unavailable" fallback.
 
 After pulling changes that touch `app.json` plugins, native config, or new native deps:
 
