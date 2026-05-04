@@ -95,18 +95,9 @@ export function AnalyzingOverlay({ photoUri, stage }: AnalyzingOverlayProps): Re
 
       <View className="flex-1 items-center justify-center gap-4 px-6">
         <Animated.View
-          style={[
-            {
-              width: 64,
-              height: 64,
-              borderRadius: 32,
-              backgroundColor: colors.gold,
-              alignItems: 'center',
-              justifyContent: 'center',
-            },
-            pulseStyle,
-          ]}>
-          <Text style={{ color: colors.onGold, fontSize: 28 }}>✦</Text>
+          className="w-16 h-16 rounded-full bg-gold items-center justify-center"
+          style={pulseStyle}>
+          <Text className="text-on-gold text-[28px]">✦</Text>
         </Animated.View>
         <Text className="text-text text-lg font-semibold text-center">{t(titleKey)}</Text>
         <Text className="text-text-dim text-sm text-center">{t('camera.analyzing.subtitle')}</Text>

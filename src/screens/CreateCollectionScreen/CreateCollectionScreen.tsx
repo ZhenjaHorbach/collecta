@@ -245,7 +245,7 @@ export function CreateCollectionScreen() {
                   multiline
                   numberOfLines={3}
                   textAlignVertical="top"
-                  style={{ minHeight: 80 }}
+                  className="min-h-[80px]"
                   editable={!generating}
                 />
               </View>
@@ -321,8 +321,7 @@ export function CreateCollectionScreen() {
                   onPress={() => setEmojiPickerOpen(true)}
                   accessibilityRole="button"
                   accessibilityLabel={t('collections.create.emoji.pick')}
-                  style={{ width: 72, height: 72 }}
-                  className="rounded-md bg-bg border border-stroke-hi items-center justify-center">
+                  className="w-[72px] h-[72px] rounded-md bg-bg border border-stroke-hi items-center justify-center">
                   <Text className="text-4xl">{emoji}</Text>
                 </TouchableOpacity>
                 <View className="flex-1">
@@ -355,7 +354,7 @@ export function CreateCollectionScreen() {
                   multiline
                   numberOfLines={3}
                   textAlignVertical="top"
-                  style={{ minHeight: 72 }}
+                  className="min-h-[72px]"
                 />
               </Field>
             </Section>
@@ -473,7 +472,7 @@ export function CreateCollectionScreen() {
                               multiline
                               numberOfLines={2}
                               textAlignVertical="top"
-                              style={{ minHeight: 56 }}
+                              className="min-h-[56px]"
                             />
                           </ItemField>
                           <ItemField label={t('collections.create.items.fields.aiHint')}>
@@ -484,7 +483,7 @@ export function CreateCollectionScreen() {
                               multiline
                               numberOfLines={2}
                               textAlignVertical="top"
-                              style={{ minHeight: 56 }}
+                              className="min-h-[56px]"
                             />
                           </ItemField>
                           <ItemField label={t('collections.create.items.fields.rarity')}>
@@ -515,7 +514,7 @@ export function CreateCollectionScreen() {
                               multiline
                               numberOfLines={2}
                               textAlignVertical="top"
-                              style={{ minHeight: 56 }}
+                              className="min-h-[56px]"
                             />
                           </ItemField>
                         </View>
@@ -545,7 +544,7 @@ export function CreateCollectionScreen() {
                 multiline
                 numberOfLines={3}
                 textAlignVertical="top"
-                style={{ minHeight: 80 }}
+                className="min-h-[80px]"
               />
             </Section>
 
@@ -573,7 +572,7 @@ export function CreateCollectionScreen() {
 
       {creationMode === 'manual' ? (
         <View className="absolute left-0 right-0 bottom-0 p-4 pt-3 bg-bg border-t border-stroke flex-row gap-2">
-          <View style={{ flex: 1 }}>
+          <View className="flex-1">
             <Button
               label={t('collections.create.cancel')}
               variant="secondary"
@@ -581,7 +580,7 @@ export function CreateCollectionScreen() {
               disabled={submitting}
             />
           </View>
-          <View style={{ flex: 2 }}>
+          <View className="flex-[2]">
             <Button
               label={t('collections.create.submit')}
               onPress={onCreate}

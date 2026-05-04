@@ -32,7 +32,7 @@ export function ChooseCollectionSheet({
           accessibilityLabel="Close"
           className="absolute top-0 left-0 right-0 bottom-0 bg-overlay"
         />
-        <View className="bg-bg rounded-t-xl p-4 gap-3" style={{ maxHeight: '70%' }}>
+        <View className="bg-bg rounded-t-xl p-4 gap-3 max-h-[70%]">
           <View className="flex-row items-center justify-between">
             <Text className="text-text text-base font-semibold">
               {t('camera.chip.chooseCollection')}
@@ -70,7 +70,7 @@ export function ChooseCollectionSheet({
                   </View>
                 </Pressable>
               }
-              ItemSeparatorComponent={() => <View style={{ height: 6 }} />}
+              ItemSeparatorComponent={() => <View className="h-1.5" />}
               renderItem={({ item }) => (
                 <Pressable
                   onPress={() => {

@@ -188,10 +188,9 @@ function AchievementCell({ achievement, onPress }: AchievementCellProps) {
       onPress={onPress}
       accessibilityRole="button"
       accessibilityLabel={achievement.title}
-      className={`w-[22%] items-center justify-center rounded-md border p-2 ${
+      className={`w-[22%] aspect-[0.9] items-center justify-center rounded-md border p-2 ${
         earned ? 'border-stroke bg-surface' : 'border-stroke/40 bg-surface-lo opacity-40'
-      }`}
-      style={{ aspectRatio: 0.9 }}>
+      }`}>
       <View
         className={`mb-1 h-9 w-9 items-center justify-center rounded-md ${
           earned ? 'bg-gold' : 'bg-surface-hi'

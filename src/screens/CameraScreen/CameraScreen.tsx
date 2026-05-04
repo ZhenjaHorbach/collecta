@@ -619,7 +619,7 @@ function ManualPickModal({ visible, collections, loading, onClose, onPick }: Man
           accessibilityLabel="Close"
           className="absolute top-0 left-0 right-0 bottom-0 bg-overlay"
         />
-        <View className="bg-bg rounded-t-xl" style={{ maxHeight: '80%' }}>
+        <View className="bg-bg rounded-t-xl max-h-[80%]">
           <ItemPickerSheet
             collections={collections}
             loading={loading}
@@ -645,7 +645,7 @@ function ItemPickerSheet({ collections, loading, onPick, onClose }: ItemPickerSh
   const [expandedId, setExpandedId] = useState<string | null>(null);
 
   return (
-    <View className="bg-surface rounded-t-xl p-4 gap-3" style={{ maxHeight: 420 }}>
+    <View className="bg-surface rounded-t-xl p-4 gap-3 max-h-[420px]">
       <View className="flex-row items-center justify-between">
         <Text className="text-text text-base font-semibold flex-1">{t('camera.chooseItem')}</Text>
         <Pressable
@@ -662,7 +662,7 @@ function ItemPickerSheet({ collections, loading, onPick, onClose }: ItemPickerSh
         <FlatList
           data={collections}
           keyExtractor={(c) => c.id}
-          ItemSeparatorComponent={() => <View style={{ height: 6 }} />}
+          ItemSeparatorComponent={() => <View className="h-1.5" />}
           renderItem={({ item }) => (
             <CollectionRow
               collection={item}
@@ -725,7 +725,7 @@ function CollectionRow({ collection, userId, expanded, onToggle, onPick }: Colle
               <Spinner />
             </View>
           ) : detail && detail.items.length > 0 ? (
-            <ScrollView style={{ maxHeight: 180 }}>
+            <ScrollView className="max-h-[180px]">
               {detail.items.map((it) => (
                 <Pressable
                   key={it.id}

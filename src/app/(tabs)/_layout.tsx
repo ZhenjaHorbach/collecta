@@ -25,7 +25,7 @@ function CameraTabButton({
     <TouchableOpacity
       onPress={onPress}
       activeOpacity={disabled ? 1 : 0.7}
-      style={{ flex: 1, alignItems: 'center', justifyContent: 'center' }}
+      className="flex-1 items-center justify-center"
       accessibilityRole="button"
       accessibilityState={{ disabled }}
       accessibilityLabel={label}>

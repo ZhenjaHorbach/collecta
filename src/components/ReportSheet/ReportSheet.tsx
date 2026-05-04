@@ -76,12 +76,12 @@ export function ReportSheet({ visible, submitting, onSubmit, onClose }: ReportSh
             multiline
             numberOfLines={3}
             textAlignVertical="top"
-            style={{ minHeight: 72 }}
+            className="min-h-[72px]"
             editable={!submitting}
           />
 
           <View className="flex-row gap-2 mt-5">
-            <View style={{ flex: 1 }}>
+            <View className="flex-1">
               <Button
                 label={t('moderation.report.cancel')}
                 variant="secondary"
@@ -89,7 +89,7 @@ export function ReportSheet({ visible, submitting, onSubmit, onClose }: ReportSh
                 disabled={submitting}
               />
             </View>
-            <View style={{ flex: 2 }}>
+            <View className="flex-[2]">
               <Button
                 label={t('moderation.report.submit')}
                 onPress={onPressSubmit}
