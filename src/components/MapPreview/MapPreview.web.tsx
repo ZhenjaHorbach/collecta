@@ -16,11 +16,7 @@ export interface MapPreviewProps {
   openMapLabel: string;
 }
 
-const apiKey =
-  (Constants.expoConfig?.extra?.googleMapsApiKey as string | undefined) ??
-  (typeof process !== 'undefined'
-    ? (process.env as Record<string, string | undefined>).GOOGLE_MAPS_API_KEY
-    : undefined);
+const apiKey = Constants.expoConfig?.extra?.googleMapsApiKey as string | undefined;
 
 // Web override — see MapPreview.tsx for the native (react-native-maps) version.
 // The card is non-interactive (no zoom/pan) so the FindDetailScreen feels the

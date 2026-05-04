@@ -28,12 +28,7 @@ import { haversineKm } from '@utils/geo.utils';
 // Clustering is intentionally skipped for v1 web — `@googlemaps/markerclusterer`
 // can be wired later as a follow-up if marker density becomes a problem.
 
-const apiKey =
-  (Constants.expoConfig?.extra?.googleMapsApiKey as string | undefined) ??
-  // Fallback for raw `expo start --web` runs that bypass app.config.ts.
-  (typeof process !== 'undefined'
-    ? (process.env as Record<string, string | undefined>).GOOGLE_MAPS_API_KEY
-    : undefined);
+const apiKey = Constants.expoConfig?.extra?.googleMapsApiKey as string | undefined;
 
 // Same conversion as the native screen — viewport delta drives the bounds
 // query that hydrates the markers.
