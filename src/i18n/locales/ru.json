@@ -64,7 +64,23 @@
   },
   "feed": {
     "title": "Лента",
-    "comingSoon": "Лента скоро появится"
+    "comingSoon": "Лента скоро появится",
+    "empty": "Здесь пока пусто — сделай свою первую находку.",
+    "sharedBadge_one": "{{count}} общая",
+    "sharedBadge_few": "{{count}} общих",
+    "sharedBadge_many": "{{count}} общих",
+    "sharedBadge_other": "{{count}} общих",
+    "openProfile": "Открыть профиль {{name}}",
+    "openCollection": "Открыть коллекцию «{{title}}»",
+    "findPhoto": "Фото «{{item}}» от {{creator}}"
+  },
+  "reactions": {
+    "like": "Лайк",
+    "fire": "Огонь",
+    "wow": "Вау",
+    "aria": {
+      "toggle": "Переключить реакцию «{{label}}»"
+    }
   },
   "map": {
     "comingSoon": "Карта скоро появится",
@@ -342,6 +358,13 @@
     },
     "toast": {
       "unlocked": "Достижение получено"
+    },
+    "signOut": {
+      "action": "Выйти",
+      "confirmTitle": "Выйти из аккаунта?",
+      "confirmBody": "Чтобы продолжить коллекционировать, нужно будет снова войти.",
+      "confirm": "Выйти",
+      "cancel": "Отмена"
     }
   },
   "theme": {
