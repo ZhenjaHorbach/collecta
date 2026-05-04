@@ -1,8 +1,8 @@
 // Jest-discoverable thin wrapper around the eval suite.
 // Skipped by default — eval runs hit a paid API and are slow. Set RUN_EVALS=1
 // to actually execute, otherwise jest just sees an empty placeholder test.
-import { aiValidationCases } from '../../src/evals/ai-validation.eval';
-import { callValidate } from '../../src/evals/client';
+import { aiValidationCases } from '../ai-validation.eval';
+import { callValidate } from '../client';
 
 const enabled = process.env.RUN_EVALS === '1' && Boolean(process.env.ANTHROPIC_API_KEY);
 

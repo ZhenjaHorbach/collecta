@@ -26,6 +26,7 @@ Per-domain rules live in `.claude/rules/` — read the relevant file before edit
 - `styling.md` — NativeWind tokens, theming, spacing
 - `supabase.md` — RLS, queries, migrations, storage, realtime
 - `ci.md` — branch workflow, commit conventions, CI jobs, secrets
+- `evals.md` — eval suites, run paths (CLI + Jest wrappers), cost gating
 
 ## Design references
 
