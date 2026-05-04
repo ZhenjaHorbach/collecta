@@ -1,22 +1,27 @@
--- Migration: 013_feed_and_reactions
--- Initial cut of the personalized feed RPC + reactions INSERT lockdown.
--- Superseded in part by 014_feed_rpc_drop_viewer_param.sql, which removes
--- the spoof-prone `viewer_user_id` parameter, fixes the candidate-window
--- pagination overlap, and tightens the reactions SELECT policy. Kept here
--- as the migration that actually ran on prod — do NOT re-edit; layer
--- changes in 014+.
+-- Migration: 014_feed_rpc_drop_viewer_param
+-- 013 shipped get_personalized_feed(viewer_user_id, viewer_lat, viewer_lng,
+-- page_size, page_offset). The viewer_user_id parameter let any caller pass
+-- another user's uuid; with SECURITY INVOKER + RLS that didn't leak data, but
+-- the user_collections sub-query then computed `shared_collections` against
+-- the spoofed user — silently returning 0 because of RLS on
+-- user_collections. Bin it: derive the viewer from auth.uid() directly.
+--
+-- This migration also widens the candidate window from `greatest(page_size*5,
+-- 100) offset page_offset` (which let consecutive pages overlap) to a fixed
+-- LIMIT 200 with the offset moved to the final ranked output, and tightens
+-- the `reactions` SELECT policy so private-collection reaction counts no
+-- longer leak via UUID guessing.
+--
+-- Idempotent re-run: drop both signatures explicitly, then create the new
+-- one.
 -- Rollback:
---   drop function if exists public.get_personalized_feed(uuid, double precision, double precision, integer, integer);
---   drop policy if exists "reactions: react to readable finds only" on public.reactions;
---   create policy "reactions: authenticated users can react"
---     on public.reactions for insert with check (auth.uid() = user_id);
+--   drop function if exists public.get_personalized_feed(double precision, double precision, integer, integer);
+--   -- then re-run 013_feed_and_reactions.sql to restore the original RPC + policy.
 
--- ─── 1. Personalized feed RPC ──────────────────────────────────────────────────
--- SECURITY INVOKER (default): the existing `finds: readable if collection is
--- public or own find` policy filters rows automatically, so we don't have to
--- duplicate the visibility predicate inside the function body.
-create or replace function public.get_personalized_feed(
-  viewer_user_id uuid,
+drop function if exists public.get_personalized_feed(uuid, double precision, double precision, integer, integer);
+drop function if exists public.get_personalized_feed(double precision, double precision, integer, integer);
+
+create function public.get_personalized_feed(
   viewer_lat     double precision,
   viewer_lng     double precision,
   page_size      integer default 20,
@@ -40,7 +45,10 @@ returns table (
 language sql
 stable
 as $$
-  with candidate as (
+  with viewer as (
+    select auth.uid() as id
+  ),
+  candidate as (
     select
       f.id            as find_id,
       f.user_id       as user_id,
@@ -53,9 +61,10 @@ as $$
       f.created_at
     from public.finds f
     join public.collection_items ci on ci.id = f.collection_item_id
-    where f.user_id <> viewer_user_id  -- own finds belong to the profile, not the social feed
+    cross join viewer v
+    where f.user_id <> v.id
     order by f.created_at desc
-    limit greatest(page_size * 5, 100) offset page_offset  -- pre-filter window before scoring
+    limit 200
   ),
   scored as (
     select
@@ -63,7 +72,8 @@ as $$
       (
         select count(*)::int
         from public.user_collections uc_viewer
-        where uc_viewer.user_id = viewer_user_id
+        cross join viewer v
+        where uc_viewer.user_id = v.id
           and uc_viewer.collection_id = c.collection_id
       ) as shared_collections,
       case
@@ -102,19 +112,19 @@ as $$
       + s.reactions_count * 1)::real as score
   from scored s
   order by score desc, s.created_at desc
-  limit page_size;
+  limit page_size offset page_offset;
 $$;
 
-grant execute on function public.get_personalized_feed(uuid, double precision, double precision, integer, integer) to authenticated;
+grant execute on function public.get_personalized_feed(double precision, double precision, integer, integer) to authenticated;
 
--- ─── 2. Reactions INSERT policy: visibility-aware ──────────────────────────────
-drop policy if exists "reactions: authenticated users can react" on public.reactions;
+-- Tighten reactions SELECT to mirror find visibility.
+drop policy if exists "reactions: public read" on public.reactions;
+drop policy if exists "reactions: read on readable finds only" on public.reactions;
 
-create policy "reactions: react to readable finds only"
-  on public.reactions for insert
-  with check (
-    auth.uid() = user_id
-    and exists (
+create policy "reactions: read on readable finds only"
+  on public.reactions for select
+  using (
+    exists (
       select 1
       from public.finds f
       join public.collection_items ci on ci.id = f.collection_item_id
