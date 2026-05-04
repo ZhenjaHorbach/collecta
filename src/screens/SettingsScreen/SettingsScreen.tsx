@@ -1,10 +1,11 @@
+import { Alert, Pressable, ScrollView, Text, View } from 'react-native';
+import { useTranslation } from 'react-i18next';
+
 import { GoBackButton } from '@components/GoBackButton';
 import { LanguageSwitcher } from '@components/LanguageSwitcher';
 import { SafeAreaView } from '@components/SafeAreaView';
 import { ThemeSwitcher } from '@components/ThemeSwitcher';
 import { signOut } from '@services/auth.service';
-import { useTranslation } from 'react-i18next';
-import { Alert, Pressable, ScrollView, Text, View } from 'react-native';
 
 export function SettingsScreen() {
   const { t } = useTranslation();

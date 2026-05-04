@@ -1,11 +1,13 @@
 import { Image } from 'expo-image';
 import { useRouter } from 'expo-router';
+import type { ReactElement } from 'react';
 import { Pressable, Text, View } from 'react-native';
 import { useTranslation } from 'react-i18next';
 
 import { ReactionBar } from '@components/ReactionBar';
 import { useReactions } from '@hooks/useReactions';
 import type { FeedItem as FeedItemModel } from '@services/feed.service';
+import type { ReactionAggregate } from '@services/reactions.service';
 
 type TranslateFn = ReturnType<typeof useTranslation>['t'];
 
@@ -21,17 +23,13 @@ function formatRelative(t: TranslateFn, iso: string): string {
 
 export interface FeedItemProps {
   item: FeedItemModel;
+  initialReactions?: ReactionAggregate;
 }
 
-export function FeedItem({ item }: FeedItemProps) {
+export function FeedItem({ item, initialReactions }: FeedItemProps): ReactElement {
   const { t } = useTranslation();
   const router = useRouter();
-  // Seed the local count for `fire` from the RPC's reactions_count so the
-  // first paint shows the right total. The hook then re-fetches the full
-  // breakdown and replaces this seed.
-  const { counts, mine, toggle } = useReactions(item.findId, {
-    counts: { fire: item.reactionsCount },
-  });
+  const { counts, mine, toggle } = useReactions(item.findId, initialReactions);
 
   return (
     <View className="mb-4 overflow-hidden rounded-lg border border-stroke bg-surface">
@@ -78,6 +76,10 @@ export function FeedItem({ item }: FeedItemProps) {
         style={{ width: '100%', aspectRatio: 1 }}
         contentFit="cover"
         cachePolicy="memory-disk"
+        accessibilityLabel={t('feed.findPhoto', {
+          item: item.itemName,
+          creator: item.creatorDisplayName,
+        })}
       />
 
       <View className="gap-3 px-4 py-3">

@@ -429,7 +429,6 @@ export type Database = {
     Functions: {
       get_personalized_feed: {
         Args: {
-          viewer_user_id: string;
           viewer_lat: number | null;
           viewer_lng: number | null;
           page_size?: number;

@@ -71,7 +71,8 @@
     "sharedBadge_many": "{{count}} общих",
     "sharedBadge_other": "{{count}} общих",
     "openProfile": "Открыть профиль {{name}}",
-    "openCollection": "Открыть коллекцию «{{title}}»"
+    "openCollection": "Открыть коллекцию «{{title}}»",
+    "findPhoto": "Фото «{{item}}» от {{creator}}"
   },
   "reactions": {
     "like": "Лайк",

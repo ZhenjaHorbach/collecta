@@ -27,7 +27,6 @@ export interface FeedItem {
 }
 
 export interface ListFeedParams {
-  viewerUserId: string;
   viewerLat: number | null;
   viewerLng: number | null;
   pageSize?: number;
@@ -59,7 +58,6 @@ interface CollectionItemJoinRow {
 // generated types already cover them.
 export async function listFeed(params: ListFeedParams): Promise<FeedItem[]> {
   const { data: rpcRows, error: rpcErr } = await supabase.rpc('get_personalized_feed', {
-    viewer_user_id: params.viewerUserId,
     viewer_lat: params.viewerLat,
     viewer_lng: params.viewerLng,
     page_size: params.pageSize ?? 20,

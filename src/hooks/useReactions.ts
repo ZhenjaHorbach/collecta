@@ -4,6 +4,7 @@ import { useAuth } from '@hooks/useAuth';
 import {
   aggregateReactionsForFind,
   toggleReaction,
+  type ReactionAggregate,
   type ReactionType,
 } from '@services/reactions.service';
 
@@ -13,25 +14,26 @@ export interface UseReactionsResult {
   toggle: (type: ReactionType) => Promise<void>;
 }
 
-interface InitialState {
-  counts?: Partial<Record<ReactionType, number>>;
-}
-
 // Optimistic toggle: count + my-mark flip immediately, server roundtrip happens
 // in the background. If the server call fails, we revert the local state and
 // surface the error in console (the toast surface for reaction errors is not
 // in scope today).
-export function useReactions(findId: string, initial?: InitialState): UseReactionsResult {
+//
+// `initialAggregate` lets a parent (e.g. useFeed) pre-populate from a single
+// batched query and skip the per-item refetch entirely.
+export function useReactions(
+  findId: string,
+  initialAggregate?: ReactionAggregate
+): UseReactionsResult {
   const { user } = useAuth();
-  const [counts, setCounts] = useState<Record<ReactionType, number>>(() => ({
-    like: initial?.counts?.like ?? 0,
-    fire: initial?.counts?.fire ?? 0,
-    wow: initial?.counts?.wow ?? 0,
-  }));
-  const [mine, setMine] = useState<Set<ReactionType>>(new Set());
+  const [counts, setCounts] = useState<Record<ReactionType, number>>(
+    () => initialAggregate?.counts ?? { like: 0, fire: 0, wow: 0 }
+  );
+  const [mine, setMine] = useState<Set<ReactionType>>(() => new Set(initialAggregate?.mine ?? []));
 
   useEffect(() => {
     if (!user) return;
+    if (initialAggregate) return; // pre-seeded by caller; no per-item fetch
     let cancelled = false;
     void (async () => {
       try {
@@ -46,7 +48,7 @@ export function useReactions(findId: string, initial?: InitialState): UseReactio
     return () => {
       cancelled = true;
     };
-  }, [findId, user]);
+  }, [findId, user, initialAggregate]);
 
   const toggle = useCallback(
     async (type: ReactionType): Promise<void> => {

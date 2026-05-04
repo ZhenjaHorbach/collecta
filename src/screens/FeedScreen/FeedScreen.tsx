@@ -1,3 +1,4 @@
+import { useEffect, useRef } from 'react';
 import { FlatList, RefreshControl, Text, View } from 'react-native';
 import { useTranslation } from 'react-i18next';
 
@@ -9,16 +10,29 @@ import { useFeed } from '@hooks/useFeed';
 import { useFeedRealtime } from '@hooks/useFeedRealtime';
 import type { FeedItem as FeedItemModel } from '@services/feed.service';
 
-export function FeedScreen() {
+const REALTIME_DEBOUNCE_MS = 2000;
+
+export function FeedScreen(): React.ReactElement {
   const { t } = useTranslation();
   const colors = useColors();
-  const { items, loading, refreshing, error, refetch, loadMore } = useFeed();
+  const { items, reactionAggregates, loading, refreshing, error, refetch, loadMore } = useFeed();
+  const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  // A new find or reaction anywhere triggers a re-fetch so RPC-ranked order
-  // stays authoritative. Cheap on Supabase Realtime — one channel, two tables.
+  // Debounce realtime-driven refetches: a single user reacting to ten finds
+  // would otherwise burst ten full RPC calls. 2 s coalesces bursts without
+  // making the feed feel stale.
   useFeedRealtime(() => {
-    void refetch();
+    if (debounceRef.current) clearTimeout(debounceRef.current);
+    debounceRef.current = setTimeout(() => {
+      void refetch();
+    }, REALTIME_DEBOUNCE_MS);
   });
+
+  useEffect(() => {
+    return () => {
+      if (debounceRef.current) clearTimeout(debounceRef.current);
+    };
+  }, []);
 
   return (
     <SafeAreaView>
@@ -37,7 +51,9 @@ export function FeedScreen() {
         <FlatList<FeedItemModel>
           data={items}
           keyExtractor={(item) => item.findId}
-          renderItem={({ item }) => <FeedItem item={item} />}
+          renderItem={({ item }) => (
+            <FeedItem item={item} initialReactions={reactionAggregates.get(item.findId)} />
+          )}
           contentContainerStyle={{ paddingHorizontal: 16, paddingBottom: 100 }}
           onEndReachedThreshold={0.5}
           onEndReached={() => {

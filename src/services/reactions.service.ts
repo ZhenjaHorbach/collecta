@@ -17,6 +17,11 @@ export interface ReactionAggregate {
   mine: ReactionType[];
 }
 
+const emptyAggregate = (): ReactionAggregate => ({
+  counts: { like: 0, fire: 0, wow: 0 },
+  mine: [],
+});
+
 export async function listReactionsForFind(findId: string): Promise<ReactionRow[]> {
   const { data, error } = await supabase
     .from('reactions')
@@ -37,13 +42,38 @@ export async function aggregateReactionsForFind(
   viewerUserId: string | null
 ): Promise<ReactionAggregate> {
   const rows = await listReactionsForFind(findId);
-  const counts: Record<ReactionType, number> = { like: 0, fire: 0, wow: 0 };
-  const mine: ReactionType[] = [];
+  const agg = emptyAggregate();
   for (const r of rows) {
-    counts[r.type] += 1;
-    if (viewerUserId && r.userId === viewerUserId) mine.push(r.type);
+    agg.counts[r.type] += 1;
+    if (viewerUserId && r.userId === viewerUserId) agg.mine.push(r.type);
   }
-  return { counts, mine };
+  return agg;
+}
+
+// Single-query batch: pulls every reaction for the given find IDs and folds
+// them into a Map. Replaces the N-query fan-out where each FeedItem mounted
+// its own listReactionsForFind call.
+export async function batchAggregateReactions(
+  findIds: string[],
+  viewerUserId: string | null
+): Promise<Map<string, ReactionAggregate>> {
+  const map = new Map<string, ReactionAggregate>();
+  if (findIds.length === 0) return map;
+  for (const id of findIds) map.set(id, emptyAggregate());
+
+  const { data, error } = await supabase
+    .from('reactions')
+    .select('user_id, find_id, type')
+    .in('find_id', findIds);
+  if (error) throw error;
+
+  for (const r of data ?? []) {
+    const agg = map.get(r.find_id);
+    if (!agg) continue;
+    agg.counts[r.type as ReactionType] += 1;
+    if (viewerUserId && r.user_id === viewerUserId) agg.mine.push(r.type as ReactionType);
+  }
+  return map;
 }
 
 export async function addReaction(

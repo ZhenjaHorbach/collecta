@@ -1,6 +1,7 @@
 import { Redirect } from 'expo-router';
-import { useTranslation } from 'react-i18next';
+import type { ReactElement } from 'react';
 import { Image, ScrollView, Text, View } from 'react-native';
+import { useTranslation } from 'react-i18next';
 
 import { GoBackButton } from '@components/GoBackButton';
 import { ProgressBar } from '@components/ProgressBar';
@@ -14,7 +15,7 @@ export interface UserProfileScreenProps {
   userId: string;
 }
 
-export function UserProfileScreen({ userId }: UserProfileScreenProps) {
+export function UserProfileScreen({ userId }: UserProfileScreenProps): ReactElement {
   const { t } = useTranslation();
   const { user } = useAuth();
   const { profile, loading, error } = useUserProfile(userId);

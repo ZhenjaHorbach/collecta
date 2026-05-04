@@ -71,7 +71,8 @@
     "sharedBadge_many": "{{count}} wspólnych",
     "sharedBadge_other": "{{count}} wspólnych",
     "openProfile": "Otwórz profil użytkownika {{name}}",
-    "openCollection": "Otwórz kolekcję {{title}}"
+    "openCollection": "Otwórz kolekcję {{title}}",
+    "findPhoto": "Zdjęcie „{{item}}” autorstwa {{creator}}"
   },
   "reactions": {
     "like": "Lubię",

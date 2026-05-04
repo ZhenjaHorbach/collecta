@@ -1,3 +1,4 @@
+import type { ReactElement } from 'react';
 import { Pressable, Text, View } from 'react-native';
 import { useTranslation } from 'react-i18next';
 
@@ -18,7 +19,7 @@ export interface ReactionBarProps {
   disabled?: boolean;
 }
 
-export function ReactionBar({ counts, mine, onToggle, disabled }: ReactionBarProps) {
+export function ReactionBar({ counts, mine, onToggle, disabled }: ReactionBarProps): ReactElement {
   const { t } = useTranslation();
 
   return (
