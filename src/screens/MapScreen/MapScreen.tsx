@@ -1,10 +1,10 @@
 import MaterialIcons from '@expo/vector-icons/MaterialIcons';
 import { useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
+import { Pressable, Platform, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
 import { Marker, type Region } from 'react-native-maps';
 import ClusterMapView from 'react-native-map-clustering';
-import { router } from 'expo-router';
+import { router, useLocalSearchParams } from 'expo-router';
 
 import { FindMarker } from '@components/FindMarker';
 import { MapClusterBubble } from '@components/MapClusterBubble';
@@ -35,6 +35,7 @@ export function MapScreen() {
   const { t } = useTranslation();
   const colors = useColors();
   const { location, status } = useUserLocation();
+  const params = useLocalSearchParams<{ lat?: string; lng?: string }>();
 
   // Defer mounting MapView until permission/location resolves so initialRegion
   // is correct on first render. initialRegion is one-shot in react-native-maps;
@@ -47,19 +48,44 @@ export function MapScreen() {
     );
   }
 
-  return <MapBody initialLocation={location} t={t} colors={colors} />;
+  // Honour ?lat=&lng= as a focus override (e.g. from a find detail's mini-map
+  // "Open map" button). Re-keying the body forces ClusterMapView to remount
+  // with a fresh initialRegion — the wrapper's animateToRegion is unreliable.
+  const focusLat = params.lat ? Number(params.lat) : null;
+  const focusLng = params.lng ? Number(params.lng) : null;
+  const focused =
+    focusLat != null && focusLng != null && Number.isFinite(focusLat) && Number.isFinite(focusLng)
+      ? { lat: focusLat, lng: focusLng }
+      : null;
+
+  const initialLocation = focused ?? location;
+  const focusKey = focused ? `${focused.lat},${focused.lng}` : 'self';
+
+  return (
+    <MapBody
+      key={focusKey}
+      initialLocation={initialLocation}
+      tightZoom={focused != null}
+      t={t}
+      colors={colors}
+    />
+  );
 }
 
 interface MapBodyProps {
   initialLocation: { lat: number; lng: number } | null;
+  tightZoom: boolean;
   t: ReturnType<typeof useTranslation>['t'];
   colors: ReturnType<typeof useColors>;
 }
 
-function MapBody({ initialLocation, t, colors }: MapBodyProps) {
-  const initialRegion: Region = initialLocation
-    ? { ...DEFAULT_MAP_REGION, latitude: initialLocation.lat, longitude: initialLocation.lng }
+function MapBody({ initialLocation, tightZoom, t, colors }: MapBodyProps) {
+  const baseRegion = tightZoom
+    ? { ...DEFAULT_MAP_REGION, latitudeDelta: 0.01, longitudeDelta: 0.01 }
     : DEFAULT_MAP_REGION;
+  const initialRegion: Region = initialLocation
+    ? { ...baseRegion, latitude: initialLocation.lat, longitude: initialLocation.lng }
+    : baseRegion;
 
   const [region, setRegion] = useState<Region>(initialRegion);
   const [activeCategory, setActiveCategory] = useState<CollectionCategory | 'all'>('all');
@@ -117,17 +143,15 @@ function MapBody({ initialLocation, t, colors }: MapBodyProps) {
           </Marker>
         )}>
         {visibleFinds.map((f) => (
-          <Marker
+          <FindMarkerPin
             key={f.id}
-            coordinate={{ latitude: f.lat, longitude: f.lng }}
-            tracksViewChanges={false}
-            onPress={() => router.push(`/collection/${f.collectionId}`)}>
-            <FindMarker
-              photoUrl={f.photoUrl}
-              emoji={f.collectionEmoji ?? CATEGORY_EMOJI[f.category]}
-              category={f.category}
-            />
-          </Marker>
+            lat={f.lat}
+            lng={f.lng}
+            photoUrl={f.photoUrl}
+            emoji={f.collectionEmoji ?? CATEGORY_EMOJI[f.category]}
+            category={f.category}
+            onPress={() => router.push(`/find/${f.id}`)}
+          />
         ))}
       </ClusterMapView>
 
@@ -174,7 +198,7 @@ function MapBody({ initialLocation, t, colors }: MapBodyProps) {
           <NearbyFindCard
             find={nearest.find}
             distanceKm={nearest.distanceKm}
-            onPress={(f) => router.push(`/collection/${f.collectionId}`)}
+            onPress={(f) => router.push(`/find/${f.id}`)}
           />
         </View>
       )}
@@ -187,6 +211,43 @@ interface ChipProps {
   label: string;
   active: boolean;
   onPress: () => void;
+}
+
+// On Android (Google Maps) custom marker views are captured to a bitmap once
+// when the marker mounts. With tracksViewChanges=false from the start the
+// capture happens before expo-image has resolved the URL → blank pin. Track
+// changes until onPhotoLoad fires, then disable tracking to keep the pan
+// smooth. iOS doesn't have the issue but the same code path is harmless.
+interface FindMarkerPinProps {
+  lat: number;
+  lng: number;
+  photoUrl: string;
+  emoji: string | null;
+  category: CollectionCategory;
+  onPress: () => void;
+}
+
+function FindMarkerPin({ lat, lng, photoUrl, emoji, category, onPress }: FindMarkerPinProps) {
+  const [tracks, setTracks] = useState(Platform.OS === 'android');
+  // Android renders a centered disk (no triangle pointer), so the anchor sits
+  // at the bitmap centre. iOS keeps the photo-card layout with the apex at
+  // the bottom edge of the captured view.
+  const anchor =
+    Platform.OS === 'android' ? ({ x: 0.5, y: 0.5 } as const) : ({ x: 0.5, y: 1 } as const);
+  return (
+    <Marker
+      coordinate={{ latitude: lat, longitude: lng }}
+      anchor={anchor}
+      tracksViewChanges={tracks}
+      onPress={onPress}>
+      <FindMarker
+        photoUrl={photoUrl}
+        emoji={emoji}
+        category={category}
+        onPhotoLoad={() => setTracks(false)}
+      />
+    </Marker>
+  );
 }
 
 function CategoryChip({ emoji, label, active, onPress }: ChipProps) {

@@ -1,3 +1,4 @@
+import { AchievementSheet } from '@components/AchievementSheet';
 import { IconSymbol } from '@components/IconSymbol';
 import { ProgressBar } from '@components/ProgressBar';
 import { SafeAreaView } from '@components/SafeAreaView';
@@ -7,6 +8,7 @@ import { useColors } from '@hooks/useColors';
 import { useUserProfile, type ProfileAchievement } from '@hooks/useUserProfile';
 import { getDisplayStreak, levelForXp } from '@utils/streak.utils';
 import { useRouter } from 'expo-router';
+import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Image, Pressable, ScrollView, Text, View } from 'react-native';
 
@@ -16,6 +18,7 @@ export function ProfileScreen() {
   const { profile, loading, error } = useUserProfile(user?.id);
   const router = useRouter();
   const colors = useColors();
+  const [activeAchievement, setActiveAchievement] = useState<ProfileAchievement | null>(null);
 
   if (loading) {
     return (
@@ -134,12 +137,21 @@ export function ProfileScreen() {
             </View>
             <View className="flex-row flex-wrap gap-2">
               {profile.achievements.map((a) => (
-                <AchievementCell key={a.id} achievement={a} />
+                <AchievementCell
+                  key={a.id}
+                  achievement={a}
+                  onPress={() => setActiveAchievement(a)}
+                />
               ))}
             </View>
           </View>
         </View>
       </ScrollView>
+
+      <AchievementSheet
+        achievement={activeAchievement}
+        onClose={() => setActiveAchievement(null)}
+      />
     </SafeAreaView>
   );
 }
@@ -166,12 +178,16 @@ function StatCell({ value, label, suffix }: StatCellProps) {
 
 interface AchievementCellProps {
   achievement: ProfileAchievement;
+  onPress: () => void;
 }
 
-function AchievementCell({ achievement }: AchievementCellProps) {
+function AchievementCell({ achievement, onPress }: AchievementCellProps) {
   const earned = achievement.unlocked;
   return (
-    <View
+    <Pressable
+      onPress={onPress}
+      accessibilityRole="button"
+      accessibilityLabel={achievement.title}
       className={`w-[22%] items-center justify-center rounded-md border p-2 ${
         earned ? 'border-stroke bg-surface' : 'border-stroke/40 bg-surface-lo opacity-40'
       }`}
@@ -187,6 +203,6 @@ function AchievementCell({ achievement }: AchievementCellProps) {
         numberOfLines={2}>
         {achievement.title}
       </Text>
-    </View>
+    </Pressable>
   );
 }

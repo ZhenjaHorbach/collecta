@@ -27,6 +27,7 @@
 
     --coral: #ef4444;
     --mint: #10b981;
+    --mint-glow: rgba(16, 185, 129, 0.18);
     --sky: #0ea5e9;
 
     --stroke: rgba(15, 23, 42, 0.08);
@@ -58,6 +59,7 @@
 
     --coral: #f07a63;
     --mint: #7ccba6;
+    --mint-glow: rgba(124, 203, 166, 0.18);
     --sky: #6ba8d4;
 
     --stroke: rgba(255, 255, 255, 0.06);

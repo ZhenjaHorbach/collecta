@@ -71,16 +71,20 @@ export function FeedItem({ item, initialReactions }: FeedItemProps): ReactElemen
         )}
       </Pressable>
 
-      <Image
-        source={{ uri: item.photoUrl }}
-        style={{ width: '100%', aspectRatio: 1 }}
-        contentFit="cover"
-        cachePolicy="memory-disk"
+      <Pressable
+        onPress={() => router.push(`/find/${item.findId}`)}
+        accessibilityRole="button"
         accessibilityLabel={t('feed.findPhoto', {
           item: item.itemName,
           creator: item.creatorDisplayName,
-        })}
-      />
+        })}>
+        <Image
+          source={{ uri: item.photoUrl }}
+          style={{ width: '100%', aspectRatio: 1 }}
+          contentFit="cover"
+          cachePolicy="memory-disk"
+        />
+      </Pressable>
 
       <View className="gap-3 px-4 py-3">
         <Pressable

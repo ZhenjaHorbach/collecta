@@ -27,6 +27,7 @@ Per-domain rules live in `.claude/rules/` — read the relevant file before edit
 - `supabase.md` — RLS, queries, migrations, storage, realtime
 - `ci.md` — branch workflow, commit conventions, CI jobs, secrets
 - `evals.md` — eval suites, run paths (CLI + Jest wrappers), cost gating
+- `settings.md` — user-facing preferences live in `SettingsScreen`, persisted via `useSetting` / MMKV
 
 ## Design references
 

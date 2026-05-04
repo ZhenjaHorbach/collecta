@@ -1,6 +1,7 @@
 import { compressImage } from 'collecta-turbo-image';
 import { useCallback, useEffect, useRef, useState } from 'react';
 
+import { CAPTURE_IMAGE_HI_RES, CAPTURE_IMAGE_STANDARD } from '@constants/capture';
 import {
   validateFind,
   type ApiUsage,
@@ -10,6 +11,7 @@ import {
 } from '@services/ai-validation.service';
 import { deleteFindPhoto, uploadFindPhoto } from '@services/find-photo.service';
 import { createFind } from '@services/finds.service';
+import { readSetting } from './useSetting';
 
 import type { Find, ValidationResult } from '@schemas';
 
@@ -102,10 +104,14 @@ export function useCapture() {
     try {
       at('compressing');
       setState((s) => ({ ...s, stage: 'compressing', error: null }));
+      // High-res toggle (SettingsScreen → Capture). Off by default — it
+      // doubles upload size and most photos don't need it. Read inline so
+      // changes take effect on the next capture without remounting.
+      const preset = readSetting('highResUploads') ? CAPTURE_IMAGE_HI_RES : CAPTURE_IMAGE_STANDARD;
       const compressed = await compressImage({
         uri: input.rawPhotoUri,
-        maxWidth: 1920,
-        quality: 0.7,
+        maxWidth: preset.maxWidth,
+        quality: preset.quality,
         stripExif: true,
         format: 'jpeg',
       });
@@ -124,11 +130,40 @@ export function useCapture() {
 
       at('validating');
       setState((s) => ({ ...s, stage: 'validating', pending: initialPending }));
-      const outcome = await validateFind({
-        photoUrl,
-        collectionItemId: input.collectionItemId ?? undefined,
-        collectionId: input.collectionId ?? undefined,
-      });
+      // AI verification toggle (SettingsScreen → Capture). When off, skip
+      // the paid Vision call entirely and synthesise a "passed" outcome so
+      // the rest of the flow proceeds as if validation succeeded. Verify
+      // (collection_item_id passed) commits straight away. The other two
+      // modes leave matchedItemId / matchedCollectionId null so the result
+      // sheet falls through to manual pick.
+      const aiOff = readSetting('aiVerification') === false;
+      const synthMode: ValidateFindMode = input.collectionItemId
+        ? 'verify'
+        : input.collectionId
+          ? 'match-in-collection'
+          : 'discover';
+      const outcome: ValidateFindOutcome = aiOff
+        ? {
+            status: 'ok',
+            mode: synthMode,
+            // Leave `result: null` so commit() writes ai_validated /
+            // ai_confidence / ai_notes as null on the row. Storing a fake
+            // confidence: 1 would be indistinguishable in analytics from a
+            // real Vision call that returned 100%.
+            result: null,
+            matchedCollectionId: input.collectionId ?? null,
+            matchedItemId: input.collectionItemId ?? null,
+            candidateItems: [],
+            candidateCollections: [],
+            model: null,
+            usage: null,
+            error: null,
+          }
+        : await validateFind({
+            photoUrl,
+            collectionItemId: input.collectionItemId ?? undefined,
+            collectionId: input.collectionId ?? undefined,
+          });
 
       // If the server picked an item for us (PR3 modes), prefer that for the
       // eventual commit. Verify mode echoes the caller-supplied id back, so

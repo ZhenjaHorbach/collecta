@@ -18,7 +18,11 @@
     "map": "Мапа",
     "collections": "Знахідки",
     "profile": "Профіль",
-    "camera": "Камера"
+    "camera": "Камера",
+    "cameraDisabled": {
+      "title": "Немає колекцій",
+      "body": "Спочатку створи або приєднайся до колекції — камера зберігає фото в неї."
+    }
   },
   "auth": {
     "welcome": {
@@ -354,7 +358,14 @@
     },
     "achievements": {
       "title": "Досягнення",
-      "fraction": "{{unlocked}} з {{total}}"
+      "fraction": "{{unlocked}} з {{total}}",
+      "detail": {
+        "xpReward": "+{{xp}} XP",
+        "unlocked": "Отримано",
+        "unlockedOn": "Отримано {{date}}",
+        "locked": "Заблоковано",
+        "lockedHint": "Продовжуй грати — відкриється, коли виконаються умови."
+      }
     },
     "toast": {
       "unlocked": "Досягнення отримано"
@@ -371,6 +382,65 @@
     "system": "Системна",
     "dark": "Темна",
     "light": "Світла"
+  },
+  "share": {
+    "brand": "COLLECTA",
+    "foundOnCollecta": "ЗНАЙДЕНО В COLLECTA",
+    "itemsToFind_one": "{{count}} елемент",
+    "itemsToFind_few": "{{count}} елементи",
+    "itemsToFind_many": "{{count}} елементів",
+    "itemsToFind_other": "{{count}} елементів",
+    "scanCollection": "Скануй, щоб приєднатися",
+    "scanFind": "Скануй, щоб відкрити",
+    "collectionByAuthor": "{{collection}} · автор {{author}}"
+  },
+  "settings": {
+    "sections": {
+      "appearance": "Вигляд",
+      "capture": "Зйомка",
+      "about": "Про застосунок"
+    },
+    "highRes": {
+      "label": "Висока роздільність",
+      "subtitle": "Краща якість, більше даних"
+    },
+    "autoLocation": {
+      "label": "Геомітка",
+      "subtitle": "Додавати GPS до знахідок"
+    },
+    "aiVerification": {
+      "label": "AI-перевірка",
+      "subtitle": "Звіряти фото з колекцією"
+    },
+    "about": {
+      "version": "Версія"
+    }
+  },
+  "find": {
+    "headerTitle": "Знахідка",
+    "loadError": "Не вдалося завантажити знахідку",
+    "aiBadge": "AI · збіг {{percent}}%",
+    "openProfile": "Відкрити профіль {{name}}",
+    "openCollection": "Відкрити колекцію {{title}}",
+    "inCollection": "У колекції",
+    "notesPlaceholder": "Без підпису",
+    "meta": {
+      "location": "Де знайдено",
+      "captured": "Знято",
+      "noLocation": "Локація невідома",
+      "coords": "{{lat}}, {{lng}}"
+    },
+    "openInMap": "Відкрити на мапі",
+    "share": "Поділитися",
+    "shareCollection": "Поділитися колекцією",
+    "shareFind": "Поділитися знахідкою",
+    "shareFindMessage": "Знайшов «{{item}}» у колекції «{{collection}}» на Collecta",
+    "shareCollectionMessage": "Подивись колекцію «{{title}}» на Collecta",
+    "startCollection": "Почати цю колекцію",
+    "openCollectionAction": "Відкрити колекцію",
+    "report": "Поскаржитися",
+    "reportTitle": "Поскаржитися на знахідку",
+    "retake": "Перезняти"
   },
   "moderation": {
     "report": {

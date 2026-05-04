@@ -33,6 +33,7 @@ export type Palette = Readonly<{
 
   coral: string;
   mint: string;
+  mintGlow: string;
   sky: string;
 
   stroke: string;
@@ -66,6 +67,7 @@ const light = {
 
   coral: '#EF4444',
   mint: '#10B981',
+  mintGlow: 'rgba(16,185,129,0.18)',
   sky: '#0EA5E9',
 
   stroke: 'rgba(15,23,42,0.08)',
@@ -97,6 +99,7 @@ const dark = {
 
   coral: '#F07A63',
   mint: '#7CCBA6',
+  mintGlow: 'rgba(124,203,166,0.18)',
   sky: '#6BA8D4',
 
   stroke: 'rgba(255,255,255,0.06)',

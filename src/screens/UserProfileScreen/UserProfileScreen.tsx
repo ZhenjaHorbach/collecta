@@ -1,8 +1,9 @@
 import { Redirect } from 'expo-router';
-import type { ReactElement } from 'react';
-import { Image, ScrollView, Text, View } from 'react-native';
+import { useState, type ReactElement } from 'react';
+import { Image, Pressable, ScrollView, Text, View } from 'react-native';
 import { useTranslation } from 'react-i18next';
 
+import { AchievementSheet } from '@components/AchievementSheet';
 import { GoBackButton } from '@components/GoBackButton';
 import { ProgressBar } from '@components/ProgressBar';
 import { SafeAreaView } from '@components/SafeAreaView';
@@ -19,6 +20,7 @@ export function UserProfileScreen({ userId }: UserProfileScreenProps): ReactElem
   const { t } = useTranslation();
   const { user } = useAuth();
   const { profile, loading, error } = useUserProfile(userId);
+  const [activeAchievement, setActiveAchievement] = useState<ProfileAchievement | null>(null);
 
   if (user?.id === userId) {
     return <Redirect href="/(tabs)/profile" />;
@@ -126,12 +128,21 @@ export function UserProfileScreen({ userId }: UserProfileScreenProps): ReactElem
             </View>
             <View className="flex-row flex-wrap gap-2">
               {profile.achievements.map((a) => (
-                <AchievementCell key={a.id} achievement={a} />
+                <AchievementCell
+                  key={a.id}
+                  achievement={a}
+                  onPress={() => setActiveAchievement(a)}
+                />
               ))}
             </View>
           </View>
         </View>
       </ScrollView>
+
+      <AchievementSheet
+        achievement={activeAchievement}
+        onClose={() => setActiveAchievement(null)}
+      />
     </SafeAreaView>
   );
 }
@@ -158,12 +169,16 @@ function StatCell({ value, label, suffix }: StatCellProps) {
 
 interface AchievementCellProps {
   achievement: ProfileAchievement;
+  onPress: () => void;
 }
 
-function AchievementCell({ achievement }: AchievementCellProps) {
+function AchievementCell({ achievement, onPress }: AchievementCellProps) {
   const earned = achievement.unlocked;
   return (
-    <View
+    <Pressable
+      onPress={onPress}
+      accessibilityRole="button"
+      accessibilityLabel={achievement.title}
       className={`w-[22%] items-center justify-center rounded-md border p-2 ${
         earned ? 'border-stroke bg-surface' : 'border-stroke/40 bg-surface-lo opacity-40'
       }`}
@@ -179,6 +194,6 @@ function AchievementCell({ achievement }: AchievementCellProps) {
         numberOfLines={2}>
         {achievement.title}
       </Text>
-    </View>
+    </Pressable>
   );
 }

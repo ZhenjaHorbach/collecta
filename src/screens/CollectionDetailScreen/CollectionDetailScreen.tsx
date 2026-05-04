@@ -175,8 +175,22 @@ function DetailBody({ data, isOwner }: { data: CollectionDetail; isOwner: boolea
     return map;
   }, [data.finds]);
 
+  const referenceFindByItem = useMemo(() => {
+    const map = new Map<string, Find>();
+    for (const f of data.referenceFinds) {
+      if (!map.has(f.collection_item_id)) map.set(f.collection_item_id, f);
+    }
+    return map;
+  }, [data.referenceFinds]);
+
   const total = data.items.length;
-  const found = data.items.filter((i) => i.found).length;
+  // Owner: only own finds count toward "found" (referenceFinds is empty).
+  // Non-owner: count cells that have either an own find or the creator's
+  // reference find — i.e. anything visibly filled in the grid. Without this
+  // a viewer sees photos in cells but the counter reads 0 / N.
+  const found = data.items.filter(
+    (i) => findByItem.has(i.id) || referenceFindByItem.has(i.id)
+  ).length;
   const progress = total > 0 ? found / total : 0;
   const headerEmoji = data.icon ?? (data.category ? CATEGORY_EMOJI[data.category] : '📦');
 
@@ -220,14 +234,27 @@ function DetailBody({ data, isOwner }: { data: CollectionDetail; isOwner: boolea
           ) : null}
         </View>
       }
-      renderItem={({ item }) => (
-        <ItemCell
-          item={item}
-          find={findByItem.get(item.id)}
-          size={cellSize}
-          onPress={() => router.push(`/(tabs)/camera?collection_item_id=${item.id}`)}
-        />
-      )}
+      renderItem={({ item }) => {
+        const ownFind = findByItem.get(item.id);
+        const refFind = referenceFindByItem.get(item.id);
+        const displayFind = ownFind ?? refFind;
+        // Non-owners can't shoot photos for someone else's collection — empty
+        // cells stay non-interactive. Owner sees camera entry as before.
+        const disabled = !isOwner && !ownFind && !refFind;
+        return (
+          <ItemCell
+            item={item}
+            find={displayFind}
+            size={cellSize}
+            disabled={disabled}
+            onPress={() => {
+              if (ownFind) router.push(`/find/${ownFind.id}`);
+              else if (refFind) router.push(`/find/${refFind.id}`);
+              else if (isOwner) router.push(`/(tabs)/camera?collection_item_id=${item.id}`);
+            }}
+          />
+        );
+      }}
       ListFooterComponent={isOwner ? <CreatorHintsPanel items={data.items} /> : null}
     />
   );
@@ -327,22 +354,26 @@ function ItemCell({
   find,
   size,
   onPress,
+  disabled,
 }: {
   item: CollectionItemWithFound;
   find: Find | undefined;
   size: number;
   onPress: () => void;
+  disabled?: boolean;
 }) {
   const photo = find?.photo_url ?? item.example_image_url;
 
   return (
     <TouchableOpacity
       onPress={onPress}
+      disabled={disabled}
       accessibilityRole="button"
+      accessibilityState={{ disabled }}
       accessibilityLabel={item.name}
-      activeOpacity={0.75}
+      activeOpacity={disabled ? 1 : 0.75}
       style={{ width: size, height: size }}
-      className={`rounded-md overflow-hidden bg-surface border border-stroke ${item.found ? '' : 'opacity-40'}`}>
+      className={`rounded-md overflow-hidden bg-surface border border-stroke ${disabled ? 'opacity-40' : ''}`}>
       {photo ? (
         <Image source={{ uri: photo }} style={{ flex: 1 }} contentFit="cover" />
       ) : (

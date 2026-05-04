@@ -18,7 +18,11 @@
     "map": "Карта",
     "collections": "Находки",
     "profile": "Профиль",
-    "camera": "Камера"
+    "camera": "Камера",
+    "cameraDisabled": {
+      "title": "Нет коллекций",
+      "body": "Сначала создай или присоединись к коллекции — камера сохраняет фото в неё."
+    }
   },
   "auth": {
     "welcome": {
@@ -354,7 +358,14 @@
     },
     "achievements": {
       "title": "Достижения",
-      "fraction": "{{unlocked}} из {{total}}"
+      "fraction": "{{unlocked}} из {{total}}",
+      "detail": {
+        "xpReward": "+{{xp}} XP",
+        "unlocked": "Получено",
+        "unlockedOn": "Получено {{date}}",
+        "locked": "Закрыто",
+        "lockedHint": "Продолжай играть — оно откроется само, когда выполнятся условия."
+      }
     },
     "toast": {
       "unlocked": "Достижение получено"
@@ -371,6 +382,65 @@
     "system": "Системная",
     "dark": "Тёмная",
     "light": "Светлая"
+  },
+  "share": {
+    "brand": "COLLECTA",
+    "foundOnCollecta": "НАЙДЕНО В COLLECTA",
+    "itemsToFind_one": "{{count}} элемент",
+    "itemsToFind_few": "{{count}} элемента",
+    "itemsToFind_many": "{{count}} элементов",
+    "itemsToFind_other": "{{count}} элементов",
+    "scanCollection": "Отсканируй, чтобы присоединиться",
+    "scanFind": "Отсканируй, чтобы открыть",
+    "collectionByAuthor": "{{collection}} · автор {{author}}"
+  },
+  "settings": {
+    "sections": {
+      "appearance": "Внешний вид",
+      "capture": "Съёмка",
+      "about": "О приложении"
+    },
+    "highRes": {
+      "label": "Высокое разрешение",
+      "subtitle": "Лучше качество, больше трафика"
+    },
+    "autoLocation": {
+      "label": "Метка геолокации",
+      "subtitle": "Добавлять GPS к находкам"
+    },
+    "aiVerification": {
+      "label": "AI-проверка",
+      "subtitle": "Сверять фото с коллекцией"
+    },
+    "about": {
+      "version": "Версия"
+    }
+  },
+  "find": {
+    "headerTitle": "Находка",
+    "loadError": "Не удалось загрузить находку",
+    "aiBadge": "AI · совпадение {{percent}}%",
+    "openProfile": "Открыть профиль {{name}}",
+    "openCollection": "Открыть коллекцию {{title}}",
+    "inCollection": "В коллекции",
+    "notesPlaceholder": "Без подписи",
+    "meta": {
+      "location": "Где найдено",
+      "captured": "Снято",
+      "noLocation": "Локация неизвестна",
+      "coords": "{{lat}}, {{lng}}"
+    },
+    "openInMap": "Открыть на карте",
+    "share": "Поделиться",
+    "shareCollection": "Поделиться коллекцией",
+    "shareFind": "Поделиться находкой",
+    "shareFindMessage": "Нашёл «{{item}}» в коллекции «{{collection}}» на Collecta",
+    "shareCollectionMessage": "Зацени коллекцию «{{title}}» на Collecta",
+    "startCollection": "Начать эту коллекцию",
+    "openCollectionAction": "Открыть коллекцию",
+    "report": "Пожаловаться",
+    "reportTitle": "Пожаловаться на находку",
+    "retake": "Переснять"
   },
   "moderation": {
     "report": {
