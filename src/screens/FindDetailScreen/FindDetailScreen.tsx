@@ -282,7 +282,9 @@ function DetailBody({ data, initialReactions, router, shareCardRef, t }: DetailB
             </Text>
             <Text className="text-xs text-text-dim" numberOfLines={1}>
               @{creator.username}
-              {creator.level != null ? ` · Lv ${creator.level}` : ''}
+              {creator.level != null
+                ? ` · ${t('profile.levelBadge', { level: creator.level })}`
+                : ''}
             </Text>
           </View>
         </Pressable>
@@ -330,9 +332,7 @@ function DetailBody({ data, initialReactions, router, shareCardRef, t }: DetailB
             label={locationLabel ?? formatCoords(find.location_lat!, find.location_lng!)}
             openMapLabel={t('find.openInMap')}
             onOpenMap={() =>
-              router.push(
-                `/(tabs)/map?lat=${find.location_lat}&lng=${find.location_lng}&findId=${find.id}`
-              )
+              router.push(`/(tabs)/map?lat=${find.location_lat}&lng=${find.location_lng}`)
             }
           />
         ) : null}

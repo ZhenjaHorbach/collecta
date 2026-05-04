@@ -27,6 +27,7 @@ module.exports = {
 
         coral: 'var(--coral)',
         mint: 'var(--mint)',
+        'mint-glow': 'var(--mint-glow)',
         sky: 'var(--sky)',
 
         stroke: 'var(--stroke)',

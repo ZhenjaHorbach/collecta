@@ -145,7 +145,11 @@ export function useCapture() {
         ? {
             status: 'ok',
             mode: synthMode,
-            result: { valid: true, confidence: 1, detected: '', suggestion: '' },
+            // Leave `result: null` so commit() writes ai_validated /
+            // ai_confidence / ai_notes as null on the row. Storing a fake
+            // confidence: 1 would be indistinguishable in analytics from a
+            // real Vision call that returned 100%.
+            result: null,
             matchedCollectionId: input.collectionId ?? null,
             matchedItemId: input.collectionItemId ?? null,
             candidateItems: [],

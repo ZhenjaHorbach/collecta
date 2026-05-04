@@ -1,5 +1,6 @@
 import { Image } from 'expo-image';
 import { forwardRef } from 'react';
+import { useTranslation } from 'react-i18next';
 import { Text, View } from 'react-native';
 import QRCode from 'react-native-qrcode-svg';
 
@@ -19,6 +20,7 @@ export const FindShareCard = forwardRef<View, FindShareCardProps>(function FindS
   ref
 ) {
   const colors = useColors();
+  const { t } = useTranslation();
 
   return (
     <View
@@ -43,7 +45,7 @@ export const FindShareCard = forwardRef<View, FindShareCardProps>(function FindS
               borderColor: colors.gold,
             }}>
             <Text style={{ color: colors.gold, fontSize: 11, fontWeight: '800', letterSpacing: 1 }}>
-              FOUND ON COLLECTA
+              {t('share.foundOnCollecta')}
             </Text>
           </View>
           <Text style={{ fontSize: 32, lineHeight: 38, fontWeight: '800', color: colors.text }}>
@@ -51,7 +53,10 @@ export const FindShareCard = forwardRef<View, FindShareCardProps>(function FindS
           </Text>
           <Text style={{ fontSize: 16, color: colors.textDim }}>
             {collectionEmoji ? `${collectionEmoji} ` : ''}
-            {collectionTitle} · by {creatorDisplayName}
+            {t('share.collectionByAuthor', {
+              collection: collectionTitle,
+              author: creatorDisplayName,
+            })}
           </Text>
         </View>
 
@@ -61,7 +66,7 @@ export const FindShareCard = forwardRef<View, FindShareCardProps>(function FindS
           </View>
           <View style={{ flex: 1 }}>
             <Text style={{ fontSize: 13, color: colors.textDim, marginBottom: 2 }}>
-              Scan to open this find
+              {t('share.scanFind')}
             </Text>
             <Text style={{ fontSize: 12, color: colors.text }} numberOfLines={2}>
               {url}

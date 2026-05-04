@@ -383,6 +383,17 @@
     "dark": "Ciemny",
     "light": "Jasny"
   },
+  "share": {
+    "brand": "COLLECTA",
+    "foundOnCollecta": "ZNALEZIONE W COLLECTA",
+    "itemsToFind_one": "{{count}} element",
+    "itemsToFind_few": "{{count}} elementy",
+    "itemsToFind_many": "{{count}} elementów",
+    "itemsToFind_other": "{{count}} elementów",
+    "scanCollection": "Zeskanuj, aby dołączyć",
+    "scanFind": "Zeskanuj, aby otworzyć",
+    "collectionByAuthor": "{{collection}} · autor: {{author}}"
+  },
   "settings": {
     "sections": {
       "appearance": "Wygląd",

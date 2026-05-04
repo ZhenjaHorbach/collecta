@@ -7,7 +7,7 @@ description: Deep links and sharing in Collecta — collecta:// URL scheme, link
 
 ## Source of truth
 
-- **URL helpers** — `src/utils/links.utils.ts`. `buildFindUrl`, `buildCollectionUrl`, `buildUserUrl`, `parseIncomingUrl`, `routeForLink`. Every share-side URL must go through these — never hand-format `collecta://...`.
+- **URL helpers** — `src/utils/links.utils.ts`. `buildFindUrl`, `buildCollectionUrl`. Every share-side URL must go through these — never hand-format `collecta://...`.
 - **Share service** — `src/services/share.service.ts`. `shareCardImage(ref, fallback)` for image-based shares; `shareUrl(payload)` for plain URL/text fallback.
 - **Share cards** — `src/components/share/{CollectionShareCard,FindShareCard}`. Off-screen views captured to PNG via `react-native-view-shot`.
 - **App scheme** — `app.json` → `"scheme": "collecta"`. Cold-start `Linking.createURL('/find/x')` produces `collecta:///find/x` (dev) or `collecta://find/x` (prod).
@@ -17,15 +17,14 @@ description: Deep links and sharing in Collecta — collecta:// URL scheme, link
 
 Expo Router wires `Linking` into its stack automatically: an incoming `collecta://find/abc` is handled the same as `router.push('/find/abc')` because the path matches a file route. **Do not** add a manual `Linking.addEventListener('url', …)` in `_layout.tsx` — it would double-route (Expo Router pushes once, your handler pushes again).
 
-The `parseIncomingUrl` helper exists only for cases where the app needs to interpret a URL itself (e.g. preflight before navigation, analytics tagging). It is **not** a routing layer.
+If you ever need to inspect an incoming URL (preflight, analytics tagging), parse it inline at the callsite with `Linking.parse(url)`. Don't add a `parseIncomingUrl` helper in `links.utils.ts` "for the future" — unused exports drift out of sync with the live routes and confuse readers.
 
 ## Adding a new shareable entity
 
 1. Add a file route under `src/app/<entity>/[id].tsx`.
 2. Add `build<Entity>Url(id)` to `links.utils.ts`.
-3. Extend `ParsedLink` and the `head === '<entity>'` branch in `parseIncomingUrl`.
-4. If the share is image-based: build a `<Entity>ShareCard` in `src/components/share/`, render it off-screen (`position:absolute, top:-9999, opacity:0`), pass the ref to `shareCardImage`. Otherwise call `shareUrl({ message, url })` directly.
-5. Add `find.share*` style i18n keys to **all four** locales (`en/ru/pl/uk`).
+3. If the share is image-based: build a `<Entity>ShareCard` in `src/components/share/`, render it off-screen (`position:absolute, top:-9999, opacity:0`), pass the ref to `shareCardImage`. Otherwise call `shareUrl({ message, url })` directly.
+4. Add `share.*` (and any entity-specific `<entity>.share*`) i18n keys to **all four** locales (`en/ru/pl/uk`).
 
 ## Share card rendering rules
 

@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useState } from 'react';
 
 import { Storage, StorageKeys } from '@services/storage.service';
 
@@ -26,13 +26,10 @@ export function writeSetting(name: SettingName, value: boolean): void {
 
 // Single-process app, single-writer settings — no MMKV listener needed for
 // cross-screen sync. Components that toggle the setting also own the local
-// state, and any reader instance picks up the latest value on mount.
+// state, and any reader instance picks up the latest value on mount via the
+// lazy `useState` initializer.
 export function useSetting(name: SettingName): [boolean, (next: boolean) => void] {
   const [value, setValue] = useState<boolean>(() => readSetting(name));
-
-  useEffect(() => {
-    setValue(readSetting(name));
-  }, [name]);
 
   const set = useCallback(
     (next: boolean): void => {

@@ -29,7 +29,7 @@ export function MapPreview({
   // Same Android quirk as MapScreen: track until image loads, then freeze.
   const [tracks, setTracks] = useState(Platform.OS === 'android');
   return (
-    <View className="rounded-md overflow-hidden border border-stroke" style={{ height: 140 }}>
+    <View className="h-[140px] rounded-md overflow-hidden border border-stroke">
       <MapView
         style={{ flex: 1 }}
         initialRegion={{

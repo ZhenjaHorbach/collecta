@@ -35,7 +35,7 @@ export function MapScreen() {
   const { t } = useTranslation();
   const colors = useColors();
   const { location, status } = useUserLocation();
-  const params = useLocalSearchParams<{ lat?: string; lng?: string; findId?: string }>();
+  const params = useLocalSearchParams<{ lat?: string; lng?: string }>();
 
   // Defer mounting MapView until permission/location resolves so initialRegion
   // is correct on first render. initialRegion is one-shot in react-native-maps;
@@ -65,7 +65,6 @@ export function MapScreen() {
     <MapBody
       key={focusKey}
       initialLocation={initialLocation}
-      focusFindId={params.findId ?? null}
       tightZoom={focused != null}
       t={t}
       colors={colors}
@@ -75,19 +74,12 @@ export function MapScreen() {
 
 interface MapBodyProps {
   initialLocation: { lat: number; lng: number } | null;
-  focusFindId: string | null;
   tightZoom: boolean;
   t: ReturnType<typeof useTranslation>['t'];
   colors: ReturnType<typeof useColors>;
 }
 
-function MapBody({
-  initialLocation,
-  focusFindId: _focusFindId,
-  tightZoom,
-  t,
-  colors,
-}: MapBodyProps) {
+function MapBody({ initialLocation, tightZoom, t, colors }: MapBodyProps) {
   const baseRegion = tightZoom
     ? { ...DEFAULT_MAP_REGION, latitudeDelta: 0.01, longitudeDelta: 0.01 }
     : DEFAULT_MAP_REGION;

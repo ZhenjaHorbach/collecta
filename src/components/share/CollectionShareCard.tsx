@@ -1,5 +1,6 @@
 import { Image } from 'expo-image';
 import { forwardRef } from 'react';
+import { useTranslation } from 'react-i18next';
 import { Text, View } from 'react-native';
 import QRCode from 'react-native-qrcode-svg';
 
@@ -18,6 +19,7 @@ export interface CollectionShareCardProps {
 export const CollectionShareCard = forwardRef<View, CollectionShareCardProps>(
   function CollectionShareCard({ title, emoji, coverUrl, itemsCount, url }, ref) {
     const colors = useColors();
+    const { t } = useTranslation();
 
     return (
       <View
@@ -40,13 +42,17 @@ export const CollectionShareCard = forwardRef<View, CollectionShareCardProps>(
               borderRadius: 100,
               backgroundColor: colors.gold,
             }}>
-            <Text style={{ color: colors.onGold, fontSize: 14, fontWeight: '800' }}>COLLECTA</Text>
+            <Text style={{ color: colors.onGold, fontSize: 14, fontWeight: '800' }}>
+              {t('share.brand')}
+            </Text>
           </View>
           <Text style={{ fontSize: 44, lineHeight: 50, fontWeight: '800', color: colors.text }}>
             {emoji ? `${emoji} ` : ''}
             {title}
           </Text>
-          <Text style={{ fontSize: 18, color: colors.textDim }}>{itemsCount} items to find</Text>
+          <Text style={{ fontSize: 18, color: colors.textDim }}>
+            {t('share.itemsToFind', { count: itemsCount })}
+          </Text>
         </View>
 
         {coverUrl ? (
@@ -75,7 +81,7 @@ export const CollectionShareCard = forwardRef<View, CollectionShareCardProps>(
           </View>
           <View style={{ flex: 1 }}>
             <Text style={{ fontSize: 14, color: colors.textDim, marginBottom: 4 }}>
-              Scan to start collecting
+              {t('share.scanCollection')}
             </Text>
             <Text style={{ fontSize: 13, color: colors.text }} numberOfLines={2}>
               {url}

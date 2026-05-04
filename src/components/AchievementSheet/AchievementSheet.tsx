@@ -48,7 +48,9 @@ export function AchievementSheet({ achievement, onClose }: AchievementSheetProps
                 </View>
                 <View
                   className={`rounded-md px-3 py-1.5 border ${
-                    achievement.unlocked ? 'bg-mint/15 border-mint' : 'bg-surface-hi border-stroke'
+                    achievement.unlocked
+                      ? 'bg-mint-glow border-mint'
+                      : 'bg-surface-hi border-stroke'
                   }`}>
                   <Text
                     className={`text-xs font-bold ${

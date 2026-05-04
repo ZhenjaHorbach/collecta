@@ -1,10 +1,10 @@
 import * as Linking from 'expo-linking';
 
-export type ParsedLink =
-  | { kind: 'find'; id: string }
-  | { kind: 'collection'; id: string }
-  | { kind: 'user'; id: string }
-  | null;
+// Single source of truth for share URLs. Every callsite that produces a link
+// to a Collecta entity goes through one of these so the scheme stays in sync
+// with `app.json` and Expo Router's file routes. Adding a new entity = a new
+// `build<Entity>Url` here + a `<entity>/[id].tsx` route. See
+// `.claude/skills/deep-linking/SKILL.md` for the full pattern.
 
 export function buildFindUrl(id: string): string {
   return Linking.createURL(`/find/${id}`);
@@ -12,32 +12,4 @@ export function buildFindUrl(id: string): string {
 
 export function buildCollectionUrl(id: string): string {
   return Linking.createURL(`/collection/${id}`);
-}
-
-export function buildUserUrl(id: string): string {
-  return Linking.createURL(`/user/${id}`);
-}
-
-// Strict on shape: we only recognise the three URL flavors the app actually
-// produces. Unknown paths return null so callers can fall back to the cold
-// start route instead of pushing garbage onto the stack.
-export function parseIncomingUrl(url: string): ParsedLink {
-  let parsed: Linking.ParsedURL;
-  try {
-    parsed = Linking.parse(url);
-  } catch {
-    return null;
-  }
-  const path = (parsed.path ?? '').replace(/^\/+/, '');
-  if (!path) return null;
-  const [head, id, ...rest] = path.split('/');
-  if (!id || rest.length > 0) return null;
-  if (head === 'find') return { kind: 'find', id };
-  if (head === 'collection') return { kind: 'collection', id };
-  if (head === 'user') return { kind: 'user', id };
-  return null;
-}
-
-export function routeForLink(link: NonNullable<ParsedLink>): string {
-  return `/${link.kind}/${link.id}`;
 }

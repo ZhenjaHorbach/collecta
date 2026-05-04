@@ -383,6 +383,17 @@
     "dark": "Тёмная",
     "light": "Светлая"
   },
+  "share": {
+    "brand": "COLLECTA",
+    "foundOnCollecta": "НАЙДЕНО В COLLECTA",
+    "itemsToFind_one": "{{count}} элемент",
+    "itemsToFind_few": "{{count}} элемента",
+    "itemsToFind_many": "{{count}} элементов",
+    "itemsToFind_other": "{{count}} элементов",
+    "scanCollection": "Отсканируй, чтобы присоединиться",
+    "scanFind": "Отсканируй, чтобы открыть",
+    "collectionByAuthor": "{{collection}} · автор {{author}}"
+  },
   "settings": {
     "sections": {
       "appearance": "Внешний вид",

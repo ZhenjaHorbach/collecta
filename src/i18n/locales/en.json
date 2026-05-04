@@ -375,6 +375,15 @@
     "dark": "Dark",
     "light": "Light"
   },
+  "share": {
+    "brand": "COLLECTA",
+    "foundOnCollecta": "FOUND ON COLLECTA",
+    "itemsToFind_one": "{{count}} item to find",
+    "itemsToFind_other": "{{count}} items to find",
+    "scanCollection": "Scan to start collecting",
+    "scanFind": "Scan to open this find",
+    "collectionByAuthor": "{{collection}} · by {{author}}"
+  },
   "settings": {
     "sections": {
       "appearance": "Appearance",
