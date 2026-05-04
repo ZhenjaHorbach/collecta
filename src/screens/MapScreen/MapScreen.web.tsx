@@ -1,6 +1,5 @@
 import MaterialIcons from '@expo/vector-icons/MaterialIcons';
 import { APIProvider, Map, Marker } from '@vis.gl/react-google-maps';
-import Constants from 'expo-constants';
 import { router, useLocalSearchParams } from 'expo-router';
 import { useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
@@ -28,7 +27,11 @@ import { haversineKm } from '@utils/geo.utils';
 // Clustering is intentionally skipped for v1 web — `@googlemaps/markerclusterer`
 // can be wired later as a follow-up if marker density becomes a problem.
 
-const apiKey = Constants.expoConfig?.extra?.googleMapsApiKey as string | undefined;
+// Metro inlines `EXPO_PUBLIC_*` vars at bundle time on web; the EXPO_PUBLIC_
+// prefix is the official Expo signal that this var is safe to ship to the
+// client. Defence in depth: HTTP referrer restrictions on the key in Google
+// Cloud Console scope it to our origins.
+const apiKey = process.env.EXPO_PUBLIC_GOOGLE_MAPS_API_KEY;
 
 // Same conversion as the native screen — viewport delta drives the bounds
 // query that hydrates the markers.

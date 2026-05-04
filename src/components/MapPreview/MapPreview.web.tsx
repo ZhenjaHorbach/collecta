@@ -1,5 +1,4 @@
 import { APIProvider, Map, Marker } from '@vis.gl/react-google-maps';
-import Constants from 'expo-constants';
 import type { ReactElement } from 'react';
 import { Pressable, Text, View } from 'react-native';
 
@@ -16,7 +15,7 @@ export interface MapPreviewProps {
   openMapLabel: string;
 }
 
-const apiKey = Constants.expoConfig?.extra?.googleMapsApiKey as string | undefined;
+const apiKey = process.env.EXPO_PUBLIC_GOOGLE_MAPS_API_KEY;
 
 // Web override — see MapPreview.tsx for the native (react-native-maps) version.
 // The card is non-interactive (no zoom/pan) so the FindDetailScreen feels the
