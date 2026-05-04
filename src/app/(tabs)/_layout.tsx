@@ -1,9 +1,10 @@
 import { HapticTab } from '@components/HapticTab';
 import { IconSymbol } from '@components/IconSymbol';
 import { useColors } from '@hooks/useColors';
+import { useMyCollections } from '@hooks/useMyCollections';
 import { Tabs } from 'expo-router';
 import { useTranslation } from 'react-i18next';
-import { TouchableOpacity, View } from 'react-native';
+import { Alert, TouchableOpacity, View } from 'react-native';
 
 function CameraTabButton({
   onPress,
@@ -11,18 +12,22 @@ function CameraTabButton({
   bgColor,
   iconColor,
   glowColor,
+  disabled,
 }: {
   onPress?: (e: unknown) => void;
   label: string;
   bgColor: string;
   iconColor: string;
   glowColor: string;
+  disabled?: boolean;
 }) {
   return (
     <TouchableOpacity
       onPress={onPress}
+      activeOpacity={disabled ? 1 : 0.7}
       style={{ flex: 1, alignItems: 'center', justifyContent: 'center' }}
       accessibilityRole="button"
+      accessibilityState={{ disabled }}
       accessibilityLabel={label}>
       <View
         style={{
@@ -35,9 +40,10 @@ function CameraTabButton({
           marginTop: -10,
           shadowColor: glowColor,
           shadowOffset: { width: 0, height: 8 },
-          shadowOpacity: 0.4,
+          shadowOpacity: disabled ? 0 : 0.4,
           shadowRadius: 20,
-          elevation: 10,
+          elevation: disabled ? 0 : 10,
+          opacity: disabled ? 0.4 : 1,
         }}>
         <IconSymbol name="camera.fill" size={28} color={iconColor} />
       </View>
@@ -48,6 +54,12 @@ function CameraTabButton({
 export default function TabLayout() {
   const { t } = useTranslation();
   const colors = useColors();
+  // Camera flow needs at least one collection to drop the find into. Without
+  // any (own or picked-up), there's nothing to commit to — disable the tab
+  // until the user creates or joins one. `useMyCollections` refetches on
+  // focus, which catches the post-creation refresh.
+  const { mine, pickedUp, loading } = useMyCollections();
+  const cameraDisabled = !loading && mine.length === 0 && pickedUp.length === 0;
 
   return (
     <Tabs
@@ -89,11 +101,18 @@ export default function TabLayout() {
           title: '',
           tabBarButton: (props) => (
             <CameraTabButton
-              onPress={props.onPress as ((e: unknown) => void) | undefined}
+              onPress={
+                cameraDisabled
+                  ? () => {
+                      Alert.alert(t('tabs.cameraDisabled.title'), t('tabs.cameraDisabled.body'));
+                    }
+                  : (props.onPress as ((e: unknown) => void) | undefined)
+              }
               label={t('tabs.camera')}
               bgColor={colors.gold}
               iconColor={colors.onGold}
               glowColor={colors.gold}
+              disabled={cameraDisabled}
             />
           ),
           tabBarStyle: { display: 'none' },

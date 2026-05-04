@@ -38,6 +38,11 @@ export interface CollectionItemWithFound extends CollectionItem {
 export interface CollectionDetail extends Collection {
   items: CollectionItemWithFound[];
   finds: Find[];
+  // Creator's finds for this collection, used to fill empty cells with the
+  // creator's example shots when a non-owner is browsing. RLS ensures these
+  // are only visible if the collection is public; otherwise the array is
+  // empty and the screen falls back to `example_image_url`.
+  referenceFinds: Find[];
 }
 
 async function attachProgress(
@@ -216,15 +221,37 @@ export async function getCollection(id: string, userId: string): Promise<Collect
   const itemIds = items.map((i) => i.id);
 
   let finds: Find[] = [];
+  let referenceFinds: Find[] = [];
   if (itemIds.length > 0) {
-    const { data: findsData, error: findsErr } = await supabase
-      .from('finds')
-      .select('*')
-      .eq('user_id', userId)
-      .in('collection_item_id', itemIds)
-      .order('created_at', { ascending: false });
-    if (findsErr) throw findsErr;
-    finds = FindListSchema.parse(findsData ?? []);
+    const queries = [
+      supabase
+        .from('finds')
+        .select('*')
+        .eq('user_id', userId)
+        .in('collection_item_id', itemIds)
+        .order('created_at', { ascending: false }),
+    ];
+    // Skip the second query when the viewer IS the creator — the first query
+    // already covers it. Otherwise pull the creator's finds so non-owners see
+    // the example shots in unfilled cells. RLS gates this for private
+    // collections (returns []), which is the fallback we want anyway.
+    if (collection.creator_id !== userId) {
+      queries.push(
+        supabase
+          .from('finds')
+          .select('*')
+          .eq('user_id', collection.creator_id)
+          .in('collection_item_id', itemIds)
+          .order('created_at', { ascending: false })
+      );
+    }
+    const [ownRes, refRes] = await Promise.all(queries);
+    if (ownRes.error) throw ownRes.error;
+    finds = FindListSchema.parse(ownRes.data ?? []);
+    if (refRes) {
+      if (refRes.error) throw refRes.error;
+      referenceFinds = FindListSchema.parse(refRes.data ?? []);
+    }
   }
 
   const foundItemIds = new Set(finds.map((f) => f.collection_item_id));
@@ -233,5 +260,6 @@ export async function getCollection(id: string, userId: string): Promise<Collect
     ...collection,
     items: items.map((item) => ({ ...item, found: foundItemIds.has(item.id) })),
     finds,
+    referenceFinds,
   };
 }

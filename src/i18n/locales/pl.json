@@ -18,7 +18,11 @@
     "map": "Mapa",
     "collections": "Znaleziska",
     "profile": "Ja",
-    "camera": "Aparat"
+    "camera": "Aparat",
+    "cameraDisabled": {
+      "title": "Brak kolekcji",
+      "body": "Najpierw utwórz lub dołącz do kolekcji — aparat zapisuje zdjęcia do niej."
+    }
   },
   "auth": {
     "welcome": {
@@ -354,7 +358,14 @@
     },
     "achievements": {
       "title": "Osiągnięcia",
-      "fraction": "{{unlocked}} z {{total}}"
+      "fraction": "{{unlocked}} z {{total}}",
+      "detail": {
+        "xpReward": "+{{xp}} XP",
+        "unlocked": "Zdobyte",
+        "unlockedOn": "Zdobyte {{date}}",
+        "locked": "Zablokowane",
+        "lockedHint": "Graj dalej — odblokuje się, gdy spełnisz warunki."
+      }
     },
     "toast": {
       "unlocked": "Osiągnięcie odblokowane"
@@ -371,6 +382,55 @@
     "system": "Systemowy",
     "dark": "Ciemny",
     "light": "Jasny"
+  },
+  "settings": {
+    "sections": {
+      "appearance": "Wygląd",
+      "capture": "Aparat",
+      "about": "O aplikacji"
+    },
+    "highRes": {
+      "label": "Wysoka rozdzielczość",
+      "subtitle": "Lepsza jakość, więcej danych"
+    },
+    "autoLocation": {
+      "label": "Auto-tagowanie lokalizacji",
+      "subtitle": "Dodawaj GPS do swoich zdjęć"
+    },
+    "aiVerification": {
+      "label": "Weryfikacja AI",
+      "subtitle": "Sprawdzaj zgodność zdjęć z kolekcją"
+    },
+    "about": {
+      "version": "Wersja"
+    }
+  },
+  "find": {
+    "headerTitle": "Znalezisko",
+    "loadError": "Nie udało się wczytać znaleziska",
+    "aiBadge": "AI · zgodność {{percent}}%",
+    "openProfile": "Otwórz profil {{name}}",
+    "openCollection": "Otwórz kolekcję {{title}}",
+    "inCollection": "W kolekcji",
+    "notesPlaceholder": "Bez opisu",
+    "meta": {
+      "location": "Miejsce",
+      "captured": "Zdjęcie",
+      "noLocation": "Nieznana lokalizacja",
+      "coords": "{{lat}}, {{lng}}",
+      "atTime": "{{time}}"
+    },
+    "openInMap": "Otwórz na mapie",
+    "share": "Udostępnij",
+    "shareCollection": "Udostępnij kolekcję",
+    "shareFind": "Udostępnij znalezisko",
+    "shareFindMessage": "Znalazłem „{{item}}” w kolekcji „{{collection}}” na Collecta",
+    "shareCollectionMessage": "Zobacz kolekcję „{{title}}” na Collecta",
+    "startCollection": "Zacznij tę kolekcję",
+    "openCollectionAction": "Otwórz kolekcję",
+    "report": "Zgłoś",
+    "reportTitle": "Zgłoś to znalezisko",
+    "retake": "Zrób ponownie"
   },
   "moderation": {
     "report": {

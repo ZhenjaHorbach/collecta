@@ -1,0 +1,1 @@
+export { FindDetailScreen } from './FindDetailScreen';

@@ -148,6 +148,115 @@ function mapFindRowTo(row: MapFindRow): MapFind | null {
   };
 }
 
+export interface FindDetail {
+  find: Find;
+  creator: {
+    id: string;
+    username: string;
+    displayName: string;
+    avatarUrl: string | null;
+    level: number | null;
+  };
+  collection: {
+    id: string;
+    title: string;
+    icon: string | null;
+    category: CollectionCategory | null;
+  };
+  item: {
+    id: string;
+    name: string;
+  };
+}
+
+interface FindDetailRow {
+  id: string;
+  user_id: string;
+  collection_item_id: string;
+  photo_url: string;
+  ai_validated: boolean | null;
+  ai_confidence: number | null;
+  ai_notes: string | null;
+  notes: string | null;
+  location_lat: number | null;
+  location_lng: number | null;
+  created_at: string;
+  users: {
+    id: string;
+    username: string;
+    display_name: string;
+    avatar_url: string | null;
+    level: number | null;
+  } | null;
+  collection_items: {
+    id: string;
+    name: string;
+    collections: {
+      id: string;
+      title: string;
+      icon: string | null;
+      category: CollectionCategory | null;
+    } | null;
+  } | null;
+}
+
+export async function getFindById(id: string): Promise<FindDetail> {
+  const { data, error } = await supabase
+    .from('finds')
+    .select(
+      `
+      id, user_id, collection_item_id, photo_url,
+      ai_validated, ai_confidence, ai_notes, notes,
+      location_lat, location_lng, created_at,
+      users ( id, username, display_name, avatar_url, level ),
+      collection_items (
+        id, name,
+        collections ( id, title, icon, category )
+      )
+    `
+    )
+    .eq('id', id)
+    .single<FindDetailRow>();
+  if (error) throw error;
+  if (!data) throw new Error('find_not_found');
+  const collection = data.collection_items?.collections;
+  const item = data.collection_items;
+  const creator = data.users;
+  if (!collection || !item || !creator) throw new Error('find_not_found');
+
+  const find = FindSchema.parse({
+    id: data.id,
+    user_id: data.user_id,
+    collection_item_id: data.collection_item_id,
+    photo_url: data.photo_url,
+    ai_validated: data.ai_validated,
+    ai_confidence: data.ai_confidence,
+    ai_notes: data.ai_notes,
+    notes: data.notes,
+    location_lat: data.location_lat,
+    location_lng: data.location_lng,
+    created_at: data.created_at,
+  });
+
+  return {
+    find,
+    creator: {
+      id: creator.id,
+      username: creator.username,
+      displayName: creator.display_name,
+      avatarUrl: creator.avatar_url,
+      level: creator.level ?? null,
+    },
+    collection: {
+      id: collection.id,
+      title: collection.title,
+      icon: collection.icon,
+      category: collection.category,
+    },
+    item: { id: item.id, name: item.name },
+  };
+}
+
 export async function listFindsForMap(
   bounds: ViewportBounds,
   limit = MAP_VIEWPORT_LIMIT

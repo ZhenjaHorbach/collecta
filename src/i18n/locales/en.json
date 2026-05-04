@@ -18,7 +18,11 @@
     "map": "Map",
     "collections": "Finds",
     "profile": "Me",
-    "camera": "Camera"
+    "camera": "Camera",
+    "cameraDisabled": {
+      "title": "No collections yet",
+      "body": "Create or join a collection first — the camera commits photos into one."
+    }
   },
   "auth": {
     "welcome": {
@@ -346,7 +350,14 @@
     },
     "achievements": {
       "title": "Achievements",
-      "fraction": "{{unlocked}} of {{total}}"
+      "fraction": "{{unlocked}} of {{total}}",
+      "detail": {
+        "xpReward": "+{{xp}} XP",
+        "unlocked": "Unlocked",
+        "unlockedOn": "Unlocked {{date}}",
+        "locked": "Locked",
+        "lockedHint": "Keep playing — this one will unlock automatically when the conditions are met."
+      }
     },
     "toast": {
       "unlocked": "Achievement unlocked"
@@ -363,6 +374,55 @@
     "system": "System",
     "dark": "Dark",
     "light": "Light"
+  },
+  "settings": {
+    "sections": {
+      "appearance": "Appearance",
+      "capture": "Capture",
+      "about": "About"
+    },
+    "highRes": {
+      "label": "High-res uploads",
+      "subtitle": "Better quality, more data"
+    },
+    "autoLocation": {
+      "label": "Auto-tag location",
+      "subtitle": "Add GPS to your captures"
+    },
+    "aiVerification": {
+      "label": "AI verification",
+      "subtitle": "Confirm photos match the collection"
+    },
+    "about": {
+      "version": "Version"
+    }
+  },
+  "find": {
+    "headerTitle": "Find",
+    "loadError": "Couldn't load this find",
+    "aiBadge": "AI · {{percent}}% match",
+    "openProfile": "Open {{name}}'s profile",
+    "openCollection": "Open collection {{title}}",
+    "inCollection": "In collection",
+    "notesPlaceholder": "No note",
+    "meta": {
+      "location": "Location",
+      "captured": "Captured",
+      "noLocation": "Location unknown",
+      "coords": "{{lat}}, {{lng}}",
+      "atTime": "{{time}}"
+    },
+    "openInMap": "Open in map",
+    "share": "Share",
+    "shareCollection": "Share collection",
+    "shareFind": "Share this find",
+    "shareFindMessage": "Found {{item}} in {{collection}} on Collecta",
+    "shareCollectionMessage": "Check out the {{title}} collection on Collecta",
+    "startCollection": "Start this collection",
+    "openCollectionAction": "Open collection",
+    "report": "Report",
+    "reportTitle": "Report this find",
+    "retake": "Retake photo"
   },
   "moderation": {
     "report": {

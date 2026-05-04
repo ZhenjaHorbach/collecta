@@ -27,6 +27,7 @@ import { Spinner } from '@components/Spinner';
 import { useActiveCollection } from '@hooks/useActiveCollection';
 import { useAuth } from '@hooks/useAuth';
 import { useCapture } from '@hooks/useCapture';
+import { useSetting } from '@hooks/useSetting';
 import { useUserLocation } from '@hooks/useUserLocation';
 import {
   getCollection,
@@ -73,6 +74,15 @@ export function CameraScreen() {
   const { activeCollectionId, setActive } = useActiveCollection();
   // Triggers location-permission prompt on Camera mount; result is read at shutter.
   const { location: deviceLocation } = useUserLocation();
+  // Auto-tag location toggle (SettingsScreen → Capture). When off, the
+  // shutter doesn't seed pendingLocation so the find commits without GPS.
+  const [autoTagLocation] = useSetting('autoTagLocation');
+  // AI verification toggle (SettingsScreen → Capture). Used here just to
+  // skip the analyzing overlay — the actual Vision-call bypass lives in
+  // useCapture. With AI off we still need to compress + upload, but there's
+  // no AI scanning to dramatize, so the viewfinder stays visible until the
+  // result sheet appears on `done`.
+  const [aiVerification] = useSetting('aiVerification');
 
   const activeCollection = useMemo(
     () => allCollections.find((c) => c.id === activeCollectionId) ?? null,
@@ -244,17 +254,18 @@ export function CameraScreen() {
       const stableUri = `${FileSystem.documentDirectory}photo_${Date.now()}.jpg`;
       await FileSystem.copyAsync({ from: photo.uri, to: stableUri });
 
+      const tagged = autoTagLocation ? deviceLocation : null;
       setPhotoUri(stableUri);
       setRawPhotoUri(stableUri);
-      setPendingLocation(deviceLocation);
+      setPendingLocation(tagged);
 
       // Skip the intermediate preview entirely — analyzing fires straight from
       // the shutter for every entry mode (matches the design).
-      captureWithMode(stableUri, deviceLocation);
+      captureWithMode(stableUri, tagged);
     } catch (e) {
       console.warn('[onShutter] takePictureAsync failed', e);
     }
-  }, [cameraSettled, deviceLocation, captureWithMode]);
+  }, [cameraSettled, deviceLocation, autoTagLocation, captureWithMode]);
 
   const onClose = useCallback((): void => {
     discard();
@@ -278,7 +289,7 @@ export function CameraScreen() {
       const picked = result.assets[0];
       const stableUri = `${FileSystem.documentDirectory}photo_${Date.now()}.jpg`;
       await FileSystem.copyAsync({ from: picked.uri, to: stableUri });
-      const exifLoc = extractGpsFromExif(picked.exif);
+      const exifLoc = autoTagLocation ? extractGpsFromExif(picked.exif) : null;
       setPhotoUri(stableUri);
       setRawPhotoUri(stableUri);
       setPendingLocation(exifLoc);
@@ -286,7 +297,7 @@ export function CameraScreen() {
     } catch (e) {
       console.warn('[onPickFromLibrary] failed', e);
     }
-  }, [captureWithMode, t]);
+  }, [autoTagLocation, captureWithMode, t]);
 
   const onRetake = useCallback((): void => discard(), [discard]);
 
@@ -394,7 +405,12 @@ export function CameraScreen() {
     );
   }
 
-  if (capture.stage !== 'idle' && capture.stage !== 'done' && capture.stage !== 'error') {
+  if (
+    aiVerification &&
+    capture.stage !== 'idle' &&
+    capture.stage !== 'done' &&
+    capture.stage !== 'error'
+  ) {
     if (photoUri) {
       return <AnalyzingOverlay photoUri={photoUri} stage={capture.stage} />;
     }
