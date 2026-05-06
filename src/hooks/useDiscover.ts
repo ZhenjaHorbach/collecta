@@ -1,5 +1,5 @@
 import { useFocusEffect } from 'expo-router';
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useState } from 'react';
 
 import type { CollectionCategory } from '@constants/categories';
 import {
@@ -42,19 +42,11 @@ export function useDiscover({ category, query, sort }: Args) {
     }
   }, [category, query, sort]);
 
-  // Refresh on focus so a fork made on the detail screen is reflected when
-  // the user pops back.
   useFocusEffect(
     useCallback(() => {
       void load();
     }, [load])
   );
-
-  // Re-run on filter change while the screen is mounted; useFocusEffect only
-  // covers focus transitions.
-  useEffect(() => {
-    void load();
-  }, [load]);
 
   return { ...state, refetch: load };
 }

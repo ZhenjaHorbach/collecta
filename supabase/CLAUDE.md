@@ -49,5 +49,4 @@ document it here so Discover still surfaces the right hero card.
 - Edge function caller-auth pattern: `supabase/functions/_shared/auth.ts`,
   rule in `.claude/rules/supabase.md`.
 - AI cost tracking helper: `supabase/functions/_shared/anthropic-usage.ts`.
-- Multi-agent starter generator: `scripts/generate-starter-collections.ts`
-  - `src/agents/`.
+- Multi-agent starter generator: `scripts/generate-collection.ts` + `src/agents/`.

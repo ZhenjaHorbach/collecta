@@ -97,7 +97,7 @@ export const AiDraftSchema = z.object({
   title: z.string().min(1).max(200),
   description: z.string().min(1).max(1000),
   category: CategoryEnum,
-  items: z.array(AiDraftItemSchema).min(5).max(20),
+  items: z.array(AiDraftItemSchema).min(5).max(25),
 });
 export type AiDraft = z.infer<typeof AiDraftSchema>;
 

@@ -129,19 +129,14 @@ Deno.serve(async (req: Request) => {
     return json(500, { error: 'rate_limit_check_failed', message: String(err) });
   }
 
-  // Coordinator: title + description + item names. Lets the model pick a
-  // category — we don't constrain the user's prompt to any of the 10
-  // top-level categories.
+  // Coordinator: title + description + item names. With no category passed
+  // in, the coordinator picks the most appropriate one from the enum based
+  // on the user's prompt — we don't have a topic-picker step here the way
+  // the cron does, so the model owns category selection.
   let coord;
   try {
     coord = await runCoordinator(anthropic, MODEL, {
       topic: prompt,
-      // Pass any category — the coordinator's tool schema enforces the
-      // allowlist. We pick a placeholder ("travel" is the broadest catch-
-      // all) and the model is free to override since the prompt explicitly
-      // says "echo the category exactly". For user-driven generation this
-      // free-form behaviour is what we want.
-      category: 'travel',
       count: DEFAULT_ITEM_COUNT,
       locale,
     });

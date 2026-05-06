@@ -1,9 +1,11 @@
 // Coordinator agent — owns the high-level structure of one collection.
-// Output: title, description, category (echoed back so we catch model drift),
-// and the item names. Item-level details (description, ai_hint, rarity,
-// fun_fact) are intentionally NOT requested here — they fan out to dedicated
-// subagents in parallel so the per-item generation happens in three small
-// turns instead of one giant one.
+// Output: title, description, category, and the item names. When the caller
+// passes a category (cron path with topic-picker), we ask the model to echo
+// it so we catch drift; when it's absent (edge function with free-form user
+// prompt), the model picks the most appropriate one from the enum. Item
+// details (description, ai_hint, rarity, fun_fact) are intentionally NOT
+// requested here — they fan out to dedicated subagents in parallel so the
+// per-item generation happens in three small turns instead of one giant one.
 
 import type Anthropic from '@anthropic-ai/sdk';
 import type { Tool } from '@anthropic-ai/sdk/resources/messages';
@@ -43,7 +45,7 @@ const LANGUAGE_NAME: Record<Locale, string> = {
 
 export interface CoordinatorInput {
   topic: string;
-  category: CollectionCategory;
+  category?: CollectionCategory;
   count: number;
   locale: Locale;
 }
@@ -59,16 +61,19 @@ export async function runCoordinator(
   model: string,
   input: CoordinatorInput
 ): Promise<CoordinatorResult> {
+  const categoryRule = input.category
+    ? `- Echo the category exactly — do not change it.`
+    : `- Choose the most appropriate category from the enum based on the topic.`;
+  const categoryLine = input.category ? `\nTarget category: ${input.category}` : '';
   const userPrompt = `Plan a real-world photo-collection.
 
-Topic: ${input.topic}
-Target category: ${input.category}
+Topic: ${input.topic}${categoryLine}
 Target item count: ${input.count}
 Title and description language: ${LANGUAGE_NAME[input.locale]}
 
 Rules:
 - Produce title and description in ${LANGUAGE_NAME[input.locale]}.
-- Echo the category exactly — do not change it.
+${categoryRule}
 - item_names must list ${input.count} distinct, real items a person could plausibly photograph in everyday life.
 - Names also in ${LANGUAGE_NAME[input.locale]}.
 - Avoid duplicates, near-duplicates, and joke entries.

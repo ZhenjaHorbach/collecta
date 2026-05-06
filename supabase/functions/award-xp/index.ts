@@ -9,11 +9,11 @@
 //   4. unlock_achievement(user_id, code)→ inserts user_achievements row(s)
 // The loop terminates when stop_reason === 'end_turn' (no more tool_use).
 //
-// Token usage from EVERY step of the loop is summed and persisted on each new
-// user_achievements row (mini-variant per CLAUDE.md → AI cost tracking). When
-// no achievement was unlocked we don't persist usage anywhere — that's the
-// trade-off of the mini variant; refactor to ai_calls when a third call site
-// lands.
+// Token usage from EVERY step of the loop is summed and persisted to the
+// shared `ai_calls` table via `_shared/anthropic-usage.ts` — the canonical
+// AI cost tracking path. The mini-variant columns on user_achievements are
+// also still populated for now until readers move to ai_calls; see
+// src/services/CLAUDE.md.
 //
 // Invoke: POST /functions/v1/award-xp
 // Body:   { user_id: string, event: 'find'|'reaction'|'collection_complete' }
