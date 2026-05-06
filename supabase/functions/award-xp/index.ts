@@ -9,11 +9,11 @@
 //   4. unlock_achievement(user_id, code)→ inserts user_achievements row(s)
 // The loop terminates when stop_reason === 'end_turn' (no more tool_use).
 //
-// Token usage from EVERY step of the loop is summed and persisted on each new
-// user_achievements row (mini-variant per CLAUDE.md → AI cost tracking). When
-// no achievement was unlocked we don't persist usage anywhere — that's the
-// trade-off of the mini variant; refactor to ai_calls when a third call site
-// lands.
+// Token usage from EVERY step of the loop is summed and persisted to the
+// shared `ai_calls` table via `_shared/anthropic-usage.ts` — the canonical
+// AI cost tracking path. The mini-variant columns on user_achievements are
+// also still populated for now until readers move to ai_calls; see
+// src/services/CLAUDE.md.
 //
 // Invoke: POST /functions/v1/award-xp
 // Body:   { user_id: string, event: 'find'|'reaction'|'collection_complete' }
@@ -38,6 +38,8 @@ import { authorizeRequest } from '../_shared/auth.ts';
 // @ts-ignore — Deno requires .ts extension on relative imports
 // prettier-ignore
 import { levelForXp, todayUtcIso, updateStreak, XP_PER_EVENT, type XpEvent } from '../_shared/leveling.ts';
+// @ts-ignore — Deno requires .ts extension on relative imports
+import { logAiCall } from '../_shared/anthropic-usage.ts';
 
 const supabase = createClient(
   Deno.env.get('SUPABASE_URL')!,
@@ -571,6 +573,26 @@ Deno.serve(async (req: Request) => {
     // Non-fatal — XP and unlocks already wrote successfully.
     console.error(`[award-xp] persist_usage_failed: ${err}`);
   }
+
+  // Normalized cost tracking — every loop run lands in ai_calls regardless of
+  // whether an unlock fired. The mini variant on user_achievements stays
+  // populated above until readers move to ai_calls.
+  await logAiCall(
+    supabase,
+    `award-xp:${event}`,
+    MODEL,
+    {
+      input_tokens: result.usage.inputTokens,
+      output_tokens: result.usage.outputTokens,
+      cache_read_tokens: result.usage.cacheReadInputTokens,
+      cache_creation_tokens: result.usage.cacheCreationInputTokens,
+    },
+    {
+      user_id: userId,
+      steps: result.steps,
+      achievements_unlocked: result.newAchievements.map((a) => a.code),
+    }
+  );
 
   // xp_delta from the caller's perspective: base event XP + any unlock bonuses.
   const baseDelta = XP_PER_EVENT[event];

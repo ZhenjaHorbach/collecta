@@ -45,6 +45,9 @@ import Anthropic from 'npm:@anthropic-ai/sdk@0.32.1';
 
 // @ts-ignore — Deno requires .ts extension on relative imports
 import { authenticateRequest } from '../_shared/auth.ts';
+// @ts-ignore — Deno requires .ts extension on relative imports
+// prettier-ignore
+import { logAiCall, type AnthropicUsage } from '../_shared/anthropic-usage.ts';
 
 const supabase = createClient(
   Deno.env.get('SUPABASE_URL')!,
@@ -801,7 +804,7 @@ async function handleDiscover(
           valid: false,
           confidence: pick.result.confidence,
           detected: pick.result.detected,
-          suggestion: '',
+          suggestion: 'No matching collection found in your library.',
         },
         mode: 'discover',
         matched_collection_id: null,
@@ -828,7 +831,7 @@ async function handleDiscover(
           valid: false,
           confidence: pick.result.confidence,
           detected: pick.result.detected,
-          suggestion: '',
+          suggestion: 'This collection has no items yet.',
         },
         mode: 'discover',
         matched_collection_id: validCollectionId,
@@ -977,6 +980,18 @@ async function handleVerify(
   };
 }
 
+// Convert the camelCase ApiUsage we already track inside this function into
+// the snake_case shape ai_calls expects. Kept inline so the rest of the code
+// keeps its current naming and we don't churn the response payload.
+function toAiCallsUsage(u: ApiUsage): AnthropicUsage {
+  return {
+    input_tokens: u.inputTokens,
+    output_tokens: u.outputTokens,
+    cache_read_tokens: u.cacheReadInputTokens,
+    cache_creation_tokens: u.cacheCreationInputTokens,
+  };
+}
+
 Deno.serve(async (req: Request) => {
   if (req.method !== 'POST') {
     return new Response('Method Not Allowed', { status: 405 });
@@ -1003,18 +1018,34 @@ Deno.serve(async (req: Request) => {
 
   const mode = inferMode(body);
 
+  let out: { ok: true; data: SuccessResponse } | { ok: false; status: number; error: unknown };
   if (mode === 'verify') {
-    const out = await handleVerify(body);
-    return out.ok ? jsonResponse(200, out.data) : jsonResponse(out.status, out.error);
+    out = await handleVerify(body);
+  } else if (mode === 'match-in-collection') {
+    out = await handleMatchInCollection(auth.userId, body);
+  } else {
+    // mode === 'discover' — auto-detect collection + item across the user's
+    // joined collections.
+    out = await handleDiscover(auth.userId, body);
   }
 
-  if (mode === 'match-in-collection') {
-    const out = await handleMatchInCollection(auth.userId, body);
-    return out.ok ? jsonResponse(200, out.data) : jsonResponse(out.status, out.error);
+  if (out.ok) {
+    // Log to ai_calls (normalized cost tracking). Best-effort — never let a
+    // logging failure take down a successful Vision call. The client still
+    // receives `usage` in the response so the existing finds.ai_* columns
+    // stay populated until those readers migrate.
+    await logAiCall(
+      supabase,
+      `validate-find:${mode}`,
+      out.data.model,
+      toAiCallsUsage(out.data.usage),
+      {
+        user_id: auth.userId,
+        collection_id: out.data.matched_collection_id,
+        collection_item_id: out.data.matched_item_id,
+      }
+    );
+    return jsonResponse(200, out.data);
   }
-
-  // mode === 'discover' — auto-detect collection + item across the user's
-  // joined collections.
-  const out = await handleDiscover(auth.userId, body);
-  return out.ok ? jsonResponse(200, out.data) : jsonResponse(out.status, out.error);
+  return jsonResponse(out.status, out.error);
 });

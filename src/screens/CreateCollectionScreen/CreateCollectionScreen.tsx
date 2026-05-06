@@ -49,6 +49,10 @@ interface ItemDraft {
   aiHint: string;
   rarity: Rarity;
   funFact: string;
+  // Reference image attached to the draft (Wikipedia or Unsplash via the
+  // multi-agent pipeline). Preserved through manual editing so a user
+  // tweaking title / rarity doesn't lose the suggested photo.
+  exampleImageUrl: string | null;
   expanded: boolean;
 }
 
@@ -62,6 +66,7 @@ const newItem = (): ItemDraft => ({
   aiHint: '',
   rarity: 'common',
   funFact: '',
+  exampleImageUrl: null,
   expanded: false,
 });
 
@@ -100,6 +105,11 @@ export function CreateCollectionScreen() {
         aiHint: it.ai_hint,
         rarity: it.rarity,
         funFact: it.fun_fact,
+        // example_image_url is optional in the draft — multi-agent pipeline
+        // populates it when Wikipedia / Unsplash returned a hit. Coerce
+        // undefined to null so the form state stays a clean discriminated
+        // shape.
+        exampleImageUrl: it.example_image_url ?? null,
         expanded: false,
       }))
     );
@@ -136,6 +146,7 @@ export function CreateCollectionScreen() {
           aiHint: i.aiHint.trim(),
           rarity: i.rarity,
           funFact: i.funFact.trim(),
+          exampleImageUrl: i.exampleImageUrl,
         }))
         .filter((i) => i.name.length > 0),
     [items]
@@ -155,7 +166,14 @@ export function CreateCollectionScreen() {
           ai_validation_prompt: it.aiHint.length > 0 ? it.aiHint : null,
           rarity: it.rarity,
           fun_fact: it.funFact.length > 0 ? it.funFact : null,
+          example_image_url: it.exampleImageUrl,
         }));
+    // First non-null reference photo becomes the collection cover. Free —
+    // saves an extra image lookup just for the cover, and keeps Discover /
+    // CollectionCard from falling back to the category emoji.
+    const coverImageUrl = isFreeform
+      ? null
+      : (cleanItems.find((it) => it.exampleImageUrl)?.exampleImageUrl ?? null);
     const id = await submit({
       collection: {
         title: title.trim(),
@@ -163,6 +181,7 @@ export function CreateCollectionScreen() {
         icon: emoji,
         category,
         ai_hint: aiHint.trim() || null,
+        cover_image_url: coverImageUrl,
         is_freeform: isFreeform,
         is_public: privacy === 'public',
       },

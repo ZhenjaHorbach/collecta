@@ -34,6 +34,12 @@ Two domain-specific workflows — never combined into one "all evals" job.
 - Structural suite always runs on matching PRs (~1 Claude call, mem­oised)
 - Calibration suite (~20 Claude calls) only via `workflow_dispatch` with `include_calibration=true`
 
+### `.github/workflows/evals-collection.yml`
+
+- `pull_request` with `paths:` filter on `scripts/generate-collection.{ts,sh}`, the prompt, `src/agents/**`, or eval files
+- Structural suite always runs on matching PRs (~6 Claude calls, mem­oised across all assertions)
+- Calibration suite (~50+ Claude calls — 8 pipeline runs × 6 calls + self-grade) only via `workflow_dispatch` with `include_calibration=true`
+
 ## Sync design (`.github/workflows/sync-design.yml`)
 
 Pulls the design bundle from claude.ai/design into `.claude/design/` and opens a PR. Manual trigger only — there is no way to auto-detect when a mockup changed (Anthropic exposes no webhook).

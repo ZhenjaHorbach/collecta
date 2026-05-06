@@ -313,7 +313,9 @@
       "rare": "Редкое"
     },
     "items": {
-      "header": "Что искать"
+      "header": "Что искать",
+      "examplePhoto": "Пример",
+      "tapToShoot": "Нажми, чтобы снять"
     },
     "detail": {
       "creatorHints": {
@@ -326,7 +328,45 @@
           "funFact": "Интересный факт"
         }
       }
+    },
+    "fork": {
+      "action": "Скопировать себе",
+      "actionPending": "Копируем…",
+      "alreadyForked": "Уже в твоих коллекциях",
+      "openMine": "Открыть мою копию",
+      "successToastTitle": "Коллекция скопирована",
+      "successToastBody": "Теперь она в твоих коллекциях — начинай собирать.",
+      "errorTitle": "Не получилось скопировать",
+      "errorBody": "Попробуй ещё раз через секунду.",
+      "forkedBadge": "Скопировано из «{{title}}»"
+    },
+    "starter": {
+      "header": "Стартовые коллекции",
+      "subtitle": "Подготовлены Collecta — скопируй любую и начинай собирать."
+    },
+    "tabs2": {
+      "discover": "Открыть",
+      "mine": "Мои"
     }
+  },
+  "discover": {
+    "title": "Открой новое",
+    "search": "Найти коллекцию…",
+    "sort": {
+      "popular": "Популярные",
+      "new": "Новые"
+    },
+    "seasonal": "Сезон",
+    "inMyCollections": "В твоих коллекциях",
+    "forksCount_one": "{{count}} коллекционер",
+    "forksCount_few": "{{count}} коллекционера",
+    "forksCount_many": "{{count}} коллекционеров",
+    "itemsCount_one": "{{count}} элемент",
+    "itemsCount_few": "{{count}} элемента",
+    "itemsCount_many": "{{count}} элементов",
+    "categoryAll": "Все",
+    "empty": "По фильтрам ничего не нашлось.",
+    "loadError": "Не удалось загрузить каталог."
   },
   "categories": {
     "nature": "Природа",

@@ -66,8 +66,10 @@ export type Database = {
           created_at: string;
           creator_id: string;
           description: string | null;
+          forked_from: string | null;
           icon: string | null;
           id: string;
+          is_featured: boolean;
           is_freeform: boolean;
           is_public: boolean;
           title: string;
@@ -80,8 +82,10 @@ export type Database = {
           created_at?: string;
           creator_id: string;
           description?: string | null;
+          forked_from?: string | null;
           icon?: string | null;
           id?: string;
+          is_featured?: boolean;
           is_freeform?: boolean;
           is_public?: boolean;
           title: string;
@@ -94,8 +98,10 @@ export type Database = {
           created_at?: string;
           creator_id?: string;
           description?: string | null;
+          forked_from?: string | null;
           icon?: string | null;
           id?: string;
+          is_featured?: boolean;
           is_freeform?: boolean;
           is_public?: boolean;
           title?: string;
@@ -109,7 +115,50 @@ export type Database = {
             referencedRelation: 'users';
             referencedColumns: ['id'];
           },
+          {
+            foreignKeyName: 'collections_forked_from_fkey';
+            columns: ['forked_from'];
+            isOneToOne: false;
+            referencedRelation: 'collections';
+            referencedColumns: ['id'];
+          },
         ];
+      };
+      ai_calls: {
+        Row: {
+          cache_creation_tokens: number;
+          cache_read_tokens: number;
+          created_at: string;
+          id: string;
+          input_tokens: number;
+          kind: string;
+          metadata: Json | null;
+          model: string;
+          output_tokens: number;
+        };
+        Insert: {
+          cache_creation_tokens?: number;
+          cache_read_tokens?: number;
+          created_at?: string;
+          id?: string;
+          input_tokens?: number;
+          kind: string;
+          metadata?: Json | null;
+          model: string;
+          output_tokens?: number;
+        };
+        Update: {
+          cache_creation_tokens?: number;
+          cache_read_tokens?: number;
+          created_at?: string;
+          id?: string;
+          input_tokens?: number;
+          kind?: string;
+          metadata?: Json | null;
+          model?: string;
+          output_tokens?: number;
+        };
+        Relationships: [];
       };
       finds: {
         Row: {
@@ -448,6 +497,33 @@ export type Database = {
           geo_score: number;
           reactions_count: number;
           score: number;
+        }[];
+      };
+      fork_collection: {
+        Args: { p_collection_id: string };
+        Returns: string;
+      };
+      rpc_discover_collections: {
+        Args: {
+          p_category?: string | null;
+          p_query?: string | null;
+          p_sort?: string;
+          p_limit?: number;
+          p_offset?: number;
+        };
+        Returns: {
+          id: string;
+          title: string;
+          description: string | null;
+          icon: string | null;
+          cover_image_url: string | null;
+          category: string | null;
+          is_featured: boolean;
+          creator_id: string;
+          created_at: string;
+          forks_count: number;
+          items_count: number;
+          forked_by_me: boolean;
         }[];
       };
     };

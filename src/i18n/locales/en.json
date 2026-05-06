@@ -305,7 +305,9 @@
       "rare": "Rare"
     },
     "items": {
-      "header": "What to find"
+      "header": "What to find",
+      "examplePhoto": "Example",
+      "tapToShoot": "Tap to capture"
     },
     "detail": {
       "creatorHints": {
@@ -318,7 +320,43 @@
           "funFact": "Fun fact"
         }
       }
+    },
+    "fork": {
+      "action": "Copy to me",
+      "actionPending": "Copying…",
+      "alreadyForked": "Already in your collections",
+      "openMine": "Open my copy",
+      "successToastTitle": "Collection copied",
+      "successToastBody": "It's now in your collections — start filling it in.",
+      "errorTitle": "Couldn't copy",
+      "errorBody": "Try again in a moment.",
+      "forkedBadge": "Forked from \"{{title}}\""
+    },
+    "starter": {
+      "header": "Starter collections",
+      "subtitle": "Curated by Collecta — copy any of them to start collecting."
+    },
+    "tabs2": {
+      "discover": "Discover",
+      "mine": "Mine"
     }
+  },
+  "discover": {
+    "title": "Discover",
+    "search": "Search collections…",
+    "sort": {
+      "popular": "Popular",
+      "new": "New"
+    },
+    "seasonal": "Season",
+    "inMyCollections": "In your collections",
+    "forksCount_one": "{{count}} collector",
+    "forksCount_other": "{{count}} collectors",
+    "itemsCount_one": "{{count}} item",
+    "itemsCount_other": "{{count}} items",
+    "categoryAll": "All",
+    "empty": "Nothing matched your filters.",
+    "loadError": "Couldn't load Discover."
   },
   "categories": {
     "nature": "Nature",

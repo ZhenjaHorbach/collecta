@@ -1,26 +1,30 @@
-name: Achievement generator evals
+name: Collection generator evals
 
-# Structural evals catch prompt regressions in the weekly achievement
-# generator (wrong shape, forbidden kind, dup against catalog). One Claude
-# call per CI run via memoisation, so cost is bounded.
+# Structural evals catch prompt / pipeline regressions in the weekly
+# collection generator (wrong category, dup vs catalog, non-English ai_hints,
+# duplicate item names, rarity bias). The full multi-agent pipeline (topic
+# picker + coordinator + 4 subagents = ~6 Claude calls) is run ONCE per CI
+# invocation; every assertion below re-uses that one memoised run.
 #
-# Paths filter: only run when the script or prompt changes — random PRs in
-# unrelated areas wouldn't affect generator output.
+# Paths filter: only run when the script, the prompt, or one of the agents
+# changes — random PRs in unrelated areas wouldn't affect generator output.
 #
-# Calibration (20+ runs, self-grading, cost) is workflow_dispatch-only —
-# expensive, report-only artefact, used to spot-check the prompt manually.
+# Calibration (8–20 full pipeline runs + self-grade, ~$0.6–1.6) is
+# workflow_dispatch-only.
 
 on:
   pull_request:
     paths:
-      - 'scripts/generate-achievement.ts'
-      - 'scripts/generate-achievement.prompt.md'
-      - 'src/evals/achievement-generator.eval.ts'
-      - 'src/evals/achievement-calibration.eval.ts'
+      - 'scripts/generate-collection.ts'
+      - 'scripts/generate-collection.sh'
+      - 'scripts/generate-collection.prompt.md'
+      - 'src/agents/**'
+      - 'src/evals/collection-generator.eval.ts'
+      - 'src/evals/collection-calibration.eval.ts'
   workflow_dispatch:
     inputs:
       include_calibration:
-        description: 'Also run the calibration suite (20 generations + self-grade)'
+        description: 'Also run the calibration suite (8 generations + self-grade)'
         required: false
         default: 'false'
 
@@ -44,13 +48,13 @@ jobs:
           ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
           SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
           SUPABASE_ANON_KEY: ${{ secrets.SUPABASE_ANON_KEY }}
-        run: scripts/run-evals.sh --suite achievement-generator
+        run: scripts/run-evals.sh --suite collection-generator
 
       - name: Upload report
         uses: actions/upload-artifact@v4
         if: always()
         with:
-          name: achievement-generator-report-${{ github.run_number }}
+          name: collection-generator-report-${{ github.run_number }}
           path: eval-results/
           retention-days: 30
 
@@ -71,13 +75,13 @@ jobs:
           ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
           SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
           SUPABASE_ANON_KEY: ${{ secrets.SUPABASE_ANON_KEY }}
-          ACHIEVEMENT_CALIBRATION_RUNS: '20'
-        run: scripts/run-evals.sh --suite achievement-calibration
+          COLLECTION_CALIBRATION_RUNS: '8'
+        run: scripts/run-evals.sh --suite collection-calibration
 
       - name: Upload report
         uses: actions/upload-artifact@v4
         if: always()
         with:
-          name: achievement-calibration-report-${{ github.run_number }}
+          name: collection-calibration-report-${{ github.run_number }}
           path: eval-results/
           retention-days: 30

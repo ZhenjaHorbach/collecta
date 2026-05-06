@@ -1,8 +1,10 @@
 // Calibration suite for the achievement generator. Heavy — runs the
 // generator N times and rolls up dup-rate, kind variety, mean cost, and a
-// self-graded usefulness score. Only run on workflow_dispatch (it costs ~N
-// Claude calls × Sonnet pricing). Output is a report-only artefact, never
-// fails CI on quality drift — the PR review is the gate for "is this fun?"
+// self-graded usefulness score. Only run on workflow_dispatch. At ~$0.001
+// per achievement on Haiku 4.5, default N=20 ≈ $0.02 per run plus the
+// self-grade turn — cheap enough to run regularly. Output is a report-only
+// artefact, never fails CI on quality drift — the PR review is the gate
+// for "is this fun?"
 //
 // Tunable via env:
 //   ACHIEVEMENT_CALIBRATION_RUNS  default 20 (max 50 to bound cost)
@@ -15,7 +17,7 @@ import { estimateCostUsd, type ApiUsage } from '../utils/cost-tracker';
 
 import type { EvalCase, EvalCaseResult } from './types';
 
-const SELF_GRADE_MODEL = 'claude-sonnet-4-6';
+const SELF_GRADE_MODEL = 'claude-haiku-4-5-20251001';
 
 interface SingleRun {
   proposal: ProposedAchievement;

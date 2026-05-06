@@ -5,11 +5,13 @@
 All eval suites live in `src/evals/`. One file per suite, exporting a
 `<suiteName>Cases: EvalCase[]`. Shared types in `src/evals/types.ts`. Currently:
 
-| Suite                     | File                              | Triggers paid Claude calls? |
-| ------------------------- | --------------------------------- | --------------------------- |
-| `ai-validation`           | `ai-validation.eval.ts`           | yes — Vision per case       |
-| `achievement-generator`   | `achievement-generator.eval.ts`   | yes — 1 memoised call/run   |
-| `achievement-calibration` | `achievement-calibration.eval.ts` | yes — N runs (default 20)   |
+| Suite                     | File                              | Triggers paid Claude calls?              |
+| ------------------------- | --------------------------------- | ---------------------------------------- |
+| `ai-validation`           | `ai-validation.eval.ts`           | yes — Vision per case                    |
+| `achievement-generator`   | `achievement-generator.eval.ts`   | yes — 1 memoised call/run                |
+| `achievement-calibration` | `achievement-calibration.eval.ts` | yes — N runs (default 20)                |
+| `collection-generator`    | `collection-generator.eval.ts`    | yes — 1 memoised pipeline (~6 calls)/run |
+| `collection-calibration`  | `collection-calibration.eval.ts`  | yes — N pipelines (default 8, max 20)    |
 
 ## Two run paths — keep them in sync
 

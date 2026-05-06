@@ -23,6 +23,7 @@ import { Spinner } from '@components/Spinner';
 import { CATEGORY_EMOJI } from '@constants/categories';
 import { useAuth } from '@hooks/useAuth';
 import { useCollection } from '@hooks/useCollection';
+import { useForkCollection } from '@hooks/useForkCollection';
 import { useReport } from '@hooks/useReport';
 import type {
   CollectionDetail,
@@ -166,6 +167,19 @@ function DetailBody({ data, isOwner }: { data: CollectionDetail; isOwner: boolea
   const router = useRouter();
   const { width: screenWidth } = useWindowDimensions();
   const cellSize = (screenWidth - GRID_PADDING * 2 - GRID_GAP * (GRID_COLUMNS - 1)) / GRID_COLUMNS;
+  const fork = useForkCollection(isOwner ? undefined : data.id, data.creator_id);
+
+  const onFork = async () => {
+    const newId = await fork.fork();
+    if (newId) {
+      Alert.alert(t('collections.fork.successToastTitle'), t('collections.fork.successToastBody'));
+      router.replace(`/collection/${newId}`);
+      return;
+    }
+    if (fork.error) {
+      Alert.alert(t('collections.fork.errorTitle'), t('collections.fork.errorBody'));
+    }
+  };
 
   const findByItem = useMemo(() => {
     const map = new Map<string, Find>();
@@ -213,6 +227,13 @@ function DetailBody({ data, isOwner }: { data: CollectionDetail; isOwner: boolea
                 </Text>
               </View>
             ) : null}
+            {isOwner && data.forkedFromTitle ? (
+              <View className="self-start mt-2 px-3 py-1 rounded-full bg-gold-glow border border-gold-lo">
+                <Text className="text-xs text-text font-semibold">
+                  {t('collections.fork.forkedBadge', { title: data.forkedFromTitle })}
+                </Text>
+              </View>
+            ) : null}
             {data.description ? (
               <Text className="text-sm text-text-dim mt-3">{data.description}</Text>
             ) : null}
@@ -227,6 +248,13 @@ function DetailBody({ data, isOwner }: { data: CollectionDetail; isOwner: boolea
               <Text className="mt-4 text-xs text-text-muted">{t('collections.freeform')}</Text>
             )}
           </View>
+          {!isOwner ? (
+            <ForkPanel
+              fork={fork}
+              onFork={onFork}
+              onOpenMine={(id) => router.replace(`/collection/${id}`)}
+            />
+          ) : null}
           {!data.is_freeform && data.items.length > 0 ? (
             <Text className="mt-5 text-xs uppercase tracking-wider text-text-dim font-semibold">
               {t('collections.items.header')}
@@ -349,6 +377,48 @@ function HintRow({ label, value }: { label: string; value: string }) {
   );
 }
 
+interface ForkPanelProps {
+  fork: ReturnType<typeof useForkCollection>;
+  onFork: () => void;
+  onOpenMine: (id: string) => void;
+}
+
+function ForkPanel({ fork, onFork, onOpenMine }: ForkPanelProps) {
+  const { t } = useTranslation();
+  // forkId === false means the source IS the user's own collection — no
+  // affordance to render (covered upstream by !isOwner, but kept defensive).
+  if (fork.forkId === false) return null;
+
+  if (typeof fork.forkId === 'string') {
+    return (
+      <TouchableOpacity
+        onPress={() => onOpenMine(fork.forkId as string)}
+        accessibilityRole="button"
+        accessibilityLabel={t('collections.fork.openMine')}
+        className="mt-3 px-4 py-3 rounded-md bg-surface border border-stroke flex-row items-center justify-between">
+        <Text className="text-sm font-semibold text-text">
+          {t('collections.fork.alreadyForked')}
+        </Text>
+        <Text className="text-sm text-text-dim">›</Text>
+      </TouchableOpacity>
+    );
+  }
+
+  return (
+    <TouchableOpacity
+      onPress={onFork}
+      disabled={fork.pending}
+      accessibilityRole="button"
+      accessibilityLabel={t('collections.fork.action')}
+      accessibilityState={{ disabled: fork.pending }}
+      className={`mt-3 px-4 py-3 rounded-md bg-gold items-center justify-center ${fork.pending ? 'opacity-60' : ''}`}>
+      <Text className="text-sm font-bold text-on-gold">
+        {fork.pending ? t('collections.fork.actionPending') : t('collections.fork.action')}
+      </Text>
+    </TouchableOpacity>
+  );
+}
+
 function ItemCell({
   item,
   find,
@@ -362,7 +432,12 @@ function ItemCell({
   onPress: () => void;
   disabled?: boolean;
 }) {
+  const { t } = useTranslation();
   const photo = find?.photo_url ?? item.example_image_url;
+  // True when the displayed image is a Wikipedia/Unsplash reference rather
+  // than a real find — drives the "Example" badge so the user knows this
+  // photo isn't theirs (or anyone's) yet.
+  const isExample = !find && Boolean(item.example_image_url);
 
   return (
     <TouchableOpacity
@@ -370,7 +445,9 @@ function ItemCell({
       disabled={disabled}
       accessibilityRole="button"
       accessibilityState={{ disabled }}
-      accessibilityLabel={item.name}
+      accessibilityLabel={
+        isExample ? `${item.name} — ${t('collections.items.examplePhoto')}` : item.name
+      }
       activeOpacity={disabled ? 1 : 0.75}
       style={{ width: size, height: size }}
       className={`rounded-md overflow-hidden bg-surface border border-stroke ${disabled ? 'opacity-40' : ''}`}>
@@ -381,6 +458,13 @@ function ItemCell({
           <Text className="text-3xl">📷</Text>
         </View>
       )}
+      {isExample ? (
+        <View className="absolute top-1 left-1 px-1.5 py-0.5 rounded-full bg-gold-glow border border-gold-lo">
+          <Text className="text-[9px] font-bold uppercase tracking-wider text-text">
+            {t('collections.items.examplePhoto')}
+          </Text>
+        </View>
+      ) : null}
       <View className="absolute left-0 right-0 bottom-0 px-2 py-1 bg-overlay">
         <Text numberOfLines={1} className="text-xs text-text font-semibold">
           {item.name}

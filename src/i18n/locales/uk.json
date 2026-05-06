@@ -313,7 +313,9 @@
       "rare": "Рідкісне"
     },
     "items": {
-      "header": "Що шукати"
+      "header": "Що шукати",
+      "examplePhoto": "Приклад",
+      "tapToShoot": "Торкнись, щоб сфотографувати"
     },
     "detail": {
       "creatorHints": {
@@ -326,7 +328,45 @@
           "funFact": "Цікавий факт"
         }
       }
+    },
+    "fork": {
+      "action": "Скопіювати собі",
+      "actionPending": "Копіюємо…",
+      "alreadyForked": "Уже у твоїх колекціях",
+      "openMine": "Відкрити мою копію",
+      "successToastTitle": "Колекцію скопійовано",
+      "successToastBody": "Тепер вона у твоїх колекціях — починай збирати.",
+      "errorTitle": "Не вдалося скопіювати",
+      "errorBody": "Спробуй ще раз за мить.",
+      "forkedBadge": "Скопійовано з «{{title}}»"
+    },
+    "starter": {
+      "header": "Стартові колекції",
+      "subtitle": "Підготовлено Collecta — скопіюй будь-яку й починай збирати."
+    },
+    "tabs2": {
+      "discover": "Відкривай",
+      "mine": "Мої"
     }
+  },
+  "discover": {
+    "title": "Відкривай",
+    "search": "Знайти колекцію…",
+    "sort": {
+      "popular": "Популярні",
+      "new": "Нові"
+    },
+    "seasonal": "Сезон",
+    "inMyCollections": "У твоїх колекціях",
+    "forksCount_one": "{{count}} колекціонер",
+    "forksCount_few": "{{count}} колекціонери",
+    "forksCount_many": "{{count}} колекціонерів",
+    "itemsCount_one": "{{count}} елемент",
+    "itemsCount_few": "{{count}} елементи",
+    "itemsCount_many": "{{count}} елементів",
+    "categoryAll": "Всі",
+    "empty": "За фільтрами нічого не знайшлося.",
+    "loadError": "Не вдалося завантажити каталог."
   },
   "categories": {
     "nature": "Природа",

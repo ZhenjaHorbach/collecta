@@ -1,5 +1,5 @@
 // Cron-driven achievement generator. Runs weekly via GitHub Actions, calls
-// Claude with the system prompt at prompts/generate-achievement.md, and
+// Claude with the system prompt in generate-achievement.prompt.md (sibling), and
 // writes a new SQL migration into supabase/migrations/. The workflow then
 // opens a PR; merging triggers deploy-supabase.yml which applies the
 // migration. No DB writes happen here — the migration is the artifact.
@@ -20,7 +20,7 @@ import { createClient } from '@supabase/supabase-js';
 import { readFile, readdir, writeFile } from 'node:fs/promises';
 import { resolve } from 'node:path';
 
-const MODEL = 'claude-sonnet-4-6';
+const MODEL = 'claude-haiku-4-5-20251001';
 const REPO_ROOT = resolve(__dirname, '..');
 
 const ALLOWED_KINDS = [
@@ -83,7 +83,7 @@ const PROPOSE_TOOL: Tool = {
 };
 
 async function loadSystemPrompt(): Promise<string> {
-  return readFile(resolve(REPO_ROOT, 'prompts/generate-achievement.md'), 'utf8');
+  return readFile(resolve(__dirname, 'generate-achievement.prompt.md'), 'utf8');
 }
 
 export async function fetchExistingCatalog(): Promise<ExistingAchievement[]> {
