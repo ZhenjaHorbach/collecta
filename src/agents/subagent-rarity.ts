@@ -9,7 +9,7 @@ import type Anthropic from '@anthropic-ai/sdk';
 import type { Tool } from '@anthropic-ai/sdk/resources/messages';
 
 import type { NormalizedUsage, Rarity, SubagentRarity } from './types.ts';
-import { normalizeUsage } from './types.ts';
+import { extractToolUseRows, normalizeUsage } from './types.ts';
 
 const TOOL: Tool = {
   name: 'classify_rarity',
@@ -68,11 +68,7 @@ Output only via the classify_rarity tool.`;
     messages: [{ role: 'user', content: userPrompt }],
   });
 
-  const block = (message.content as { type?: string }[]).find((b) => b?.type === 'tool_use');
-  if (!block) throw new Error('rarity: no tool_use block');
-  const input = (block as { input?: { ratings?: { name?: string; rarity?: Rarity }[] } }).input;
-  const rows = input?.ratings;
-  if (!Array.isArray(rows)) throw new Error('rarity: invalid tool input');
+  const rows = extractToolUseRows<{ name?: string; rarity?: Rarity }>(message, 'ratings', 'rarity');
 
   const byName: Record<string, Rarity> = {};
   for (const r of rows) {

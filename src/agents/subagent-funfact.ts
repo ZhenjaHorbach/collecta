@@ -6,7 +6,7 @@ import type Anthropic from '@anthropic-ai/sdk';
 import type { Tool } from '@anthropic-ai/sdk/resources/messages';
 
 import type { Locale, NormalizedUsage, SubagentFunFacts } from './types.ts';
-import { normalizeUsage } from './types.ts';
+import { extractToolUseRows, normalizeUsage } from './types.ts';
 
 const TOOL: Tool = {
   name: 'write_fun_facts',
@@ -66,11 +66,11 @@ Output only via the write_fun_facts tool.`;
     messages: [{ role: 'user', content: userPrompt }],
   });
 
-  const block = (message.content as { type?: string }[]).find((b) => b?.type === 'tool_use');
-  if (!block) throw new Error('fun-facts: no tool_use block');
-  const input = (block as { input?: { facts?: { name?: string; fun_fact?: string }[] } }).input;
-  const rows = input?.facts;
-  if (!Array.isArray(rows)) throw new Error('fun-facts: invalid tool input');
+  const rows = extractToolUseRows<{ name?: string; fun_fact?: string }>(
+    message,
+    'facts',
+    'fun-facts'
+  );
 
   const byName: Record<string, string> = {};
   for (const r of rows) {

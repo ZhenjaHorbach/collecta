@@ -2,7 +2,7 @@ import { Image } from 'expo-image';
 import { forwardRef } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Text, View } from 'react-native';
-import QRCode from 'react-native-qrcode-svg';
+import { ShareQr } from './ShareQr';
 
 export interface FindShareCardProps {
   photoUrl: string;
@@ -15,9 +15,6 @@ export interface FindShareCardProps {
 
 // Renders off-screen for view-shot capture. Fixed dimensions so the captured
 // PNG is consistent regardless of viewport.
-//
-// QR code wrappers use literal #fff/#000 — the deep-linking skill requires
-// scanner-friendly contrast that doesn't shift with the active theme.
 export const FindShareCard = forwardRef<View, FindShareCardProps>(function FindShareCard(
   { photoUrl, itemName, collectionTitle, collectionEmoji, creatorDisplayName, url },
   ref
@@ -45,9 +42,7 @@ export const FindShareCard = forwardRef<View, FindShareCardProps>(function FindS
         </View>
 
         <View className="flex-row items-center gap-3.5">
-          <View style={{ backgroundColor: '#fff', padding: 6, borderRadius: 10 }}>
-            <QRCode value={url} size={80} backgroundColor="#fff" color="#000" />
-          </View>
+          <ShareQr value={url} size={80} padding={6} borderRadius={10} />
           <View className="flex-1">
             <Text className="text-[13px] text-text-dim mb-0.5">{t('share.scanFind')}</Text>
             <Text className="text-xs text-text" numberOfLines={2}>

@@ -41,6 +41,7 @@ export type Palette = Readonly<{
 
   overlay: string;
   overlayHi: string;
+  scrim: string;
 
   mapBg: string;
   mapDeep: string;
@@ -75,6 +76,7 @@ const light = {
 
   overlay: 'rgba(255,255,255,0.82)',
   overlayHi: 'rgba(255,255,255,0.9)',
+  scrim: 'rgba(0,0,0,0.55)',
 
   mapBg: '#E2E8F0',
   mapDeep: '#CBD5E1',
@@ -107,6 +109,7 @@ const dark = {
 
   overlay: 'rgba(14,17,22,0.82)',
   overlayHi: 'rgba(14,17,22,0.9)',
+  scrim: 'rgba(0,0,0,0.55)',
 
   mapBg: '#1A2230',
   mapDeep: '#0E1722',

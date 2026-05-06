@@ -35,6 +35,7 @@
 
     --overlay: rgba(255, 255, 255, 0.82);
     --overlay-hi: rgba(255, 255, 255, 0.9);
+    --scrim: rgba(0, 0, 0, 0.55);
 
     --map-bg: #e2e8f0;
     --map-deep: #cbd5e1;
@@ -67,6 +68,7 @@
 
     --overlay: rgba(14, 17, 22, 0.82);
     --overlay-hi: rgba(14, 17, 22, 0.9);
+    --scrim: rgba(0, 0, 0, 0.55);
 
     --map-bg: #1a2230;
     --map-deep: #0e1722;

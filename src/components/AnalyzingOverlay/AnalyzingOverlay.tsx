@@ -71,10 +71,7 @@ export function AnalyzingOverlay({ photoUri, stage }: AnalyzingOverlayProps): Re
         blurRadius={12}
         recyclingKey={photoUri}
       />
-      <View
-        className="absolute left-0 right-0 top-0 bottom-0"
-        style={{ backgroundColor: 'rgba(0,0,0,0.55)' }}
-      />
+      <View className="absolute left-0 right-0 top-0 bottom-0 bg-scrim" />
 
       <Animated.View
         style={[

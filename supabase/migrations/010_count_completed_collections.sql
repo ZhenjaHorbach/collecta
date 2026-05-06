@@ -1,4 +1,11 @@
 -- Migration: 010_count_completed_collections
+--
+-- SUPERSEDED in part by 017_completed_owned_collections.sql: that migration
+-- redefines the function to count collections the caller OWNS rather than
+-- merely joined, and UNIONs the legacy join-based path here so existing
+-- unlocks survive. Keep this migration as the function's foundation; don't
+-- back-fill changes — write a new follow-up migration instead.
+--
 -- Replaces the N+1 client-loop in award-xp's countCompletedCollections() with
 -- a single round-trip RPC. For a user joined to K collections the previous
 -- code fired 1 + 2K queries (one for items + one for find-count per

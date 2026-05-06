@@ -2,7 +2,7 @@ import { Image } from 'expo-image';
 import { forwardRef } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Text, View } from 'react-native';
-import QRCode from 'react-native-qrcode-svg';
+import { ShareQr } from './ShareQr';
 
 export interface CollectionShareCardProps {
   title: string;
@@ -46,9 +46,7 @@ export const CollectionShareCard = forwardRef<View, CollectionShareCardProps>(
         )}
 
         <View className="flex-row items-center gap-4">
-          <View style={{ backgroundColor: '#fff', padding: 8, borderRadius: 12 }}>
-            <QRCode value={url} size={88} backgroundColor="#fff" color="#000" />
-          </View>
+          <ShareQr value={url} />
           <View className="flex-1">
             <Text className="text-sm text-text-dim mb-1">{t('share.scanCollection')}</Text>
             <Text className="text-[13px] text-text" numberOfLines={2}>
