@@ -30,6 +30,7 @@
 ## General
 
 - No `console.log` in production code.
+- `console.warn` / `console.error` are allowed inside `catch` blocks for non-fatal failures (capture upload retries, missing data fallbacks, fire-and-forget background work). Tag every call with a `[module]` prefix — e.g. `console.warn('[capture] failed at stage=', err)`. **Why:** keeps debugging signal on dev/CI without escalating to a logger; the prefix makes Sentry-grade triage possible later. Don't use them for happy-path tracing — only failure paths.
 - No unused variables or imports (ESLint enforces).
 - `const` over `let`; never `var`.
 - Short-circuit (`cond && <X />`) over ternary for conditional rendering when there's no else branch.

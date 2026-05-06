@@ -51,4 +51,10 @@ export const StorageKeys = {
   onboardingDone: 'onboarding_done',
   lastSyncedAt: 'last_synced_at',
   draftFind: 'draft_find',
+  activeCollectionId: 'active_collection_id',
+  // User preferences (SettingsScreen toggles). Defaults live next to the
+  // useSetting hook so the consuming code reads a single source of truth.
+  prefAutoTagLocation: 'pref_auto_tag_location',
+  prefAiVerification: 'pref_ai_verification',
+  prefHighResUploads: 'pref_high_res_uploads',
 } as const;

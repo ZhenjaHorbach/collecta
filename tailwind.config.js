@@ -35,6 +35,7 @@ module.exports = {
 
         overlay: 'var(--overlay)',
         'overlay-hi': 'var(--overlay-hi)',
+        scrim: 'var(--scrim)',
 
         'map-bg': 'var(--map-bg)',
         'map-deep': 'var(--map-deep)',

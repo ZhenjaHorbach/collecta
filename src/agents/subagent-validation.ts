@@ -10,7 +10,7 @@ import type Anthropic from '@anthropic-ai/sdk';
 import type { Tool } from '@anthropic-ai/sdk/resources/messages';
 
 import type { NormalizedUsage, SubagentValidationHints } from './types.ts';
-import { normalizeUsage } from './types.ts';
+import { extractToolUseRows, normalizeUsage } from './types.ts';
 
 const TOOL: Tool = {
   name: 'write_validation_hints',
@@ -64,11 +64,11 @@ Return one entry per name in the same order. English only. Output only via the w
     messages: [{ role: 'user', content: userPrompt }],
   });
 
-  const block = (message.content as { type?: string }[]).find((b) => b?.type === 'tool_use');
-  if (!block) throw new Error('validation-hints: no tool_use block');
-  const input = (block as { input?: { hints?: { name?: string; ai_hint?: string }[] } }).input;
-  const rows = input?.hints;
-  if (!Array.isArray(rows)) throw new Error('validation-hints: invalid tool input');
+  const rows = extractToolUseRows<{ name?: string; ai_hint?: string }>(
+    message,
+    'hints',
+    'validation-hints'
+  );
 
   const byName: Record<string, string> = {};
   for (const r of rows) {

@@ -10,7 +10,7 @@ import type Anthropic from '@anthropic-ai/sdk';
 import type { Tool } from '@anthropic-ai/sdk/resources/messages';
 
 import type { Locale, NormalizedUsage, SubagentDescriptions } from './types.ts';
-import { normalizeUsage } from './types.ts';
+import { extractToolUseRows, normalizeUsage } from './types.ts';
 
 const TOOL: Tool = {
   name: 'write_descriptions',
@@ -70,12 +70,11 @@ Return one entry per name in the same order. Output only via the write_descripti
     messages: [{ role: 'user', content: userPrompt }],
   });
 
-  const block = (message.content as { type?: string }[]).find((b) => b?.type === 'tool_use');
-  if (!block) throw new Error('descriptions: no tool_use block');
-  const input = (block as { input?: { descriptions?: { name?: string; description?: string }[] } })
-    .input;
-  const rows = input?.descriptions;
-  if (!Array.isArray(rows)) throw new Error('descriptions: invalid tool input');
+  const rows = extractToolUseRows<{ name?: string; description?: string }>(
+    message,
+    'descriptions',
+    'descriptions'
+  );
 
   const byName: Record<string, string> = {};
   for (const r of rows) {

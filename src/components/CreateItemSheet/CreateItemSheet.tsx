@@ -1,7 +1,8 @@
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Modal, Pressable, ScrollView, Text, TextInput, View } from 'react-native';
+import { Pressable, ScrollView, Text, TextInput, View } from 'react-native';
 
+import { BottomSheet } from '@components/BottomSheet';
 import { Spinner } from '@components/Spinner';
 import { useColors } from '@hooks/useColors';
 import { addCollectionItem } from '@services/collections.service';
@@ -66,99 +67,97 @@ export function CreateItemSheet({
   };
 
   return (
-    <Modal visible={visible} animationType="slide" transparent onRequestClose={onClose}>
-      <View className="flex-1 justify-end bg-overlay">
-        <View className="bg-bg rounded-t-xl p-5 gap-4 max-h-[85%]">
-          <View className="flex-row items-center justify-between">
-            <Text className="text-text text-base font-semibold">
-              {t('validation.createItem.title')}
-            </Text>
-            <Pressable onPress={onClose} className="px-3 py-1 rounded-full bg-surface-hi">
-              <Text className="text-text text-xs">{t('common.close')}</Text>
-            </Pressable>
-          </View>
-          <Text className="text-text-dim text-xs">
-            {t('validation.createItem.subtitle', { collection: collectionTitle })}
-          </Text>
-
-          <ScrollView contentContainerClassName="gap-3" keyboardShouldPersistTaps="handled">
-            <View className="px-3 py-3 rounded-md bg-surface border border-stroke">
-              <Text className="text-text-dim text-[11px] uppercase tracking-wider mb-1">
-                {t('validation.createItem.nameLabel')}
-              </Text>
-              <TextInput
-                value={name}
-                onChangeText={(next) => {
-                  setName(next);
-                  if (error) setError(null);
-                }}
-                placeholder={t('validation.createItem.namePlaceholder')}
-                placeholderTextColor={colors.textMuted}
-                maxLength={200}
-                className="text-text text-sm"
-                autoFocus
-              />
-            </View>
-
-            <View className="px-3 py-3 rounded-md bg-surface border border-stroke">
-              <Text className="text-text-dim text-[11px] uppercase tracking-wider mb-1">
-                {t('validation.createItem.descriptionLabel')}
-              </Text>
-              <TextInput
-                value={description}
-                onChangeText={setDescription}
-                placeholder={t('validation.createItem.descriptionPlaceholder')}
-                placeholderTextColor={colors.textMuted}
-                maxLength={500}
-                multiline
-                className="text-text text-sm"
-              />
-            </View>
-
-            <View className="gap-2">
-              <Text className="text-text-dim text-[11px] uppercase tracking-wider">
-                {t('validation.createItem.rarityLabel')}
-              </Text>
-              <View className="flex-row gap-2">
-                {RARITIES.map((r) => (
-                  <Pressable
-                    key={r}
-                    onPress={() => setRarity(r)}
-                    accessibilityRole="button"
-                    className={`flex-1 px-3 py-2 rounded-md border items-center ${
-                      r === rarity ? 'bg-gold-glow border-gold' : 'bg-surface border-stroke'
-                    }`}>
-                    <Text
-                      className={`text-xs font-semibold ${
-                        r === rarity ? 'text-gold' : 'text-text-dim'
-                      }`}>
-                      {t(`collections.rarity.${r}`)}
-                    </Text>
-                  </Pressable>
-                ))}
-              </View>
-            </View>
-
-            {error ? <Text className="text-coral text-xs">{error}</Text> : null}
-          </ScrollView>
-
-          <Pressable
-            onPress={() => {
-              void submit();
-            }}
-            disabled={submitting}
-            accessibilityRole="button"
-            className={`px-4 py-4 rounded-md items-center ${submitting ? 'bg-surface-hi' : 'bg-gold'}`}>
-            {submitting ? (
-              <Spinner />
-            ) : (
-              <Text className="text-on-gold font-semibold">
-                {t('validation.createItem.submit')}
-              </Text>
-            )}
-          </Pressable>
-        </View>
+    <BottomSheet
+      visible={visible}
+      onClose={onClose}
+      showHandle={false}
+      contentClassName="bg-bg rounded-t-xl p-5 gap-4 max-h-[85%]">
+      <View className="flex-row items-center justify-between">
+        <Text className="text-text text-base font-semibold">
+          {t('validation.createItem.title')}
+        </Text>
+        <Pressable onPress={onClose} className="px-3 py-1 rounded-full bg-surface-hi">
+          <Text className="text-text text-xs">{t('common.close')}</Text>
+        </Pressable>
       </View>
-    </Modal>
+      <Text className="text-text-dim text-xs">
+        {t('validation.createItem.subtitle', { collection: collectionTitle })}
+      </Text>
+
+      <ScrollView contentContainerClassName="gap-3" keyboardShouldPersistTaps="handled">
+        <View className="px-3 py-3 rounded-md bg-surface border border-stroke">
+          <Text className="text-text-dim text-[11px] uppercase tracking-wider mb-1">
+            {t('validation.createItem.nameLabel')}
+          </Text>
+          <TextInput
+            value={name}
+            onChangeText={(next) => {
+              setName(next);
+              if (error) setError(null);
+            }}
+            placeholder={t('validation.createItem.namePlaceholder')}
+            placeholderTextColor={colors.textMuted}
+            maxLength={200}
+            className="text-text text-sm"
+            autoFocus
+          />
+        </View>
+
+        <View className="px-3 py-3 rounded-md bg-surface border border-stroke">
+          <Text className="text-text-dim text-[11px] uppercase tracking-wider mb-1">
+            {t('validation.createItem.descriptionLabel')}
+          </Text>
+          <TextInput
+            value={description}
+            onChangeText={setDescription}
+            placeholder={t('validation.createItem.descriptionPlaceholder')}
+            placeholderTextColor={colors.textMuted}
+            maxLength={500}
+            multiline
+            className="text-text text-sm"
+          />
+        </View>
+
+        <View className="gap-2">
+          <Text className="text-text-dim text-[11px] uppercase tracking-wider">
+            {t('validation.createItem.rarityLabel')}
+          </Text>
+          <View className="flex-row gap-2">
+            {RARITIES.map((r) => (
+              <Pressable
+                key={r}
+                onPress={() => setRarity(r)}
+                accessibilityRole="button"
+                className={`flex-1 px-3 py-2 rounded-md border items-center ${
+                  r === rarity ? 'bg-gold-glow border-gold' : 'bg-surface border-stroke'
+                }`}>
+                <Text
+                  className={`text-xs font-semibold ${
+                    r === rarity ? 'text-gold' : 'text-text-dim'
+                  }`}>
+                  {t(`collections.rarity.${r}`)}
+                </Text>
+              </Pressable>
+            ))}
+          </View>
+        </View>
+
+        {error ? <Text className="text-coral text-xs">{error}</Text> : null}
+      </ScrollView>
+
+      <Pressable
+        onPress={() => {
+          void submit();
+        }}
+        disabled={submitting}
+        accessibilityRole="button"
+        className={`px-4 py-4 rounded-md items-center ${submitting ? 'bg-surface-hi' : 'bg-gold'}`}>
+        {submitting ? (
+          <Spinner />
+        ) : (
+          <Text className="text-on-gold font-semibold">{t('validation.createItem.submit')}</Text>
+        )}
+      </Pressable>
+    </BottomSheet>
   );
 }

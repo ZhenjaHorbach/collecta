@@ -92,6 +92,24 @@ export function normalizeUsage(raw: RawUsage | null | undefined): NormalizedUsag
   };
 }
 
+// Pulls the array of rows out of a single-tool-use Anthropic response.
+// Every subagent uses the same pattern: one call, `tool_choice: { type: 'tool',
+// name }`, exactly one `tool_use` block whose `input` is a single-key object
+// wrapping a row array. The agentName prefix flows into error messages so a
+// failure points at the right caller without per-file duplicated parsing.
+export function extractToolUseRows<T>(
+  message: { content: unknown },
+  outerKey: string,
+  agentName: string
+): T[] {
+  const block = (message.content as { type?: string }[]).find((b) => b?.type === 'tool_use');
+  if (!block) throw new Error(`${agentName}: no tool_use block`);
+  const input = (block as { input?: Record<string, unknown> }).input;
+  const rows = input?.[outerKey];
+  if (!Array.isArray(rows)) throw new Error(`${agentName}: invalid tool input`);
+  return rows as T[];
+}
+
 export function sumUsage(...parts: NormalizedUsage[]): NormalizedUsage {
   return parts.reduce(
     (acc, p) => ({

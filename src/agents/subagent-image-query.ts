@@ -16,7 +16,7 @@ import type Anthropic from '@anthropic-ai/sdk';
 import type { Tool } from '@anthropic-ai/sdk/resources/messages';
 
 import type { NormalizedUsage } from './types.ts';
-import { normalizeUsage } from './types.ts';
+import { extractToolUseRows, normalizeUsage } from './types.ts';
 
 const TOOL: Tool = {
   name: 'rewrite_search_queries',
@@ -77,11 +77,11 @@ Output via the rewrite_search_queries tool. Same order, one query per item.`;
     messages: [{ role: 'user', content: userPrompt }],
   });
 
-  const block = (message.content as { type?: string }[]).find((b) => b?.type === 'tool_use');
-  if (!block) throw new Error('image-query: no tool_use block');
-  const input = (block as { input?: { queries?: { name?: string; query?: string }[] } }).input;
-  const rows = input?.queries;
-  if (!Array.isArray(rows)) throw new Error('image-query: invalid tool input');
+  const rows = extractToolUseRows<{ name?: string; query?: string }>(
+    message,
+    'queries',
+    'image-query'
+  );
 
   const byName: Record<string, string> = {};
   for (const r of rows) {

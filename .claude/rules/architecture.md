@@ -31,3 +31,15 @@ supabase/
 - Services: `<domain>.service.ts` → functions, not classes
 - Hooks: `use<Name>.ts` → `export function useCollection`
 - Utils: `<domain>.utils.ts` → named exports
+
+## Platform-split files (`*.ts` ↔ `*.web.ts`)
+
+Metro picks `<file>.web.ts` for web bundles and `<file>.ts` for iOS/Android. When you split a file this way, **every named export in the native file must exist with the same name and equivalent type signature in the web file** — and vice versa. Callers don't know which variant they get; an export missing on one platform fails silently as `undefined` at runtime (not a type error, since the importer resolves through the platform-correct file).
+
+Rules:
+
+- **Export parity.** Same exports, same names, same TS signatures. If web genuinely can't implement something, export a stub that throws — don't omit the symbol.
+- **Constants stay identical.** Shared keymaps, schema definitions, and enum-like objects (e.g. `StorageKeys`, PowerSync `AppSchema`) must be byte-equal between platforms. If both copies grow long, hoist the constant into a sibling `<file>.shared.ts` and re-export from each platform file.
+- **When you edit one, edit the other in the same commit.** Drift between `*.ts` and `*.web.ts` is a known foot-gun; the typecheck won't catch it because Metro routes the import per-platform.
+
+Currently split: `src/services/database.service.{ts,web.ts}`, `src/services/storage.service.{ts,web.ts}`, `src/components/MapPreview/MapPreview.{tsx,web.tsx}`, `src/screens/MapScreen/MapScreen.{tsx,web.tsx}`, `src/components/IconSymbol/IconSymbol.{tsx,ios.tsx}`.
