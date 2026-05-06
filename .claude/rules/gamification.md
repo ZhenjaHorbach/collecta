@@ -54,7 +54,7 @@ No cron job. A user who skipped 3 days still has the OLD `streak_days` in the DB
 | `first_collection_complete` | 🏆   | collections_complete ≥ 1 | 100 |
 | `reactions_given_25`        | 💬   | reactions_given ≥ 25     | 40  |
 
-A "completed collection" = the user has at least one find for every `collection_items` row in a collection they joined (`user_collections`).
+A "completed collection" = the user has at least one find for every `collection_items` row in a collection they **own** (`collections.creator_id = user_id`). This covers both originally-authored collections and forks (since `fork_collection` inserts the copy under the caller). The legacy `user_collections` join is still UNION'd in `count_completed_collections` (migration 017) so pre-fork users keep their existing unlocks — drop that second branch once `user_collections` is empty.
 
 ## Agent loop (CCAF Domain 1)
 

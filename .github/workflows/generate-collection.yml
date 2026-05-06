@@ -1,0 +1,93 @@
+name: Generate weekly collection
+
+on:
+  schedule:
+    # Tuesdays at 09:00 UTC — staggered from the achievement cron so a
+    # transient Anthropic outage doesn't kill both runs at once.
+    - cron: '0 9 * * 2'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  pull-requests: write
+
+concurrency:
+  group: generate-collection
+  cancel-in-progress: false
+
+jobs:
+  propose:
+    name: Propose new collection
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+      - run: npm ci
+
+      - name: Generate migration
+        id: gen
+        env:
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_ANON_KEY: ${{ secrets.SUPABASE_ANON_KEY }}
+        run: |
+          OUTPUT=$(scripts/generate-collection.sh)
+          echo "$OUTPUT" | tee /tmp/gen.json
+
+      - name: Extract proposal fields
+        id: meta
+        run: |
+          FILE=$(jq -r .file /tmp/gen.json)
+          TITLE=$(jq -r .title /tmp/gen.json)
+          CATEGORY=$(jq -r .category /tmp/gen.json)
+          ITEMS=$(jq -r .item_count /tmp/gen.json)
+          TOPIC=$(jq -r .topic /tmp/gen.json)
+          RATIONALE=$(jq -r .rationale /tmp/gen.json)
+          MODEL=$(jq -r .model /tmp/gen.json)
+          IN=$(jq -r .usage.input_tokens /tmp/gen.json)
+          OUT=$(jq -r .usage.output_tokens /tmp/gen.json)
+          SLUG=$(basename "$FILE" .sql | sed 's/^[0-9]*_collection_//')
+          {
+            echo "file=$FILE"
+            echo "title=$TITLE"
+            echo "category=$CATEGORY"
+            echo "items=$ITEMS"
+            echo "topic=$TOPIC"
+            echo "rationale<<EOF"
+            echo "$RATIONALE"
+            echo "EOF"
+            echo "model=$MODEL"
+            echo "input_tokens=$IN"
+            echo "output_tokens=$OUT"
+            echo "slug=$SLUG"
+          } >> "$GITHUB_OUTPUT"
+
+      - name: Create pull request
+        uses: peter-evans/create-pull-request@v6
+        with:
+          branch: collection/${{ steps.meta.outputs.slug }}
+          title: 'feat(collections): add starter collection "${{ steps.meta.outputs.title }}"'
+          commit-message: 'feat(collections): add starter collection ${{ steps.meta.outputs.slug }}'
+          body: |
+            Auto-proposed by Claude (multi-agent pipeline). Review the migration before merging — once on `main`, `deploy-supabase.yml` applies it to production and the collection becomes Forkable from Discover.
+
+            **Proposal**
+            - **title**: ${{ steps.meta.outputs.title }}
+            - **category**: `${{ steps.meta.outputs.category }}`
+            - **items**: ${{ steps.meta.outputs.items }}
+            - **topic seed**: ${{ steps.meta.outputs.topic }}
+
+            **Why this one**
+            ${{ steps.meta.outputs.rationale }}
+
+            **Generation**
+            - model: `${{ steps.meta.outputs.model }}`
+            - tokens: in=${{ steps.meta.outputs.input_tokens }} out=${{ steps.meta.outputs.output_tokens }}
+
+            Triggered by `${{ github.event_name }}` from @${{ github.actor }}.
+          add-paths: supabase/migrations/**
+          labels: collections,automated
+          delete-branch: true

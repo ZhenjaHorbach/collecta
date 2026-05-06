@@ -313,7 +313,9 @@
       "rare": "Bardzo rzadkie"
     },
     "items": {
-      "header": "Czego szukać"
+      "header": "Czego szukać",
+      "examplePhoto": "Przykład",
+      "tapToShoot": "Dotknij, by sfotografować"
     },
     "detail": {
       "creatorHints": {
@@ -326,7 +328,45 @@
           "funFact": "Ciekawostka"
         }
       }
+    },
+    "fork": {
+      "action": "Skopiuj do mnie",
+      "actionPending": "Kopiowanie…",
+      "alreadyForked": "Już masz tę kolekcję",
+      "openMine": "Otwórz moją kopię",
+      "successToastTitle": "Kolekcja skopiowana",
+      "successToastBody": "Jest już w Twoich kolekcjach — zacznij ją uzupełniać.",
+      "errorTitle": "Nie udało się skopiować",
+      "errorBody": "Spróbuj ponownie za chwilę.",
+      "forkedBadge": "Skopiowano z „{{title}}\""
+    },
+    "starter": {
+      "header": "Kolekcje na start",
+      "subtitle": "Przygotowane przez Collecta — skopiuj dowolną i zacznij zbierać."
+    },
+    "tabs2": {
+      "discover": "Odkrywaj",
+      "mine": "Moje"
     }
+  },
+  "discover": {
+    "title": "Odkrywaj",
+    "search": "Szukaj kolekcji…",
+    "sort": {
+      "popular": "Popularne",
+      "new": "Nowe"
+    },
+    "seasonal": "Sezon",
+    "inMyCollections": "W Twoich kolekcjach",
+    "forksCount_one": "{{count}} kolekcjoner",
+    "forksCount_few": "{{count}} kolekcjonerów",
+    "forksCount_many": "{{count}} kolekcjonerów",
+    "itemsCount_one": "{{count}} pozycja",
+    "itemsCount_few": "{{count}} pozycje",
+    "itemsCount_many": "{{count}} pozycji",
+    "categoryAll": "Wszystkie",
+    "empty": "Nic nie pasuje do filtrów.",
+    "loadError": "Nie udało się wczytać katalogu."
   },
   "categories": {
     "nature": "Natura",

@@ -111,3 +111,5 @@ supabase/
 ```
 
 Path aliases: `@components/*`, `@screens/*`, `@services/*`, `@hooks/*`, `@utils/*`, `@constants/*`, `@typings/*`, `@i18n` / `@i18n/*`, `~/*` (= `src/*`).
+
+**Hierarchical context.** When working inside `src/services/` or `supabase/`, read the local `CLAUDE.md` first — each adds layer-specific rules on top of these root ones (no duplication). The root file stays the canonical source for everything else.

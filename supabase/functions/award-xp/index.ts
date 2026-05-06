@@ -38,6 +38,8 @@ import { authorizeRequest } from '../_shared/auth.ts';
 // @ts-ignore — Deno requires .ts extension on relative imports
 // prettier-ignore
 import { levelForXp, todayUtcIso, updateStreak, XP_PER_EVENT, type XpEvent } from '../_shared/leveling.ts';
+// @ts-ignore — Deno requires .ts extension on relative imports
+import { logAiCall } from '../_shared/anthropic-usage.ts';
 
 const supabase = createClient(
   Deno.env.get('SUPABASE_URL')!,
@@ -571,6 +573,26 @@ Deno.serve(async (req: Request) => {
     // Non-fatal — XP and unlocks already wrote successfully.
     console.error(`[award-xp] persist_usage_failed: ${err}`);
   }
+
+  // Normalized cost tracking — every loop run lands in ai_calls regardless of
+  // whether an unlock fired. The mini variant on user_achievements stays
+  // populated above until readers move to ai_calls.
+  await logAiCall(
+    supabase,
+    `award-xp:${event}`,
+    MODEL,
+    {
+      input_tokens: result.usage.inputTokens,
+      output_tokens: result.usage.outputTokens,
+      cache_read_tokens: result.usage.cacheReadInputTokens,
+      cache_creation_tokens: result.usage.cacheCreationInputTokens,
+    },
+    {
+      user_id: userId,
+      steps: result.steps,
+      achievements_unlocked: result.newAchievements.map((a) => a.code),
+    }
+  );
 
   // xp_delta from the caller's perspective: base event XP + any unlock bonuses.
   const baseDelta = XP_PER_EVENT[event];

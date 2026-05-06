@@ -5,6 +5,8 @@ import { achievementCalibrationCases } from './achievement-calibration.eval';
 import { achievementGeneratorCases } from './achievement-generator.eval';
 import { aiValidationCases } from './ai-validation.eval';
 import { callValidate } from './client';
+import { collectionCalibrationCases } from './collection-calibration.eval';
+import { collectionGeneratorCases } from './collection-generator.eval';
 import { buildReport } from './report';
 import type { EvalCase, EvalContext } from './types';
 
@@ -12,6 +14,8 @@ const SUITES: Record<string, EvalCase[]> = {
   'ai-validation': aiValidationCases,
   'achievement-generator': achievementGeneratorCases,
   'achievement-calibration': achievementCalibrationCases,
+  'collection-generator': collectionGeneratorCases,
+  'collection-calibration': collectionCalibrationCases,
 };
 
 interface CliArgs {

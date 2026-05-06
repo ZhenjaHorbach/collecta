@@ -1,7 +1,14 @@
 import { useRouter } from 'expo-router';
 import { useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { FlatList, RefreshControl, Text, TouchableOpacity, View } from 'react-native';
+import {
+  FlatList,
+  RefreshControl,
+  Text,
+  TouchableOpacity,
+  useWindowDimensions,
+  View,
+} from 'react-native';
 
 import { CollectionCard } from '@components/CollectionCard';
 import { SafeAreaView } from '@components/SafeAreaView';
@@ -9,27 +16,40 @@ import { Spinner } from '@components/Spinner';
 import { Tabs } from '@components/Tabs';
 import { useColors } from '@hooks/useColors';
 import { useMyCollections } from '@hooks/useMyCollections';
+import { DiscoverScreen } from '@screens/DiscoverScreen';
 import type { CollectionWithProgress } from '@services/collections.service';
 
-type TabKey = 'mine' | 'pickedUp';
+type TabKey = 'discover' | 'mine' | 'pickedUp';
+
+// Two-column grid sizing — kept here so a lone trailing card in an odd
+// total doesn't stretch across the row (flex-1 has no sibling to share
+// with). Mirrors DiscoverScreen so the visual rhythm matches.
+const GRID_PADDING = 16;
+const GRID_GAP = 12;
+const GRID_COLUMNS = 2;
 
 export function CollectionsScreen() {
   const { t } = useTranslation();
   const router = useRouter();
   const colors = useColors();
-  const [tab, setTab] = useState<TabKey>('mine');
+  const { width: screenWidth } = useWindowDimensions();
+  const cellWidth = (screenWidth - GRID_PADDING * 2 - GRID_GAP * (GRID_COLUMNS - 1)) / GRID_COLUMNS;
+  const [tab, setTab] = useState<TabKey>('discover');
   const { mine, pickedUp, loading, error, refetch } = useMyCollections();
 
   const tabs = useMemo(
     () =>
       [
-        { key: 'mine' as const, label: t('collections.tabs.mine') },
+        { key: 'discover' as const, label: t('collections.tabs2.discover') },
+        { key: 'mine' as const, label: t('collections.tabs2.mine') },
+        // pickedUp kept while user_collections still has rows for legacy
+        // users; it disappears entirely once that table is dropped.
         { key: 'pickedUp' as const, label: t('collections.tabs.pickedUp') },
       ] as const,
     [t]
   );
 
-  const data = tab === 'mine' ? mine : pickedUp;
+  const ownedAndJoined = tab === 'mine' ? mine : pickedUp;
 
   return (
     <SafeAreaView>
@@ -48,16 +68,21 @@ export function CollectionsScreen() {
       <View className="px-5 pb-3">
         <Tabs<TabKey> options={tabs} value={tab} onChange={setTab} />
       </View>
-      <CollectionsList
-        data={data}
-        loading={loading}
-        error={error}
-        emptyText={t(tab === 'mine' ? 'collections.empty.mine' : 'collections.empty.pickedUp')}
-        errorText={t('collections.loadError')}
-        spinnerColor={colors.gold}
-        onRefresh={refetch}
-        onPressItem={(id) => router.push(`/collection/${id}`)}
-      />
+      {tab === 'discover' ? (
+        <DiscoverScreen />
+      ) : (
+        <CollectionsList
+          data={ownedAndJoined}
+          loading={loading}
+          error={error}
+          emptyText={t(tab === 'mine' ? 'collections.empty.mine' : 'collections.empty.pickedUp')}
+          errorText={t('collections.loadError')}
+          spinnerColor={colors.gold}
+          cellWidth={cellWidth}
+          onRefresh={refetch}
+          onPressItem={(id) => router.push(`/collection/${id}`)}
+        />
+      )}
     </SafeAreaView>
   );
 }
@@ -69,6 +94,7 @@ interface ListProps {
   emptyText: string;
   errorText: string;
   spinnerColor: string;
+  cellWidth: number;
   onRefresh: () => void;
   onPressItem: (id: string) => void;
 }
@@ -80,6 +106,7 @@ function CollectionsList({
   emptyText,
   errorText,
   spinnerColor,
+  cellWidth,
   onRefresh,
   onPressItem,
 }: ListProps) {
@@ -97,9 +124,13 @@ function CollectionsList({
     <FlatList
       data={data}
       keyExtractor={(item) => item.id}
-      numColumns={2}
-      columnWrapperStyle={{ gap: 12 }}
-      contentContainerStyle={{ padding: 16, gap: 12, paddingBottom: 120 }}
+      numColumns={GRID_COLUMNS}
+      columnWrapperStyle={{ gap: GRID_GAP }}
+      contentContainerStyle={{
+        padding: GRID_PADDING,
+        gap: GRID_GAP,
+        paddingBottom: 120,
+      }}
       refreshControl={
         <RefreshControl refreshing={loading} onRefresh={onRefresh} tintColor={spinnerColor} />
       }
@@ -109,7 +140,7 @@ function CollectionsList({
         </View>
       }
       renderItem={({ item }) => (
-        <CollectionCard collection={item} onPress={() => onPressItem(item.id)} />
+        <CollectionCard collection={item} width={cellWidth} onPress={() => onPressItem(item.id)} />
       )}
     />
   );

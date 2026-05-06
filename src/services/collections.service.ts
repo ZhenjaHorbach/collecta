@@ -43,6 +43,10 @@ export interface CollectionDetail extends Collection {
   // are only visible if the collection is public; otherwise the array is
   // empty and the screen falls back to `example_image_url`.
   referenceFinds: Find[];
+  // Title of the source collection when this is a fork — drives the
+  // "Forked from «X»" badge on the owner's view. Null for original
+  // collections (forked_from === null) or when the source was deleted.
+  forkedFromTitle: string | null;
 }
 
 async function attachProgress(
@@ -204,6 +208,33 @@ export async function getCollectionItemContext(itemId: string): Promise<Collecti
   return { collection, item };
 }
 
+// Copies a public collection (and all its items) under the calling user.
+// Idempotent: a second call for the same source returns the existing fork.
+// All work happens in the security-definer RPC fork_collection (see migration
+// 016) — never insert collections + items by hand on the client, RLS won't
+// allow reading items from a foreign collection during the copy step.
+export async function forkCollection(sourceId: string): Promise<string> {
+  const { data, error } = await supabase.rpc('fork_collection', {
+    p_collection_id: sourceId,
+  });
+  if (error) throw error;
+  if (typeof data !== 'string') throw new Error('fork_collection: unexpected response shape');
+  return data;
+}
+
+// True when the user already forked this source. Used to swap "Copy to me"
+// for "Already in your collections" on Discover and the detail screen.
+export async function isForkedByMe(sourceId: string, userId: string): Promise<string | null> {
+  const { data, error } = await supabase
+    .from('collections')
+    .select('id')
+    .eq('forked_from', sourceId)
+    .eq('creator_id', userId)
+    .maybeSingle();
+  if (error) throw error;
+  return data?.id ?? null;
+}
+
 export async function getCollection(id: string, userId: string): Promise<CollectionDetail> {
   const [collectionRes, itemsRes] = await Promise.all([
     supabase.from('collections').select('*').eq('id', id).single(),
@@ -256,10 +287,22 @@ export async function getCollection(id: string, userId: string): Promise<Collect
 
   const foundItemIds = new Set(finds.map((f) => f.collection_item_id));
 
+  let forkedFromTitle: string | null = null;
+  if (collection.forked_from) {
+    const { data: sourceRow, error: sourceErr } = await supabase
+      .from('collections')
+      .select('title')
+      .eq('id', collection.forked_from)
+      .maybeSingle();
+    if (sourceErr) throw sourceErr;
+    forkedFromTitle = (sourceRow?.title as string | undefined) ?? null;
+  }
+
   return {
     ...collection,
     items: items.map((item) => ({ ...item, found: foundItemIds.has(item.id) })),
     finds,
     referenceFinds,
+    forkedFromTitle,
   };
 }

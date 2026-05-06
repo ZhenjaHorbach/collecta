@@ -12,12 +12,21 @@ export const CategoryEnum = z.enum([COLLECTION_CATEGORIES[0], ...COLLECTION_CATE
 
 export const RarityEnum = z.enum(['common', 'uncommon', 'rare']);
 
+// Postgres uuid columns accept any 36-char hex UUID, including sentinel
+// values like 00000000-0000-0000-0000-000000000001 (the system user).
+// Zod's UuidLike rejects those because it enforces RFC 9562
+// version digits (1-8). The DB-level uuid type is the real integrity gate;
+// runtime validation here is a sanity check, so accept the looser shape.
+const UuidLike = z
+  .string()
+  .regex(/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i, 'Invalid UUID');
+
 export const ReportTargetEnum = z.enum(['collection', 'find']);
 export const ReportStatusEnum = z.enum(['pending', 'reviewed', 'dismissed']);
 
 export const CollectionSchema = z.object({
-  id: z.string().uuid(),
-  creator_id: z.string().uuid(),
+  id: UuidLike,
+  creator_id: UuidLike,
   title: z.string().min(1).max(200),
   description: z.string().nullable(),
   icon: z.string().nullable(),
@@ -26,14 +35,16 @@ export const CollectionSchema = z.object({
   ai_hint: z.string().nullable(),
   is_freeform: z.boolean(),
   is_public: z.boolean(),
+  is_featured: z.boolean(),
+  forked_from: UuidLike.nullable(),
   created_at: z.string(),
   updated_at: z.string(),
 });
 export type Collection = z.infer<typeof CollectionSchema>;
 
 export const CollectionItemSchema = z.object({
-  id: z.string().uuid(),
-  collection_id: z.string().uuid(),
+  id: UuidLike,
+  collection_id: UuidLike,
   name: z.string().min(1).max(200),
   description: z.string().nullable(),
   ai_validation_prompt: z.string().nullable(),
@@ -47,9 +58,9 @@ export const CollectionItemSchema = z.object({
 export type CollectionItem = z.infer<typeof CollectionItemSchema>;
 
 export const FindSchema = z.object({
-  id: z.string().uuid(),
-  user_id: z.string().uuid(),
-  collection_item_id: z.string().uuid(),
+  id: UuidLike,
+  user_id: UuidLike,
+  collection_item_id: UuidLike,
   photo_url: z.string().min(1),
   ai_validated: z.boolean().nullable(),
   ai_confidence: z.number().min(0).max(1).nullable(),
@@ -62,10 +73,10 @@ export const FindSchema = z.object({
 export type Find = z.infer<typeof FindSchema>;
 
 export const ReportSchema = z.object({
-  id: z.string().uuid(),
-  reporter_id: z.string().uuid(),
+  id: UuidLike,
+  reporter_id: UuidLike,
   target_type: ReportTargetEnum,
-  target_id: z.string().uuid(),
+  target_id: UuidLike,
   reason: z.string().nullable(),
   status: ReportStatusEnum,
   created_at: z.string(),
@@ -78,6 +89,7 @@ export const AiDraftItemSchema = z.object({
   ai_hint: z.string().min(1).max(500),
   rarity: RarityEnum,
   fun_fact: z.string().min(1).max(500),
+  example_image_url: z.string().nullable().optional(),
 });
 export type AiDraftItem = z.infer<typeof AiDraftItemSchema>;
 
