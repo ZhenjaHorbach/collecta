@@ -42,7 +42,9 @@ export function CollectionDetailScreen() {
   const isOwner = !!user && !!data && data.creator_id === user.id;
   const { submit: submitReport, submitting: reporting, reset: resetReport } = useReport();
   const [reportSheetOpen, setReportSheetOpen] = useState(false);
-  const deleteCollection = useDeleteCollection();
+  // `error` from the hook isn't read directly — failures surface via
+  // run() returning false and the inline Alert below.
+  const { pending: deleting, run: runDelete } = useDeleteCollection();
 
   const headerTitle = data?.title ?? t('collections.detailTitle');
 
@@ -65,7 +67,7 @@ export function CollectionDetailScreen() {
         text: t('collections.delete.confirmAction'),
         style: 'destructive',
         onPress: async () => {
-          const ok = await deleteCollection.run(data.id);
+          const ok = await runDelete(data.id);
           if (ok) {
             router.replace('/(tabs)/collections');
             return;
@@ -197,7 +199,7 @@ export function CollectionDetailScreen() {
         onClose={() => setReportSheetOpen(false)}
       />
 
-      {deleteCollection.pending ? (
+      {deleting ? (
         <View
           accessibilityRole="progressbar"
           accessibilityLabel={t('collections.delete.pending')}

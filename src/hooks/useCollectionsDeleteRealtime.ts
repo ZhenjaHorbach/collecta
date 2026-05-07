@@ -11,6 +11,12 @@ import { supabase } from '@services/supabase.service';
 // from the consumer's perspective (just refetch) but the channel sees
 // 1/N traffic.
 //
+// TODO(scale): the subscription has no `filter` clause, so consumers
+// refetch on ANY collection deletion globally. Fine at current scale
+// (deletions are rare), but once Discover holds thousands of public
+// collections worth caching, narrow the filter (e.g. only the ids
+// currently rendered) to avoid wasted refetches.
+//
 // Channel name is uniquified per mount for the same reason as in
 // useFeedRealtime — supabase-js keeps channels in a process-global map
 // keyed by name and re-subscribing to a name in `subscribed` state throws

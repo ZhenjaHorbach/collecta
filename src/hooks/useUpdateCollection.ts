@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useCallback, useState } from 'react';
 
 import {
   addCollectionItemsAt,
@@ -51,74 +51,79 @@ const INITIAL: State = { saving: false, error: null };
 export function useUpdateCollection() {
   const [state, setState] = useState<State>(INITIAL);
 
-  const save = async (id: string, payload: UpdateCollectionPayload): Promise<boolean> => {
-    setState({ saving: true, error: null });
-    try {
-      // 1. Top-level columns first. If this fails (RLS, validation), the
-      // caller still sees the original items in DB unchanged.
-      await updateCollection(id, payload.collection);
+  const save = useCallback(
+    async (id: string, payload: UpdateCollectionPayload): Promise<boolean> => {
+      setState({ saving: true, error: null });
+      try {
+        // 1. Top-level columns first. If this fails (RLS, validation), the
+        // caller still sees the original items in DB unchanged.
+        await updateCollection(id, payload.collection);
 
-      const draftDbIds = new Set(
-        payload.draftItems.map((it) => it.dbId).filter((v): v is string => Boolean(v))
-      );
+        const draftDbIds = new Set(
+          payload.draftItems.map((it) => it.dbId).filter((v): v is string => Boolean(v))
+        );
 
-      // 2. Removed items: in the existing snapshot but not in the draft.
-      const toDelete = payload.existingItemIds.filter((existingId) => !draftDbIds.has(existingId));
-      for (const removedId of toDelete) {
-        await deleteCollectionItem(removedId);
-      }
+        // 2. Removed items: in the existing snapshot but not in the draft.
+        const toDelete = payload.existingItemIds.filter(
+          (existingId) => !draftDbIds.has(existingId)
+        );
+        for (const removedId of toDelete) {
+          await deleteCollectionItem(removedId);
+        }
 
-      // 3. Retained items + reordering: every draft item with a dbId gets
-      // its fields and sort_order rewritten unconditionally. Cheaper than
-      // diffing field-by-field and prevents drift if the user toggled
-      // something then toggled it back.
-      for (let index = 0; index < payload.draftItems.length; index += 1) {
-        const item = payload.draftItems[index];
-        if (!item.dbId) continue;
-        const patch: UpdateItemInput = {
-          name: item.name,
-          description: item.description,
-          ai_validation_prompt: item.ai_validation_prompt,
-          rarity: item.rarity,
-          fun_fact: item.fun_fact,
-          example_image_url: item.example_image_url,
-          sort_order: index,
-        };
-        await updateCollectionItem(item.dbId, patch);
-      }
-
-      // 4. New items keep their array index as sort_order so they land
-      // exactly where the user dropped them in the form.
-      const inserts: { input: CreateItemInput; sortOrder: number }[] = [];
-      for (let index = 0; index < payload.draftItems.length; index += 1) {
-        const item = payload.draftItems[index];
-        if (item.dbId) continue;
-        inserts.push({
-          input: {
+        // 3. Retained items + reordering: every draft item with a dbId gets
+        // its fields and sort_order rewritten unconditionally. Cheaper than
+        // diffing field-by-field and prevents drift if the user toggled
+        // something then toggled it back.
+        for (let index = 0; index < payload.draftItems.length; index += 1) {
+          const item = payload.draftItems[index];
+          if (!item.dbId) continue;
+          const patch: UpdateItemInput = {
             name: item.name,
             description: item.description,
             ai_validation_prompt: item.ai_validation_prompt,
             rarity: item.rarity,
             fun_fact: item.fun_fact,
             example_image_url: item.example_image_url,
-          },
-          sortOrder: index,
-        });
-      }
-      if (inserts.length > 0) {
-        await addCollectionItemsAt(id, inserts);
-      }
+            sort_order: index,
+          };
+          await updateCollectionItem(item.dbId, patch);
+        }
 
-      setState({ saving: false, error: null });
-      return true;
-    } catch (err) {
-      setState({
-        saving: false,
-        error: err instanceof Error ? err : new Error(String(err)),
-      });
-      return false;
-    }
-  };
+        // 4. New items keep their array index as sort_order so they land
+        // exactly where the user dropped them in the form.
+        const inserts: { input: CreateItemInput; sortOrder: number }[] = [];
+        for (let index = 0; index < payload.draftItems.length; index += 1) {
+          const item = payload.draftItems[index];
+          if (item.dbId) continue;
+          inserts.push({
+            input: {
+              name: item.name,
+              description: item.description,
+              ai_validation_prompt: item.ai_validation_prompt,
+              rarity: item.rarity,
+              fun_fact: item.fun_fact,
+              example_image_url: item.example_image_url,
+            },
+            sortOrder: index,
+          });
+        }
+        if (inserts.length > 0) {
+          await addCollectionItemsAt(id, inserts);
+        }
+
+        setState({ saving: false, error: null });
+        return true;
+      } catch (err) {
+        setState({
+          saving: false,
+          error: err instanceof Error ? err : new Error(String(err)),
+        });
+        return false;
+      }
+    },
+    []
+  );
 
   return { ...state, save };
 }

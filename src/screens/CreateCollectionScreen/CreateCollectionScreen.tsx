@@ -14,6 +14,7 @@ import {
   COLLECTION_CATEGORIES,
   type CollectionCategory,
 } from '@constants/categories';
+import { useAuth } from '@hooks/useAuth';
 import { useCollection } from '@hooks/useCollection';
 import { useColors } from '@hooks/useColors';
 import { useCreateCollection } from '@hooks/useCreateCollection';
@@ -94,6 +95,7 @@ export function CreateCollectionScreen({ editingId }: CreateCollectionScreenProp
   const router = useRouter();
   const { t, i18n } = useTranslation();
   const colors = useColors();
+  const { user } = useAuth();
   const { submit, submitting } = useCreateCollection();
   const update = useUpdateCollection();
   const { generate, generating, error: aiError, reset: resetAi } = useGenerateCollection();
@@ -155,6 +157,14 @@ export function CreateCollectionScreen({ editingId }: CreateCollectionScreenProp
     }
     setHydrated(true);
   }, [isEdit, hydrated, existing.data]);
+
+  useEffect(() => {
+    if (!isEdit || !editingId) return;
+    if (!hydrated || !existing.data || !user) return;
+    if (existing.data.creator_id !== user.id) {
+      router.replace(`/collection/${editingId}`);
+    }
+  }, [isEdit, editingId, hydrated, existing.data, user, router]);
 
   const applyDraft = (draft: AiGeneratedCollection) => {
     setTitle(draft.title);
