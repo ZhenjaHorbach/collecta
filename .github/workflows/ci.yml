@@ -28,6 +28,8 @@ jobs:
         run: npx eslint . --max-warnings 0
       - name: TypeScript strict check
         run: npx tsc --noEmit
+      - name: React Compiler healthcheck
+        run: npm run react-compiler:check
 
   test:
     name: Jest Unit Tests
