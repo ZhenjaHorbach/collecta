@@ -23,6 +23,7 @@ import { Spinner } from '@components/Spinner';
 import { CATEGORY_EMOJI } from '@constants/categories';
 import { useAuth } from '@hooks/useAuth';
 import { useCollection } from '@hooks/useCollection';
+import { useDeleteCollection } from '@hooks/useDeleteCollection';
 import { useForkCollection } from '@hooks/useForkCollection';
 import { useReport } from '@hooks/useReport';
 import type {
@@ -34,12 +35,16 @@ import type { ReportError, ReportReason } from '@services/moderation.service';
 
 export function CollectionDetailScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
+  const router = useRouter();
   const { t } = useTranslation();
   const { user } = useAuth();
   const { data, loading, error } = useCollection(id);
   const isOwner = !!user && !!data && data.creator_id === user.id;
   const { submit: submitReport, submitting: reporting, reset: resetReport } = useReport();
   const [reportSheetOpen, setReportSheetOpen] = useState(false);
+  // `error` from the hook isn't read directly — failures surface via
+  // run() returning false and the inline Alert below.
+  const { pending: deleting, run: runDelete } = useDeleteCollection();
 
   const headerTitle = data?.title ?? t('collections.detailTitle');
 
@@ -54,26 +59,75 @@ export function CollectionDetailScreen() {
     setReportSheetOpen(true);
   };
 
+  const onConfirmDelete = () => {
+    if (!data) return;
+    Alert.alert(t('collections.delete.confirmTitle'), t('collections.delete.confirmBody'), [
+      { text: t('common.cancel'), style: 'cancel' },
+      {
+        text: t('collections.delete.confirmAction'),
+        style: 'destructive',
+        onPress: async () => {
+          const ok = await runDelete(data.id);
+          if (ok) {
+            router.replace('/(tabs)/collections');
+            return;
+          }
+          Alert.alert(t('collections.delete.errorTitle'), t('collections.delete.errorBody'));
+        },
+      },
+    ]);
+  };
+
   const onPressMore = () => {
+    // Owner sees Edit + Delete instead of Report — owners can't report
+    // their own collection (RLS-enforced, no point showing the option).
+    // Edit is the safe primary action; Delete stays destructive and
+    // last in the list so a misfire is unlikely.
+    const ownerOptions = [
+      t('common.close'),
+      t('collections.edit.trigger'),
+      t('collections.delete.trigger'),
+    ];
+    const reporterOptions = [t('common.close'), t('moderation.report.trigger')];
+    const options = isOwner ? ownerOptions : reporterOptions;
+    const onSelected = (selected: number) => {
+      if (selected === 0) return;
+      if (isOwner) {
+        if (selected === 1) {
+          if (data) router.push(`/collection/edit/${data.id}`);
+          return;
+        }
+        if (selected === 2) onConfirmDelete();
+        return;
+      }
+      if (selected === 1) openReportSheet();
+    };
+
     if (Platform.OS === 'ios') {
       ActionSheetIOS.showActionSheetWithOptions(
         {
-          options: [t('common.close'), t('moderation.report.trigger')],
+          options,
           cancelButtonIndex: 0,
-          destructiveButtonIndex: 1,
+          destructiveButtonIndex: isOwner ? 2 : 1,
         },
-        (selected) => {
-          if (selected === 1) openReportSheet();
-        }
+        onSelected
       );
+      return;
+    }
+    if (isOwner) {
+      Alert.alert(t('moderation.report.more'), undefined, [
+        { text: t('common.close'), style: 'cancel' },
+        { text: options[1], onPress: () => onSelected(1) },
+        { text: options[2], style: 'destructive', onPress: () => onSelected(2) },
+      ]);
       return;
     }
     Alert.alert(t('moderation.report.more'), undefined, [
       { text: t('common.close'), style: 'cancel' },
       {
-        text: t('moderation.report.trigger'),
+        text: options[1],
         style: 'destructive',
-        onPress: openReportSheet,
+        onPress: () => onSelected(1),
       },
     ]);
   };
@@ -144,6 +198,18 @@ export function CollectionDetailScreen() {
         onSubmit={onSubmitReport}
         onClose={() => setReportSheetOpen(false)}
       />
+
+      {deleting ? (
+        <View
+          accessibilityRole="progressbar"
+          accessibilityLabel={t('collections.delete.pending')}
+          className="absolute top-0 left-0 right-0 bottom-0 bg-overlay items-center justify-center">
+          <Spinner />
+          <Text className="mt-3 text-sm text-text font-semibold">
+            {t('collections.delete.pending')}
+          </Text>
+        </View>
+      ) : null}
     </SafeAreaView>
   );
 }

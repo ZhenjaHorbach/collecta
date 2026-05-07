@@ -5,6 +5,7 @@
     "unknownError": "Nieznany błąd",
     "goBack": "Wstecz",
     "close": "Zamknij",
+    "cancel": "Anuluj",
     "error": "Coś poszło nie tak"
   },
   "languages": {
@@ -339,6 +340,24 @@
       "errorTitle": "Nie udało się skopiować",
       "errorBody": "Spróbuj ponownie za chwilę.",
       "forkedBadge": "Skopiowano z „{{title}}\""
+    },
+    "delete": {
+      "trigger": "Usuń kolekcję",
+      "confirmTitle": "Usunąć kolekcję?",
+      "confirmBody": "Wszystkie znaleziska w tej kolekcji zostaną utracone na zawsze.",
+      "confirmAction": "Usuń",
+      "pending": "Usuwanie kolekcji…",
+      "errorTitle": "Nie udało się usunąć",
+      "errorBody": "Spróbuj ponownie za chwilę."
+    },
+    "edit": {
+      "trigger": "Edytuj kolekcję",
+      "title": "Edycja kolekcji",
+      "headerSubtitle": "Dostosuj opis i pozycje.",
+      "submit": "Zapisz zmiany",
+      "modeLocked": "Tryb nie może być zmieniony — niektóre pozycje mają już znaleziska.",
+      "errorTitle": "Nie udało się zapisać",
+      "errorBody": "Spróbuj ponownie za chwilę."
     },
     "starter": {
       "header": "Kolekcje na start",

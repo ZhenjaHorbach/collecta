@@ -13,9 +13,13 @@
 
 ## CI jobs (`.github/workflows/ci.yml`)
 
-1. `lint-and-typecheck` — ESLint (zero warnings) + `tsc --noEmit`
+1. `lint-and-typecheck` — ESLint (zero warnings) + `tsc --noEmit` + `npm run react-compiler:check`
 2. `test` — Jest with coverage, `--passWithNoTests` during early dev
 3. `build-check` — `expo-doctor` + EAS dry-run for both platforms
+
+### React Compiler gate
+
+`scripts/check-react-compiler.sh` runs `react-compiler-healthcheck` and fails the build if any component is rejected by the compiler (the CLI itself always exits 0, so the wrapper parses the "Successfully compiled X out of Y" line). Pairs with the static `react-compiler/react-compiler` ESLint rule — lint catches Rules-of-React violations the compiler refuses to optimise; healthcheck catches anything the compiler rejects for other reasons (compiler version bumps, transitive import shape, etc.). Locally: `npm run react-compiler:check`.
 
 ## Evals
 

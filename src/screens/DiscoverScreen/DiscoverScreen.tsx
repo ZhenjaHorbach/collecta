@@ -1,6 +1,6 @@
 import { Image } from 'expo-image';
 import { useRouter } from 'expo-router';
-import { useEffect, useMemo, useState } from 'react';
+import { useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import {
   FlatList,
@@ -10,6 +10,7 @@ import {
   useWindowDimensions,
   View,
 } from 'react-native';
+import { useDebounce } from 'use-debounce';
 
 import { Spinner } from '@components/Spinner';
 import { Tabs } from '@components/Tabs';
@@ -18,6 +19,7 @@ import {
   COLLECTION_CATEGORIES,
   type CollectionCategory,
 } from '@constants/categories';
+import { useCollectionsDeleteRealtime } from '@hooks/useCollectionsDeleteRealtime';
 import { useColors } from '@hooks/useColors';
 import { useDiscover } from '@hooks/useDiscover';
 import type { DiscoverCollection, DiscoverSort } from '@services/discover.service';
@@ -41,16 +43,25 @@ export function DiscoverScreen() {
   const cellWidth = (screenWidth - GRID_PADDING * 2 - GRID_GAP * (GRID_COLUMNS - 1)) / GRID_COLUMNS;
   const [category, setCategory] = useState<CollectionCategory | null>(null);
   const [searchInput, setSearchInput] = useState('');
-  const [debouncedQuery, setDebouncedQuery] = useState('');
   const [sort, setSort] = useState<DiscoverSort>('popular');
 
   // Debounce the search input so we don't hit the RPC on every keystroke.
-  useEffect(() => {
-    const handle = setTimeout(() => setDebouncedQuery(searchInput.trim()), SEARCH_DEBOUNCE_MS);
-    return () => clearTimeout(handle);
-  }, [searchInput]);
+  // use-debounce handles unmount/strict-mode cleanup internally — no
+  // ref + clearTimeout dance needed.
+  const [debouncedQuery] = useDebounce(searchInput.trim(), SEARCH_DEBOUNCE_MS);
 
-  const { data, loading, error } = useDiscover({ category, query: debouncedQuery, sort });
+  const { data, loading, error, refetch } = useDiscover({
+    category,
+    query: debouncedQuery,
+    sort,
+  });
+
+  // Drop a deleted collection from the catalog without forcing the user
+  // to scroll-to-refresh. RPC ranking stays authoritative — we just
+  // re-run the same query.
+  useCollectionsDeleteRealtime(() => {
+    void refetch();
+  });
 
   const sortOptions = useMemo(
     () =>
@@ -109,9 +120,16 @@ export function DiscoverScreen() {
       data={grid}
       keyExtractor={(item) => item.id}
       numColumns={GRID_COLUMNS}
-      columnWrapperStyle={{ gap: GRID_GAP }}
+      // Horizontal padding lives on the row wrapper, NOT on
+      // contentContainerStyle. ListHeaderComponent is rendered inside the
+      // contentContainer, so paddingHorizontal there would push the
+      // header right by GRID_PADDING — causing a visible 16 px shift the
+      // moment the spinner shell is replaced by the loaded grid (the
+      // shell uses a plain <View> with no padding). columnWrapperStyle
+      // only wraps grid rows, leaving the header's own px-4 children
+      // aligned identically across both states.
+      columnWrapperStyle={{ gap: GRID_GAP, paddingHorizontal: GRID_PADDING }}
       contentContainerStyle={{
-        paddingHorizontal: GRID_PADDING,
         paddingBottom: 120,
         gap: GRID_GAP,
       }}

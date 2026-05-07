@@ -1,11 +1,12 @@
-import { useEffect, useRef } from 'react';
 import { FlatList, RefreshControl, Text, View } from 'react-native';
 import { useTranslation } from 'react-i18next';
+import { useDebouncedCallback } from 'use-debounce';
 
 import { FeedItem } from '@components/FeedItem';
 import { SafeAreaView } from '@components/SafeAreaView';
 import { Spinner } from '@components/Spinner';
 import { useColors } from '@hooks/useColors';
+import { useCollectionsDeleteRealtime } from '@hooks/useCollectionsDeleteRealtime';
 import { useFeed } from '@hooks/useFeed';
 import { useFeedRealtime } from '@hooks/useFeedRealtime';
 import type { FeedItem as FeedItemModel } from '@services/feed.service';
@@ -16,23 +17,24 @@ export function FeedScreen(): React.ReactElement {
   const { t } = useTranslation();
   const colors = useColors();
   const { items, reactionAggregates, loading, refreshing, error, refetch, loadMore } = useFeed();
-  const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   // Debounce realtime-driven refetches: a single user reacting to ten finds
   // would otherwise burst ten full RPC calls. 2 s coalesces bursts without
-  // making the feed feel stale.
-  useFeedRealtime(() => {
-    if (debounceRef.current) clearTimeout(debounceRef.current);
-    debounceRef.current = setTimeout(() => {
-      void refetch();
-    }, REALTIME_DEBOUNCE_MS);
-  });
+  // making the feed feel stale. use-debounce auto-cancels on unmount and
+  // handles strict-mode double-invokes — no manual ref/cleanup.
+  const debouncedRefetch = useDebouncedCallback(() => {
+    void refetch();
+  }, REALTIME_DEBOUNCE_MS);
 
-  useEffect(() => {
-    return () => {
-      if (debounceRef.current) clearTimeout(debounceRef.current);
-    };
-  }, []);
+  useFeedRealtime(debouncedRefetch);
+
+  // A deleted collection cascades into deleted finds — refetch so the
+  // stale cards drop out. No debounce: collection deletion is a single
+  // explicit user action, not a burst stream like reactions, so one
+  // event => one refetch is fine.
+  useCollectionsDeleteRealtime(() => {
+    void refetch();
+  });
 
   return (
     <SafeAreaView>

@@ -6,7 +6,7 @@ import {
   type CollectionItem,
   type Find,
 } from '@schemas';
-import type { TablesInsert } from '@typings/database';
+import type { TablesInsert, TablesUpdate } from '@typings/database';
 
 import { supabase } from './supabase.service';
 
@@ -24,6 +24,16 @@ export type CreateCollectionInput = Omit<
 export type CreateItemInput = Omit<
   TablesInsert<'collection_items'>,
   'id' | 'collection_id' | 'created_at' | 'updated_at' | 'sort_order'
+>;
+
+export type UpdateCollectionInput = Omit<
+  TablesUpdate<'collections'>,
+  'id' | 'creator_id' | 'created_at' | 'updated_at'
+>;
+
+export type UpdateItemInput = Omit<
+  TablesUpdate<'collection_items'>,
+  'id' | 'collection_id' | 'created_at' | 'updated_at'
 >;
 
 export interface CollectionWithProgress extends Collection {
@@ -220,6 +230,84 @@ export async function forkCollection(sourceId: string): Promise<string> {
   if (error) throw error;
   if (typeof data !== 'string') throw new Error('fork_collection: unexpected response shape');
   return data;
+}
+
+// Bulk-insert variant that keeps the caller-supplied sort_order. Used by
+// the edit-collection diff so re-ordered/inserted rows don't get their
+// positions clobbered by the index-based numbering in addCollectionItems.
+export async function addCollectionItemsAt(
+  collectionId: string,
+  items: { input: CreateItemInput; sortOrder: number }[]
+): Promise<CollectionItem[]> {
+  if (items.length === 0) return [];
+  const rows: TablesInsert<'collection_items'>[] = items.map(({ input, sortOrder }) => ({
+    ...input,
+    collection_id: collectionId,
+    sort_order: sortOrder,
+  }));
+  const { data, error } = await supabase
+    .from('collection_items')
+    .insert(rows)
+    .select('*')
+    .throwOnError();
+  if (error) throw error;
+  return CollectionItemListSchema.parse(data ?? []);
+}
+
+// Edits the top-level columns of a collection the caller owns. Items are
+// edited separately via updateCollectionItem / addCollectionItems /
+// deleteCollectionItem — keeping the boundary thin so the screen-level
+// diff logic in useUpdateCollection stays readable.
+export async function updateCollection(
+  id: string,
+  patch: UpdateCollectionInput
+): Promise<Collection> {
+  const { data, error } = await supabase
+    .from('collections')
+    .update(patch)
+    .eq('id', id)
+    .select('*')
+    .single()
+    .throwOnError();
+  if (error) throw error;
+  return CollectionSchema.parse(data);
+}
+
+export async function updateCollectionItem(
+  id: string,
+  patch: UpdateItemInput
+): Promise<CollectionItem> {
+  const { data, error } = await supabase
+    .from('collection_items')
+    .update(patch)
+    .eq('id', id)
+    .select('*')
+    .single()
+    .throwOnError();
+  if (error) throw error;
+  return CollectionItemSchema.parse(data);
+}
+
+// Removes a single item. Cascade in 001_init.sql wipes any finds that
+// referenced it — callers must check for finds and confirm with the
+// user before invoking. RLS in 011_user_added_items.sql enforces that
+// only the collection owner can delete an item.
+export async function deleteCollectionItem(id: string): Promise<void> {
+  const { error } = await supabase.from('collection_items').delete().eq('id', id);
+  if (error) throw error;
+}
+
+// Permanently removes a collection the caller owns, including its finds,
+// reactions, user_collections rows, and Storage photos. Goes through the
+// delete-collection edge function so Storage cleanup runs with the
+// service-role key — see supabase/functions/delete-collection/index.ts
+// for the cleanup ordering and the (intentional) absence of a counter
+// recompute step.
+export async function deleteCollection(collectionId: string): Promise<void> {
+  const { error } = await supabase.functions.invoke('delete-collection', {
+    body: { collection_id: collectionId },
+  });
+  if (error) throw error;
 }
 
 // True when the user already forked this source. Used to swap "Copy to me"
