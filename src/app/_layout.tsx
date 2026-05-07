@@ -43,6 +43,10 @@ export default function RootLayout() {
                 options={{ headerShown: false, presentation: 'modal' }}
               />
               <Stack.Screen
+                name="collection/edit/[id]"
+                options={{ headerShown: false, presentation: 'modal' }}
+              />
+              <Stack.Screen
                 name="settings"
                 options={{ headerShown: false, presentation: 'modal' }}
               />

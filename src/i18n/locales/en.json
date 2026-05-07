@@ -5,6 +5,7 @@
     "unknownError": "Unknown error",
     "goBack": "Go back",
     "close": "Close",
+    "cancel": "Cancel",
     "error": "Something went wrong"
   },
   "languages": {
@@ -331,6 +332,24 @@
       "errorTitle": "Couldn't copy",
       "errorBody": "Try again in a moment.",
       "forkedBadge": "Forked from \"{{title}}\""
+    },
+    "delete": {
+      "trigger": "Delete collection",
+      "confirmTitle": "Delete collection?",
+      "confirmBody": "All your finds in this collection will be lost forever.",
+      "confirmAction": "Delete",
+      "pending": "Deleting collection…",
+      "errorTitle": "Couldn't delete",
+      "errorBody": "Try again in a moment."
+    },
+    "edit": {
+      "trigger": "Edit collection",
+      "title": "Edit collection",
+      "headerSubtitle": "Adjust the details and items.",
+      "submit": "Save changes",
+      "modeLocked": "Mode can't be changed because some items already have finds.",
+      "errorTitle": "Couldn't save",
+      "errorBody": "Try again in a moment."
     },
     "starter": {
       "header": "Starter collections",

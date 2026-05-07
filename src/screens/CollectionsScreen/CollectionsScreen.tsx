@@ -14,6 +14,7 @@ import { CollectionCard } from '@components/CollectionCard';
 import { SafeAreaView } from '@components/SafeAreaView';
 import { Spinner } from '@components/Spinner';
 import { Tabs } from '@components/Tabs';
+import { useCollectionsDeleteRealtime } from '@hooks/useCollectionsDeleteRealtime';
 import { useColors } from '@hooks/useColors';
 import { useMyCollections } from '@hooks/useMyCollections';
 import { DiscoverScreen } from '@screens/DiscoverScreen';
@@ -36,6 +37,13 @@ export function CollectionsScreen() {
   const cellWidth = (screenWidth - GRID_PADDING * 2 - GRID_GAP * (GRID_COLUMNS - 1)) / GRID_COLUMNS;
   const [tab, setTab] = useState<TabKey>('discover');
   const { mine, pickedUp, loading, error, refetch } = useMyCollections();
+
+  // When the user (or another device they're signed in on) deletes a
+  // collection, drop the stale tile from "Mine" without waiting for the
+  // next pull-to-refresh.
+  useCollectionsDeleteRealtime(() => {
+    void refetch();
+  });
 
   const tabs = useMemo(
     () =>

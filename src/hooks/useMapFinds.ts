@@ -1,4 +1,5 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useState } from 'react';
+import { useDebounce } from 'use-debounce';
 
 import { MAP_REGION_DEBOUNCE_MS } from '@constants/map';
 import { listFindsForMap, type MapFind, type ViewportBounds } from '@services/finds.service';
@@ -8,28 +9,33 @@ interface State {
   loading: boolean;
 }
 
+// Debounce the viewport so panning/zooming doesn't fire one RPC per
+// frame — the user can sweep across the map at 60 Hz, we only want one
+// listFindsForMap call after they settle. use-debounce auto-cancels on
+// unmount and on rapid bounds changes; the effect below just reacts
+// to the settled value.
 export function useMapFinds(bounds: ViewportBounds | null): State {
   const [state, setState] = useState<State>({ finds: [], loading: false });
-  const timer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const [debouncedBounds] = useDebounce(bounds, MAP_REGION_DEBOUNCE_MS);
 
   useEffect(() => {
-    if (!bounds) return;
-    if (timer.current) clearTimeout(timer.current);
-
-    timer.current = setTimeout(async () => {
-      setState((s) => ({ ...s, loading: true }));
+    if (!debouncedBounds) return;
+    let cancelled = false;
+    setState((s) => ({ ...s, loading: true }));
+    void (async () => {
       try {
-        const finds = await listFindsForMap(bounds);
+        const finds = await listFindsForMap(debouncedBounds);
+        if (cancelled) return;
         setState({ finds, loading: false });
       } catch {
+        if (cancelled) return;
         setState((s) => ({ ...s, loading: false }));
       }
-    }, MAP_REGION_DEBOUNCE_MS);
-
+    })();
     return () => {
-      if (timer.current) clearTimeout(timer.current);
+      cancelled = true;
     };
-  }, [bounds]);
+  }, [debouncedBounds]);
 
   return state;
 }

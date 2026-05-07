@@ -1,5 +1,5 @@
 import { useRouter } from 'expo-router';
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { ActivityIndicator, Alert, ScrollView, Text, TouchableOpacity, View } from 'react-native';
 
@@ -8,14 +8,17 @@ import { EmojiPickerSheet } from '@components/EmojiPickerSheet';
 import { GoBackButton } from '@components/GoBackButton';
 import { Input } from '@components/Input';
 import { SafeAreaView } from '@components/SafeAreaView';
+import { Spinner } from '@components/Spinner';
 import {
   CATEGORY_EMOJI,
   COLLECTION_CATEGORIES,
   type CollectionCategory,
 } from '@constants/categories';
+import { useCollection } from '@hooks/useCollection';
 import { useColors } from '@hooks/useColors';
 import { useCreateCollection } from '@hooks/useCreateCollection';
 import { useGenerateCollection } from '@hooks/useGenerateCollection';
+import { useUpdateCollection } from '@hooks/useUpdateCollection';
 import {
   type AiGeneratedCollection,
   type AiGenerationErrorCode,
@@ -44,6 +47,13 @@ const AI_LOCALES: readonly AiGenerationLocale[] = ['en', 'ru', 'pl', 'uk'];
 
 interface ItemDraft {
   id: string;
+  // Set for items loaded from the database (edit mode). Undefined for
+  // items added during this session — they become INSERTs on save.
+  dbId?: string;
+  // True for existing items that already have at least one find. Drives
+  // the UI gates that protect user data: ✕ button is hidden, and any
+  // mode-toggle that would orphan finds is disabled.
+  hasFinds?: boolean;
   name: string;
   description: string;
   aiHint: string;
@@ -70,12 +80,24 @@ const newItem = (): ItemDraft => ({
   expanded: false,
 });
 
-export function CreateCollectionScreen() {
+export interface CreateCollectionScreenProps {
+  // When set, the screen runs in EDIT mode: AI affordances are hidden,
+  // existing data is loaded and prefilled, and submit calls
+  // useUpdateCollection instead of useCreateCollection. The id MUST
+  // belong to a collection the caller owns — RLS will reject the save
+  // otherwise.
+  editingId?: string;
+}
+
+export function CreateCollectionScreen({ editingId }: CreateCollectionScreenProps = {}) {
+  const isEdit = Boolean(editingId);
   const router = useRouter();
   const { t, i18n } = useTranslation();
   const colors = useColors();
   const { submit, submitting } = useCreateCollection();
+  const update = useUpdateCollection();
   const { generate, generating, error: aiError, reset: resetAi } = useGenerateCollection();
+  const existing = useCollection(editingId);
 
   const [creationMode, setCreationMode] = useState<CreationMode>('manual');
   const [aiPrompt, setAiPrompt] = useState('');
@@ -91,6 +113,48 @@ export function CreateCollectionScreen() {
   const [items, setItems] = useState<ItemDraft[]>(() => [newItem()]);
   const [aiHint, setAiHint] = useState('');
   const [privacy, setPrivacy] = useState<Privacy>('public');
+  const [hydrated, setHydrated] = useState(false);
+
+  // Snapshot of the items that exist in the DB when the screen loaded.
+  // useUpdateCollection uses this to compute the diff at save time.
+  const [existingItemIds, setExistingItemIds] = useState<string[]>([]);
+
+  // One-shot prefill from the loaded collection. Guarded by `hydrated`
+  // so the user's in-progress edits aren't trampled by a re-render of
+  // useCollection's data reference.
+  useEffect(() => {
+    if (!isEdit || hydrated) return;
+    const data = existing.data;
+    if (!data) return;
+    setTitle(data.title);
+    setDescription(data.description ?? '');
+    setEmoji(data.icon ?? (data.category ? CATEGORY_EMOJI[data.category] : DEFAULT_EMOJI));
+    setCategory(data.category);
+    setMode(data.is_freeform ? 'free' : 'list');
+    setAiHint(data.ai_hint ?? '');
+    setPrivacy(data.is_public ? 'public' : 'private');
+    if (data.is_freeform) {
+      setItems([newItem()]);
+      setExistingItemIds([]);
+    } else {
+      const findItemIds = new Set(data.finds.map((f) => f.collection_item_id));
+      const drafts: ItemDraft[] = data.items.map((it) => ({
+        id: `i-${nextItemId++}`,
+        dbId: it.id,
+        hasFinds: findItemIds.has(it.id),
+        name: it.name,
+        description: it.description ?? '',
+        aiHint: it.ai_validation_prompt ?? '',
+        rarity: it.rarity,
+        funFact: it.fun_fact ?? '',
+        exampleImageUrl: it.example_image_url ?? null,
+        expanded: false,
+      }));
+      setItems(drafts.length > 0 ? drafts : [newItem()]);
+      setExistingItemIds(data.items.map((it) => it.id));
+    }
+    setHydrated(true);
+  }, [isEdit, hydrated, existing.data]);
 
   const applyDraft = (draft: AiGeneratedCollection) => {
     setTitle(draft.title);
@@ -137,6 +201,11 @@ export function CreateCollectionScreen() {
     resetAi();
   };
 
+  // True when any draft item already has a find. Switching mode (list ↔
+  // free) or removing items in this state would orphan finds, so the
+  // affordances are locked.
+  const anyItemHasFinds = useMemo(() => items.some((it) => it.hasFinds), [items]);
+
   const cleanItems = useMemo(
     () =>
       items
@@ -156,7 +225,7 @@ export function CreateCollectionScreen() {
     title.trim().length > 0 && category !== null && (mode === 'free' || cleanItems.length > 0);
 
   const onCreate = async () => {
-    if (!canCreate || submitting) return;
+    if (!canCreate || submitting || update.saving) return;
     const isFreeform = mode === 'free';
     const itemsPayload: CreateItemInput[] = isFreeform
       ? []
@@ -174,6 +243,46 @@ export function CreateCollectionScreen() {
     const coverImageUrl = isFreeform
       ? null
       : (cleanItems.find((it) => it.exampleImageUrl)?.exampleImageUrl ?? null);
+
+    if (isEdit && editingId) {
+      // Build draft items in the form's display order. Each entry keeps
+      // its original dbId when present so the diff in useUpdateCollection
+      // can tell retained items from new INSERTs.
+      const draftItems = isFreeform
+        ? []
+        : items
+            .map((it) => ({
+              dbId: it.dbId,
+              name: it.name.trim(),
+              description: it.description.trim() ? it.description.trim() : null,
+              ai_validation_prompt: it.aiHint.trim() ? it.aiHint.trim() : null,
+              rarity: it.rarity,
+              fun_fact: it.funFact.trim() ? it.funFact.trim() : null,
+              example_image_url: it.exampleImageUrl,
+            }))
+            .filter((it) => it.name.length > 0);
+      const ok = await update.save(editingId, {
+        collection: {
+          title: title.trim(),
+          description: description.trim() || null,
+          icon: emoji,
+          category,
+          ai_hint: aiHint.trim() || null,
+          cover_image_url: coverImageUrl,
+          is_freeform: isFreeform,
+          is_public: privacy === 'public',
+        },
+        existingItemIds,
+        draftItems,
+      });
+      if (ok) {
+        router.replace(`/collection/${editingId}`);
+      } else {
+        Alert.alert(t('collections.edit.errorTitle'), t('collections.edit.errorBody'));
+      }
+      return;
+    }
+
     const id = await submit({
       collection: {
         title: title.trim(),
@@ -201,7 +310,16 @@ export function CreateCollectionScreen() {
     setItems((prev) => prev.map((it) => (it.id === id ? { ...it, expanded: !it.expanded } : it)));
   };
   const removeItem = (id: string) => {
-    setItems((prev) => (prev.length > 1 ? prev.filter((it) => it.id !== id) : prev));
+    // In edit mode, items that already have at least one find are
+    // protected — removing them would cascade-delete the user's photos
+    // (`finds.collection_item_id` is `on delete cascade`). The ✕ button
+    // is hidden for those, but we double-check here as defence in depth.
+    setItems((prev) => {
+      if (prev.length <= 1) return prev;
+      const target = prev.find((it) => it.id === id);
+      if (target?.hasFinds) return prev;
+      return prev.filter((it) => it.id !== id);
+    });
   };
   const addItem = () => setItems((prev) => [...prev, newItem()]);
   const moveItem = (id: string, direction: -1 | 1) => {
@@ -215,31 +333,54 @@ export function CreateCollectionScreen() {
     });
   };
 
+  // While the existing collection is loading in edit mode, render an
+  // empty shell — submitting a still-empty form would create an INSERT
+  // tree that overwrites the real one with blanks.
+  if (isEdit && (existing.loading || !hydrated)) {
+    return (
+      <SafeAreaView>
+        <GoBackButton icon="close">
+          <View className="flex-1">
+            <Text className="text-xl font-bold text-text">{t('collections.edit.title')}</Text>
+          </View>
+        </GoBackButton>
+        <Spinner />
+      </SafeAreaView>
+    );
+  }
+
   return (
     <SafeAreaView>
       <GoBackButton icon="close">
         <View className="flex-1">
-          <Text className="text-xl font-bold text-text">{t('collections.newCollection')}</Text>
+          <Text className="text-xl font-bold text-text">
+            {isEdit ? t('collections.edit.title') : t('collections.newCollection')}
+          </Text>
           <Text className="text-xs text-text-dim mt-0.5">
-            {t('collections.create.headerSubtitle')}
+            {isEdit ? t('collections.edit.headerSubtitle') : t('collections.create.headerSubtitle')}
           </Text>
         </View>
       </GoBackButton>
 
-      <View className="px-4 pt-2 pb-1">
-        <View className="flex-row p-1 rounded-md bg-surface-lo border border-stroke">
-          <ModeToggle
-            active={creationMode === 'manual'}
-            label={t('collections.create.mode.manual')}
-            onPress={() => setCreationMode('manual')}
-          />
-          <ModeToggle
-            active={creationMode === 'ai'}
-            label={t('collections.create.mode.ai')}
-            onPress={() => setCreationMode('ai')}
-          />
+      {/* AI generation is a create-only affordance: editing existing
+          curation by re-running the generator would overwrite the
+          user's items wholesale. Hide the toggle entirely in edit mode. */}
+      {!isEdit ? (
+        <View className="px-4 pt-2 pb-1">
+          <View className="flex-row p-1 rounded-md bg-surface-lo border border-stroke">
+            <ModeToggle
+              active={creationMode === 'manual'}
+              label={t('collections.create.mode.manual')}
+              onPress={() => setCreationMode('manual')}
+            />
+            <ModeToggle
+              active={creationMode === 'ai'}
+              label={t('collections.create.mode.ai')}
+              onPress={() => setCreationMode('ai')}
+            />
+          </View>
         </View>
-      </View>
+      ) : null}
 
       <ScrollView
         contentContainerStyle={{ paddingBottom: 120 }}
@@ -389,7 +530,7 @@ export function CreateCollectionScreen() {
                           onPress={() => setCategory(c)}
                           accessibilityRole="button"
                           accessibilityState={{ selected: active }}
-                          className={`items-center py-3 rounded-sm border ${active ? 'bg-gold border-gold' : 'bg-surface border-stroke'}`}>
+                          className={`h-20 items-center justify-center px-1 rounded-sm border ${active ? 'bg-gold border-gold' : 'bg-surface border-stroke'}`}>
                           <Text className="text-xl">{CATEGORY_EMOJI[c]}</Text>
                           <Text
                             adjustsFontSizeToFit
@@ -409,6 +550,7 @@ export function CreateCollectionScreen() {
               <ModeCard
                 active={mode === 'list'}
                 onPress={() => setMode('list')}
+                disabled={isEdit && anyItemHasFinds}
                 icon="📋"
                 title={t('collections.create.modes.list.title')}
                 description={t('collections.create.modes.list.description')}
@@ -416,11 +558,17 @@ export function CreateCollectionScreen() {
               <ModeCard
                 active={mode === 'free'}
                 onPress={() => setMode('free')}
+                disabled={isEdit && anyItemHasFinds}
                 icon="♾️"
                 title={t('collections.create.modes.free.title')}
                 description={t('collections.create.modes.free.description')}
                 className="mt-2"
               />
+              {isEdit && anyItemHasFinds ? (
+                <Text className="text-xs text-text-muted mt-2 leading-5">
+                  {t('collections.edit.modeLocked')}
+                </Text>
+              ) : null}
             </Section>
 
             {mode === 'list' ? (
@@ -459,7 +607,7 @@ export function CreateCollectionScreen() {
                             <Text className="text-text-dim text-sm">↓</Text>
                           </TouchableOpacity>
                         </View>
-                        {items.length > 1 ? (
+                        {items.length > 1 && !item.hasFinds ? (
                           <TouchableOpacity
                             onPress={() => removeItem(item.id)}
                             accessibilityRole="button"
@@ -596,15 +744,15 @@ export function CreateCollectionScreen() {
               label={t('collections.create.cancel')}
               variant="secondary"
               onPress={() => router.back()}
-              disabled={submitting}
+              disabled={submitting || update.saving}
             />
           </View>
           <View className="flex-[2]">
             <Button
-              label={t('collections.create.submit')}
+              label={isEdit ? t('collections.edit.submit') : t('collections.create.submit')}
               onPress={onCreate}
               disabled={!canCreate}
-              loading={submitting}
+              loading={submitting || update.saving}
             />
           </View>
         </View>
@@ -696,15 +844,25 @@ interface ModeCardProps {
   title: string;
   description: string;
   className?: string;
+  disabled?: boolean;
 }
 
-function ModeCard({ active, onPress, icon, title, description, className }: ModeCardProps) {
+function ModeCard({
+  active,
+  onPress,
+  icon,
+  title,
+  description,
+  className,
+  disabled,
+}: ModeCardProps) {
   return (
     <TouchableOpacity
       onPress={onPress}
+      disabled={disabled}
       accessibilityRole="button"
-      accessibilityState={{ selected: active }}
-      className={`p-4 rounded-md flex-row items-center gap-3 border ${active ? 'bg-surface-hi border-gold' : 'bg-surface border-stroke'} ${className ?? ''}`}>
+      accessibilityState={{ selected: active, disabled }}
+      className={`p-4 rounded-md flex-row items-center gap-3 border ${active ? 'bg-surface-hi border-gold' : 'bg-surface border-stroke'} ${disabled ? 'opacity-50' : ''} ${className ?? ''}`}>
       <View
         className={`w-10 h-10 rounded-sm items-center justify-center ${active ? 'bg-gold' : 'bg-surface-hi'}`}>
         <Text className="text-xl">{icon}</Text>
