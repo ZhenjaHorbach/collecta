@@ -1,6 +1,7 @@
-import { Storage } from '@services/storage.service';
 import { useColorScheme } from 'nativewind';
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useSyncExternalStore } from 'react';
+
+import { Storage } from '@services/storage.service';
 
 export type ThemePreference = 'system' | 'dark' | 'light';
 
@@ -16,39 +17,44 @@ function readStoredTheme(): ThemePreference {
   return isPreference(saved) ? saved : 'system';
 }
 
-type Listener = (preference: ThemePreference) => void;
-
+// Module-level store that backs every useTheme() consumer. Kept outside
+// React state so theme writes from one screen propagate immediately to
+// every other mounted component without a context provider. React
+// Compiler refuses to optimise components that mutate module globals
+// read during render — useSyncExternalStore is the canonical bridge:
+// the hook reads via getSnapshot (no mutation) and gets re-rendered
+// only when subscribe's listener fires.
 let currentPreference: ThemePreference = readStoredTheme();
-const listeners = new Set<Listener>();
+const listeners = new Set<() => void>();
 
-function notify() {
-  for (const listener of listeners) listener(currentPreference);
+function subscribe(listener: () => void): () => void {
+  listeners.add(listener);
+  return () => {
+    listeners.delete(listener);
+  };
 }
 
-export function getStoredTheme(): ThemePreference {
+function getSnapshot(): ThemePreference {
   return currentPreference;
+}
+
+function writePreference(next: ThemePreference): void {
+  if (next === currentPreference) return;
+  Storage.set(THEME_STORAGE_KEY, next);
+  currentPreference = next;
+  for (const listener of listeners) listener();
 }
 
 export function useTheme() {
   const { colorScheme, setColorScheme } = useColorScheme();
-  const [preference, setPreferenceState] = useState<ThemePreference>(currentPreference);
-
-  useEffect(() => {
-    const listener: Listener = (next) => setPreferenceState(next);
-    listeners.add(listener);
-    return () => {
-      listeners.delete(listener);
-    };
-  }, []);
+  const preference = useSyncExternalStore(subscribe, getSnapshot);
 
   useEffect(() => {
     setColorScheme(preference);
   }, [preference, setColorScheme]);
 
   const setPreference = useCallback((next: ThemePreference) => {
-    Storage.set(THEME_STORAGE_KEY, next);
-    currentPreference = next;
-    notify();
+    writePreference(next);
   }, []);
 
   return useMemo(
