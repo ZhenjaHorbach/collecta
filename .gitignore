@@ -61,3 +61,5 @@ DerivedData/
 supabase/.temp
 
 .build-metrics.jsonl
+
+/coverage
