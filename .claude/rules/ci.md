@@ -17,6 +17,12 @@
 2. `test` — Jest with coverage, `--passWithNoTests` during early dev
 3. `build-check` — `expo-doctor` + EAS dry-run for both platforms
 
+### Post-build checks
+
+`scripts/post-build-checks.sh` (calls `scripts/post-build-checks.ts`) runs after `expo export` in the deploy job. Caps web bundle size at 50 MB, scans `src/` + `supabase/` + `scripts/` for accidentally-committed long-form secrets (Anthropic keys, Supabase service-role JWTs, AWS access keys), re-asserts strict TypeScript, and appends a one-line `{ts, sha, ref, bundle_mb, failed}` JSON to `.build-metrics.jsonl` for trend tracking. Any cap miss or secret hit fails the job with a `::error::` line. The metrics file is gitignored — telemetry, not source of truth.
+
+`MAX_BUNDLE_MB` and `DIST_DIR` are env-overridable for local debugging. Locally: `npx expo export --platform web && bash scripts/post-build-checks.sh`.
+
 ### React Compiler gate
 
 `scripts/check-react-compiler.sh` runs `react-compiler-healthcheck` and fails the build if any component is rejected by the compiler (the CLI itself always exits 0, so the wrapper parses the "Successfully compiled X out of Y" line). Pairs with the static `react-compiler/react-compiler` ESLint rule — lint catches Rules-of-React violations the compiler refuses to optimise; healthcheck catches anything the compiler rejects for other reasons (compiler version bumps, transitive import shape, etc.). Locally: `npm run react-compiler:check`.

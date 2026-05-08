@@ -351,6 +351,7 @@ export type Database = {
           bio: string | null;
           created_at: string;
           display_name: string;
+          expo_push_token: string | null;
           id: string;
           last_find_date: string | null;
           level: number;
@@ -364,6 +365,7 @@ export type Database = {
           bio?: string | null;
           created_at?: string;
           display_name: string;
+          expo_push_token?: string | null;
           id: string;
           last_find_date?: string | null;
           level?: number;
@@ -377,6 +379,7 @@ export type Database = {
           bio?: string | null;
           created_at?: string;
           display_name?: string;
+          expo_push_token?: string | null;
           id?: string;
           last_find_date?: string | null;
           level?: number;

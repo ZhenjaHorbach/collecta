@@ -1,3 +1,4 @@
+import { Image } from 'expo-image';
 import { useRouter } from 'expo-router';
 import { useEffect, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
@@ -25,6 +26,11 @@ import {
   type AiGenerationErrorCode,
   type AiGenerationLocale,
 } from '@services/ai-collection-generator.service';
+import {
+  deleteCollectionItemPhoto,
+  isOwnedCollectionItemPhoto,
+  uploadCollectionItemPhoto,
+} from '@services/collection-item-photo.service';
 import type { CreateItemInput } from '@services/collections.service';
 import type { Database } from '@typings/database';
 
@@ -116,6 +122,10 @@ export function CreateCollectionScreen({ editingId }: CreateCollectionScreenProp
   const [aiHint, setAiHint] = useState('');
   const [privacy, setPrivacy] = useState<Privacy>('public');
   const [hydrated, setHydrated] = useState(false);
+  // Tracks per-item upload progress so the row can show a spinner and we
+  // can disable picker buttons while in flight. Keyed by ItemDraft.id, not
+  // dbId — the form state is the source of truth for "which row".
+  const [uploadingItemIds, setUploadingItemIds] = useState<Set<string>>(() => new Set());
 
   // Snapshot of the items that exist in the DB when the screen loaded.
   // useUpdateCollection uses this to compute the diff at save time.
@@ -332,6 +342,75 @@ export function CreateCollectionScreen({ editingId }: CreateCollectionScreenProp
     });
   };
   const addItem = () => setItems((prev) => [...prev, newItem()]);
+
+  // Picks an image from the gallery and uploads it to the
+  // collection-item-images bucket. The previous URL is discarded best-effort:
+  // owned (our bucket) → delete the storage object so it doesn't leak;
+  // foreign (Wikipedia / Unsplash from the AI pipeline) → just drop the
+  // reference, the upstream resource isn't ours to remove.
+  const onPickItemImage = async (id: string): Promise<void> => {
+    if (!user) return;
+    if (uploadingItemIds.has(id)) return;
+    try {
+      const ImagePicker = await import('expo-image-picker');
+      const perm = await ImagePicker.requestMediaLibraryPermissionsAsync();
+      if (!perm.granted) {
+        Alert.alert(
+          t('collections.create.items.fields.image.errorTitle'),
+          t('collections.create.items.fields.image.permissionDenied')
+        );
+        return;
+      }
+      const result = await ImagePicker.launchImageLibraryAsync({
+        mediaTypes: ['images'],
+        quality: 0.85,
+        allowsEditing: true,
+        aspect: [1, 1],
+      });
+      if (result.canceled || !result.assets?.[0]) return;
+      const picked = result.assets[0];
+
+      setUploadingItemIds((prev) => {
+        const next = new Set(prev);
+        next.add(id);
+        return next;
+      });
+
+      const previous = items.find((it) => it.id === id)?.exampleImageUrl ?? null;
+      const url = await uploadCollectionItemPhoto(picked.uri, user.id);
+      updateItem(id, { exampleImageUrl: url });
+
+      if (previous && isOwnedCollectionItemPhoto(previous)) {
+        deleteCollectionItemPhoto(previous).catch((err) => {
+          console.warn('[create-collection] failed to delete old preview', err);
+        });
+      }
+    } catch (err) {
+      console.warn('[create-collection] image upload failed', err);
+      Alert.alert(
+        t('collections.create.items.fields.image.errorTitle'),
+        t('collections.create.items.fields.image.errorBody')
+      );
+    } finally {
+      setUploadingItemIds((prev) => {
+        const next = new Set(prev);
+        next.delete(id);
+        return next;
+      });
+    }
+  };
+
+  const onRemoveItemImage = (id: string): void => {
+    if (uploadingItemIds.has(id)) return;
+    const previous = items.find((it) => it.id === id)?.exampleImageUrl ?? null;
+    updateItem(id, { exampleImageUrl: null });
+    if (previous && isOwnedCollectionItemPhoto(previous)) {
+      deleteCollectionItemPhoto(previous).catch((err) => {
+        console.warn('[create-collection] failed to delete preview', err);
+      });
+    }
+  };
+
   const moveItem = (id: string, direction: -1 | 1) => {
     setItems((prev) => {
       const idx = prev.findIndex((it) => it.id === id);
@@ -592,6 +671,19 @@ export function CreateCollectionScreen({ editingId }: CreateCollectionScreenProp
                         <View className="w-7 h-7 rounded-sm bg-surface border border-stroke items-center justify-center">
                           <Text className="text-xs font-bold text-text-dim">{idx + 1}</Text>
                         </View>
+                        {item.exampleImageUrl ? (
+                          <TouchableOpacity
+                            onPress={() => toggleItemDetails(item.id)}
+                            accessibilityRole="imagebutton"
+                            accessibilityLabel={t('collections.create.items.fields.image.label')}
+                            className="w-10 h-10 rounded-sm overflow-hidden border border-stroke-hi bg-surface">
+                            <Image
+                              source={{ uri: item.exampleImageUrl }}
+                              contentFit="cover"
+                              className="w-full h-full"
+                            />
+                          </TouchableOpacity>
+                        ) : null}
                         <View className="flex-1">
                           <Input
                             value={item.name}
@@ -639,6 +731,12 @@ export function CreateCollectionScreen({ editingId }: CreateCollectionScreenProp
                       </TouchableOpacity>
                       {item.expanded ? (
                         <View className="ml-9 mt-2 p-3 rounded-sm bg-surface-lo border border-stroke gap-3">
+                          <ItemImageField
+                            url={item.exampleImageUrl}
+                            uploading={uploadingItemIds.has(item.id)}
+                            onPick={() => onPickItemImage(item.id)}
+                            onRemove={() => onRemoveItemImage(item.id)}
+                          />
                           <ItemField label={t('collections.create.items.fields.description')}>
                             <Input
                               value={item.description}
@@ -953,6 +1051,84 @@ function ItemField({ label, children }: ItemFieldProps) {
     <View>
       <Text className="text-xs font-semibold text-text-dim mb-1.5">{label}</Text>
       {children}
+    </View>
+  );
+}
+
+interface ItemImageFieldProps {
+  url: string | null;
+  uploading: boolean;
+  onPick: () => void;
+  onRemove: () => void;
+}
+
+function ItemImageField({ url, uploading, onPick, onRemove }: ItemImageFieldProps) {
+  const { t } = useTranslation();
+  const colors = useColors();
+  const hasImage = Boolean(url);
+  return (
+    <View>
+      <Text className="text-xs font-semibold text-text-dim mb-1.5">
+        {t('collections.create.items.fields.image.label')}
+      </Text>
+      <View className="flex-row items-start gap-3">
+        <TouchableOpacity
+          onPress={onPick}
+          disabled={uploading}
+          accessibilityRole="button"
+          accessibilityLabel={t(
+            hasImage
+              ? 'collections.create.items.fields.image.replace'
+              : 'collections.create.items.fields.image.pick'
+          )}
+          className={`w-20 h-20 rounded-sm overflow-hidden border ${hasImage ? 'border-stroke-hi' : 'border-dashed border-stroke-hi'} bg-surface items-center justify-center ${uploading ? 'opacity-60' : ''}`}>
+          {hasImage ? (
+            <Image
+              source={{ uri: url ?? undefined }}
+              contentFit="cover"
+              className="w-full h-full"
+            />
+          ) : (
+            <Text className="text-2xl">🖼️</Text>
+          )}
+          {uploading ? (
+            <View className="absolute inset-0 items-center justify-center bg-surface-lo/70">
+              <ActivityIndicator color={colors.gold} />
+            </View>
+          ) : null}
+        </TouchableOpacity>
+        <View className="flex-1 gap-2">
+          <Text className="text-xs text-text-dim leading-5">
+            {t('collections.create.items.fields.image.hint')}
+          </Text>
+          <View className="flex-row gap-2 flex-wrap">
+            <TouchableOpacity
+              onPress={onPick}
+              disabled={uploading}
+              accessibilityRole="button"
+              className={`py-2 px-3 rounded-sm border border-stroke-hi bg-surface ${uploading ? 'opacity-60' : ''}`}>
+              <Text className="text-xs font-semibold text-text">
+                {uploading
+                  ? t('collections.create.items.fields.image.uploading')
+                  : hasImage
+                    ? t('collections.create.items.fields.image.replace')
+                    : t('collections.create.items.fields.image.pick')}
+              </Text>
+            </TouchableOpacity>
+            {hasImage ? (
+              <TouchableOpacity
+                onPress={onRemove}
+                disabled={uploading}
+                accessibilityRole="button"
+                className={`py-2 px-3 rounded-sm border border-stroke bg-surface ${uploading ? 'opacity-60' : ''}`}>
+                <Text className="text-xs font-semibold text-text-dim">
+                  {t('collections.create.items.fields.image.remove')}
+                </Text>
+              </TouchableOpacity>
+            ) : null}
+          </View>
+        </View>
+      </View>
     </View>
   );
 }

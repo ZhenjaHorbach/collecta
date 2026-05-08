@@ -10,6 +10,7 @@ export const SETTINGS = {
   autoTagLocation: { key: StorageKeys.prefAutoTagLocation, default: true },
   aiVerification: { key: StorageKeys.prefAiVerification, default: true },
   highResUploads: { key: StorageKeys.prefHighResUploads, default: false },
+  pushNotifications: { key: StorageKeys.prefPushNotifications, default: true },
 } as const satisfies Record<string, { key: string; default: boolean }>;
 
 export type SettingName = keyof typeof SETTINGS;
