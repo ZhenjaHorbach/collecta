@@ -1,4 +1,4 @@
-import { useEffect } from 'react';
+import { useEffect, useRef } from 'react';
 import { View } from 'react-native';
 import Animated, {
   Easing,
@@ -17,8 +17,16 @@ const ANIM_MS = 600;
 export function ProgressBar({ value, className }: ProgressBarProps) {
   const clamped = Math.max(0, Math.min(1, value));
   const progress = useSharedValue(clamped);
+  // Skip the initial mount: useSharedValue already seeds at `clamped`, so a
+  // first withTiming would animate from clamped → clamped and waste 600ms.
+  const mounted = useRef(false);
 
   useEffect(() => {
+    if (!mounted.current) {
+      mounted.current = true;
+      progress.value = clamped;
+      return;
+    }
     progress.value = withTiming(clamped, {
       duration: ANIM_MS,
       easing: Easing.out(Easing.cubic),

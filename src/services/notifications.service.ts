@@ -9,6 +9,7 @@
 // silently. Failures (network, simulator without a project ID, etc) are
 // logged with the [notifications] prefix per code-style.md.
 
+import Constants from 'expo-constants';
 import * as Device from 'expo-device';
 import * as Notifications from 'expo-notifications';
 
@@ -29,7 +30,12 @@ export async function registerForPushNotifications(userId: string): Promise<stri
     }
     if (status !== 'granted') return null;
 
-    const tokenResponse = await Notifications.getExpoPushTokenAsync();
+    // Pass projectId explicitly — the SDK falls back to expoConfig.extra.eas.projectId
+    // which can be undefined in development builds before expoConfig hydrates.
+    const projectId = Constants.expoConfig?.extra?.eas?.projectId as string | undefined;
+    const tokenResponse = await Notifications.getExpoPushTokenAsync(
+      projectId ? { projectId } : undefined
+    );
     const token = tokenResponse.data;
     if (!token) return null;
 

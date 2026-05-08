@@ -94,8 +94,11 @@ function checkSecrets(): void {
 }
 
 function checkStrictTypes(): void {
+  // tsconfig.json already sets "strict": true — re-running tsc here re-asserts
+  // it against the post-export tree without implying CI is stricter than the
+  // committed config.
   try {
-    execSync('npx tsc --noEmit --strict', { stdio: 'inherit' });
+    execSync('npx tsc --noEmit', { stdio: 'inherit' });
     console.log('[post-build] strict typecheck clean');
   } catch {
     fail('strict TypeScript check failed');

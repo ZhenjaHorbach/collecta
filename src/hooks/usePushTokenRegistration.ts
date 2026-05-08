@@ -11,9 +11,10 @@
 import { useEffect, useRef } from 'react';
 import { Platform } from 'react-native';
 
+import { clearPushToken, registerForPushNotifications } from '@services/notifications.service';
+
 import { useAuth } from './useAuth';
 import { useSetting } from './useSetting';
-import { registerForPushNotifications } from '@services/notifications.service';
 
 export function usePushTokenRegistration(): void {
   const { user, loading } = useAuth();
@@ -26,5 +27,15 @@ export function usePushTokenRegistration(): void {
     if (attemptedFor.current === user.id) return;
     attemptedFor.current = user.id;
     void registerForPushNotifications(user.id);
+  }, [user, loading, enabled]);
+
+  // When the user opts out, clear the stored token so a future delivery
+  // service won't push to a disabled device. Reset the per-session guard
+  // so opting back in re-registers.
+  useEffect(() => {
+    if (loading || !user || enabled) return;
+    if (Platform.OS === 'web') return;
+    attemptedFor.current = null;
+    void clearPushToken(user.id);
   }, [user, loading, enabled]);
 }
