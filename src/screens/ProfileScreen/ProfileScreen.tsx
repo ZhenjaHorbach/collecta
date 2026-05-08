@@ -48,11 +48,12 @@ export function ProfileScreen() {
   const unlockedCount = profile.achievements.filter((a) => a.unlocked).length;
 
   return (
-    <SafeAreaView>
+    <SafeAreaView testID="profile-screen">
       <ScrollView className="flex-1" contentContainerStyle={{ paddingBottom: 100 }}>
         <View className="px-5 pt-4 pb-3 flex-row items-center justify-between">
           <Text className="text-2xl font-bold text-text">{t('profile.title')}</Text>
           <Pressable
+            testID="profile-settings-button"
             onPress={() => router.push('/settings')}
             accessibilityRole="button"
             accessibilityLabel={t('profile.settings')}
@@ -185,6 +186,7 @@ function AchievementCell({ achievement, onPress }: AchievementCellProps) {
   const earned = achievement.unlocked;
   return (
     <Pressable
+      testID={`achievement-cell-${achievement.code}`}
       onPress={onPress}
       accessibilityRole="button"
       accessibilityLabel={achievement.title}

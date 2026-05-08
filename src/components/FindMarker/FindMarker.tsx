@@ -8,17 +8,18 @@ export interface FindMarkerProps {
   emoji: string | null;
   category: CollectionCategory;
   onPhotoLoad?: () => void;
+  testID?: string;
 }
 
 // iOS path — kept as the original NativeWind layout. Apple Maps marker
 // capture handles overflowing children and class-derived styles fine.
 //
 // Visual reference: .claude/design/collecta/project/screen-profile.jsx (MapScreen pin)
-export function FindMarker({ photoUrl, emoji, category, onPhotoLoad }: FindMarkerProps) {
+export function FindMarker({ photoUrl, emoji, category, onPhotoLoad, testID }: FindMarkerProps) {
   const accent = CATEGORY_COLOR[category];
 
   return (
-    <View className="items-center">
+    <View testID={testID} className="items-center">
       <View className="w-10 h-10">
         <View
           className="rounded-md overflow-hidden border-2 w-full h-full"

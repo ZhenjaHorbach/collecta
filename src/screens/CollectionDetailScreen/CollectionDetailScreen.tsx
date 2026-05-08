@@ -157,7 +157,7 @@ export function CollectionDetailScreen() {
   };
 
   return (
-    <SafeAreaView>
+    <SafeAreaView testID="collection-detail-screen">
       <GoBackButton>
         <Text numberOfLines={1} className="text-xl font-bold text-text flex-1">
           {headerTitle}
@@ -165,6 +165,7 @@ export function CollectionDetailScreen() {
         {data ? (
           <View className="flex-row gap-2">
             <TouchableOpacity
+              testID="collection-share-button"
               onPress={onShare}
               accessibilityRole="button"
               accessibilityLabel={t('collections.share')}
@@ -172,6 +173,7 @@ export function CollectionDetailScreen() {
               <Text className="text-text text-base">↗</Text>
             </TouchableOpacity>
             <TouchableOpacity
+              testID="collection-more-button"
               onPress={onPressMore}
               accessibilityRole="button"
               accessibilityLabel={t('moderation.report.more')}
@@ -458,6 +460,7 @@ function ForkPanel({ fork, onFork, onOpenMine }: ForkPanelProps) {
   if (typeof fork.forkId === 'string') {
     return (
       <TouchableOpacity
+        testID="collection-open-fork-button"
         onPress={() => onOpenMine(fork.forkId as string)}
         accessibilityRole="button"
         accessibilityLabel={t('collections.fork.openMine')}
@@ -472,6 +475,7 @@ function ForkPanel({ fork, onFork, onOpenMine }: ForkPanelProps) {
 
   return (
     <TouchableOpacity
+      testID="collection-fork-button"
       onPress={onFork}
       disabled={fork.pending}
       accessibilityRole="button"
@@ -507,6 +511,7 @@ function ItemCell({
 
   return (
     <TouchableOpacity
+      testID={`collection-item-cell-${item.id}`}
       onPress={onPress}
       disabled={disabled}
       accessibilityRole="button"

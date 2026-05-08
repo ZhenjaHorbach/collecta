@@ -23,6 +23,7 @@ function CameraTabButton({
 }) {
   return (
     <TouchableOpacity
+      testID="tabbar-camera"
       onPress={onPress}
       activeOpacity={disabled ? 1 : 0.7}
       className="flex-1 items-center justify-center"
@@ -85,6 +86,7 @@ export default function TabLayout() {
         name="index"
         options={{
           title: t('tabs.feed'),
+          tabBarButtonTestID: 'tabbar-feed',
           tabBarIcon: ({ color }) => <IconSymbol name="house.fill" size={24} color={color} />,
         }}
       />
@@ -92,6 +94,7 @@ export default function TabLayout() {
         name="map"
         options={{
           title: t('tabs.map'),
+          tabBarButtonTestID: 'tabbar-map',
           tabBarIcon: ({ color }) => <IconSymbol name="map" size={24} color={color} />,
         }}
       />
@@ -122,6 +125,7 @@ export default function TabLayout() {
         name="collections"
         options={{
           title: t('tabs.collections'),
+          tabBarButtonTestID: 'tabbar-collections',
           tabBarIcon: ({ color }) => (
             <IconSymbol name="square.grid.2x2.fill" size={24} color={color} />
           ),
@@ -131,6 +135,7 @@ export default function TabLayout() {
         name="profile"
         options={{
           title: t('tabs.profile'),
+          tabBarButtonTestID: 'tabbar-profile',
           tabBarIcon: ({ color }) => <IconSymbol name="person.fill" size={24} color={color} />,
         }}
       />

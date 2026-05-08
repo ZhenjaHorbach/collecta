@@ -63,6 +63,7 @@ export function AchievementToast({ achievement, onDismiss }: AchievementToastPro
       className="absolute left-0 right-0 top-12 z-50 items-center px-4"
       style={style}>
       <Pressable
+        testID={`achievement-toast-${achievement.code}`}
         onPress={onDismiss}
         className="flex-row items-center gap-3 rounded-lg border border-stroke bg-surface-hi px-4 py-3">
         <View className="h-10 w-10 items-center justify-center rounded-md bg-gold">

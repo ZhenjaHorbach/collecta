@@ -7,11 +7,12 @@ export interface EmptyStateProps {
   icon?: string;
   action?: ReactNode;
   className?: string;
+  testID?: string;
 }
 
-export function EmptyState({ title, subtitle, icon, action, className }: EmptyStateProps) {
+export function EmptyState({ title, subtitle, icon, action, className, testID }: EmptyStateProps) {
   return (
-    <View className={`items-center justify-center px-6 py-20 ${className ?? ''}`}>
+    <View testID={testID} className={`items-center justify-center px-6 py-20 ${className ?? ''}`}>
       {icon ? <Text className="text-5xl mb-3">{icon}</Text> : null}
       <Text className="text-base text-text-dim text-center font-semibold">{title}</Text>
       {subtitle ? (

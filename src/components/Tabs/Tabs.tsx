@@ -10,9 +10,19 @@ export interface TabsProps<T extends string> {
   value: T;
   onChange: (value: T) => void;
   className?: string;
+  // Prefix for per-tab testID. Reused across screens (Collections has
+  // discover/mine/pickedUp; Profile uses similar tabs in the future), so
+  // the prefix disambiguates. Optional — when omitted no testID is emitted.
+  testIDPrefix?: string;
 }
 
-export function Tabs<T extends string>({ options, value, onChange, className }: TabsProps<T>) {
+export function Tabs<T extends string>({
+  options,
+  value,
+  onChange,
+  className,
+  testIDPrefix,
+}: TabsProps<T>) {
   return (
     <View
       className={`flex-row gap-1 p-1 bg-surface rounded-full border border-stroke ${className ?? ''}`}>
@@ -21,6 +31,7 @@ export function Tabs<T extends string>({ options, value, onChange, className }: 
         return (
           <TouchableOpacity
             key={option.key}
+            testID={testIDPrefix ? `${testIDPrefix}-${option.key}` : undefined}
             onPress={() => onChange(option.key)}
             accessibilityRole="button"
             accessibilityState={{ selected: active }}

@@ -57,10 +57,16 @@ export function ValidationResultSheet({
       <Text className="text-text-muted text-xs">{t('validation.advisoryNote')}</Text>
 
       <View className="flex-row gap-3">
-        <Pressable onPress={onRetake} className="flex-1 bg-surface-hi rounded-md p-4 items-center">
+        <Pressable
+          testID="validation-retake-button"
+          onPress={onRetake}
+          className="flex-1 bg-surface-hi rounded-md p-4 items-center">
           <Text className="text-text">{t('camera.retake')}</Text>
         </Pressable>
-        <Pressable onPress={onSave} className="flex-1 bg-gold rounded-md p-4 items-center">
+        <Pressable
+          testID="validation-save-button"
+          onPress={onSave}
+          className="flex-1 bg-gold rounded-md p-4 items-center">
           <Text className="text-on-gold font-semibold">
             {result?.valid === false ? t('validation.saveAnyway') : t('camera.save')}
           </Text>

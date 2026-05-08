@@ -49,12 +49,13 @@ export function SignInScreen() {
   return (
     <SafeAreaView>
       <GoBackButton />
-      <View className="flex-1 px-6 pt-2">
+      <View testID="signin-screen" className="flex-1 px-6 pt-2">
         <Text className="text-3xl font-bold text-text mb-2">{t('auth.signIn.title')}</Text>
         <Text className="text-text-dim text-sm mb-8">{t('auth.signIn.subtitle')}</Text>
 
         <View className="gap-3 mb-4">
           <Input
+            testID="signin-email-input"
             value={email}
             onChangeText={setEmail}
             placeholder={t('auth.signIn.emailPlaceholder')}
@@ -63,6 +64,7 @@ export function SignInScreen() {
             autoComplete="email"
           />
           <Input
+            testID="signin-password-input"
             value={password}
             onChangeText={setPassword}
             placeholder={t('auth.signIn.passwordPlaceholder')}
@@ -72,6 +74,7 @@ export function SignInScreen() {
         </View>
 
         <Button
+          testID="signin-submit-button"
           label={t('auth.signIn.submit')}
           onPress={onSignIn}
           loading={submitting}
@@ -85,6 +88,7 @@ export function SignInScreen() {
         </View>
 
         <Button
+          testID="signin-google-button"
           label={t('auth.signIn.continueWithGoogle')}
           variant="secondary"
           onPress={onGoogle}

@@ -17,9 +17,20 @@ export interface ReactionBarProps {
   mine: Set<ReactionType>;
   onToggle: (type: ReactionType) => void;
   disabled?: boolean;
+  // Prefix for per-button testID. The component is reused per FeedItem, so
+  // the prefix ensures Maestro can pick the right button (`<prefix>-like`,
+  // `<prefix>-fire`, `<prefix>-wow`). Optional — when omitted, no testID is
+  // emitted, keeping the component zero-impact for non-E2E callsites.
+  testIDPrefix?: string;
 }
 
-export function ReactionBar({ counts, mine, onToggle, disabled }: ReactionBarProps): ReactElement {
+export function ReactionBar({
+  counts,
+  mine,
+  onToggle,
+  disabled,
+  testIDPrefix,
+}: ReactionBarProps): ReactElement {
   const { t } = useTranslation();
 
   return (
@@ -30,6 +41,7 @@ export function ReactionBar({ counts, mine, onToggle, disabled }: ReactionBarPro
         return (
           <Pressable
             key={type}
+            testID={testIDPrefix ? `${testIDPrefix}-${type}` : undefined}
             disabled={disabled}
             onPress={() => onToggle(type)}
             accessibilityRole="button"

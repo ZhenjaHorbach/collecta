@@ -24,6 +24,7 @@ export function GoBackButton({ icon = 'back', onPress, children }: GoBackButtonP
   return (
     <View className="px-4 pt-2 pb-3 flex-row items-center gap-3">
       <TouchableOpacity
+        testID={icon === 'back' ? 'go-back-button' : 'close-button'}
         onPress={handlePress}
         accessibilityRole="button"
         accessibilityLabel={icon === 'back' ? t('common.goBack') : t('common.close')}

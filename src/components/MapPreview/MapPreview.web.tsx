@@ -13,6 +13,7 @@ export interface MapPreviewProps {
   label: string;
   onOpenMap: () => void;
   openMapLabel: string;
+  testID?: string;
 }
 
 const apiKey = process.env.EXPO_PUBLIC_GOOGLE_MAPS_API_KEY;
@@ -27,9 +28,10 @@ export function MapPreview({
   label,
   onOpenMap,
   openMapLabel,
+  testID,
 }: MapPreviewProps): ReactElement {
   return (
-    <View className="h-[140px] rounded-md overflow-hidden border border-stroke">
+    <View testID={testID} className="h-[140px] rounded-md overflow-hidden border border-stroke">
       {apiKey ? (
         <APIProvider apiKey={apiKey}>
           <Map

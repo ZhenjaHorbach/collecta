@@ -37,7 +37,7 @@ export function FeedScreen(): React.ReactElement {
   });
 
   return (
-    <SafeAreaView>
+    <SafeAreaView testID="feed-screen">
       <View className="px-5 pt-4 pb-3">
         <Text className="text-2xl font-bold text-text">{t('feed.title')}</Text>
       </View>

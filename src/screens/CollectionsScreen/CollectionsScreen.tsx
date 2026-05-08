@@ -61,10 +61,11 @@ export function CollectionsScreen() {
   const ownedAndJoined = tab === 'mine' ? mine : pickedUp;
 
   return (
-    <SafeAreaView>
+    <SafeAreaView testID="collections-screen">
       <View className="px-5 pt-4 pb-2 flex-row items-center justify-between">
         <Text className="text-2xl font-bold text-text">{t('collections.title')}</Text>
         <TouchableOpacity
+          testID="collections-new-button"
           onPress={() => router.push('/collection/create')}
           accessibilityRole="button"
           accessibilityLabel={t('collections.newCollection')}
@@ -75,7 +76,7 @@ export function CollectionsScreen() {
         </TouchableOpacity>
       </View>
       <View className="px-5 pb-3">
-        <Tabs<TabKey> options={tabs} value={tab} onChange={setTab} />
+        <Tabs<TabKey> options={tabs} value={tab} onChange={setTab} testIDPrefix="collections-tab" />
       </View>
       {tab === 'discover' ? (
         <DiscoverScreen />
@@ -143,7 +144,7 @@ function CollectionsList({
       refreshControl={
         <RefreshControl refreshing={loading} onRefresh={onRefresh} tintColor={spinnerColor} />
       }
-      ListEmptyComponent={<EmptyState icon="📦" title={emptyText} />}
+      ListEmptyComponent={<EmptyState testID="collections-empty" icon="📦" title={emptyText} />}
       renderItem={({ item }) => (
         <CollectionCard collection={item} width={cellWidth} onPress={() => onPressItem(item.id)} />
       )}

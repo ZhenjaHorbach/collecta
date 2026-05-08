@@ -13,6 +13,7 @@ export function ActiveCollectionChip({
   const { t } = useTranslation();
   return (
     <Pressable
+      testID="camera-active-collection-chip"
       onPress={onPress}
       accessibilityRole="button"
       className="flex-row items-center gap-2 px-3 py-2 rounded-md bg-overlay-hi border border-stroke-hi self-center">

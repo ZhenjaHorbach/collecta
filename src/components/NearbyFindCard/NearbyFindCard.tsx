@@ -28,6 +28,7 @@ export function NearbyFindCard({ find, distanceKm, onPress }: NearbyFindCardProp
 
   return (
     <Pressable
+      testID={`nearby-card-${find.id}`}
       onPress={() => onPress(find)}
       className="flex-row items-center gap-3 rounded-lg bg-surface-hi border border-stroke p-4">
       <Image

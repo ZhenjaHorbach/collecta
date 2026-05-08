@@ -69,6 +69,7 @@ export function EmojiPickerSheet({ visible, current, onPick, onClose }: EmojiPic
             return (
               <View key={emoji} className="flex-1 px-1">
                 <TouchableOpacity
+                  testID={`emoji-pick-${emoji}`}
                   onPress={() => onPick(emoji)}
                   accessibilityRole="button"
                   accessibilityLabel={emoji}

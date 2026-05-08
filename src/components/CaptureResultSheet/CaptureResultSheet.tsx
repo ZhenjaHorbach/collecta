@@ -126,6 +126,7 @@ function VerifyBranch(props: CaptureResultSheetProps): React.ReactElement {
             disagree with the AI or want to file under a different item. */}
         {props.onPickManually ? (
           <Pressable
+            testID="capture-result-change-item-button"
             onPress={props.onPickManually}
             accessibilityRole="button"
             className="self-start px-3 py-2 rounded-full bg-surface-hi border border-stroke">
@@ -145,12 +146,14 @@ function VerifyBranch(props: CaptureResultSheetProps): React.ReactElement {
 
         <View className="flex-row gap-3">
           <Pressable
+            testID="capture-result-retake-button"
             onPress={props.onRetake}
             accessibilityRole="button"
             className="flex-1 bg-surface-hi rounded-md p-4 items-center border border-stroke">
             <Text className="text-text font-semibold">{t('camera.retake')}</Text>
           </Pressable>
           <Pressable
+            testID="capture-result-save-button"
             onPress={props.onSave}
             accessibilityRole="button"
             className="flex-1 bg-gold rounded-md p-4 items-center">
@@ -299,6 +302,7 @@ function NoteInput({ value, onChange }: NoteInputProps): React.ReactElement {
   return (
     <View className="px-3 py-3 rounded-md bg-surface border border-stroke">
       <TextInput
+        testID="capture-result-note-input"
         value={value}
         onChangeText={onChange}
         placeholder={t('camera.notePlaceholder')}
@@ -345,6 +349,7 @@ function AmbiguousBranch(props: CaptureResultSheetProps): React.ReactElement {
         {props.candidateItems.map((c) => (
           <Pressable
             key={c.id}
+            testID={`capture-candidate-item-${c.id}`}
             onPress={() => props.onPickItem?.(c.id)}
             accessibilityRole="button"
             className="flex-row items-center gap-3 px-3 py-3 rounded-md bg-surface border border-stroke">
@@ -356,6 +361,7 @@ function AmbiguousBranch(props: CaptureResultSheetProps): React.ReactElement {
         ))}
 
         <Pressable
+          testID="capture-ambiguous-none-button"
           onPress={props.onPickManually}
           accessibilityRole="button"
           className="px-3 py-3 rounded-md bg-surface-hi border border-stroke items-center">
@@ -363,6 +369,7 @@ function AmbiguousBranch(props: CaptureResultSheetProps): React.ReactElement {
         </Pressable>
 
         <Pressable
+          testID="capture-ambiguous-retake-button"
           onPress={props.onRetake}
           accessibilityRole="button"
           className="px-3 py-3 rounded-md bg-surface-lo border border-stroke items-center">
@@ -398,6 +405,7 @@ function ChooseCollectionBranch(props: CaptureResultSheetProps): React.ReactElem
         {props.candidateCollections.map((c) => (
           <Pressable
             key={c.id}
+            testID={`capture-candidate-collection-${c.id}`}
             onPress={() => props.onPickCollection?.(c.id)}
             accessibilityRole="button"
             className="flex-row items-center gap-3 px-3 py-3 rounded-md bg-surface border border-stroke">
@@ -410,6 +418,7 @@ function ChooseCollectionBranch(props: CaptureResultSheetProps): React.ReactElem
         ))}
 
         <Pressable
+          testID="capture-collection-pick-manually-button"
           onPress={props.onPickManually}
           accessibilityRole="button"
           className="px-3 py-3 rounded-md bg-surface-hi border border-stroke items-center">
@@ -417,6 +426,7 @@ function ChooseCollectionBranch(props: CaptureResultSheetProps): React.ReactElem
         </Pressable>
 
         <Pressable
+          testID="capture-collection-retake-button"
           onPress={props.onRetake}
           accessibilityRole="button"
           className="px-3 py-3 rounded-md bg-surface-lo border border-stroke items-center">
@@ -445,6 +455,7 @@ function NoMatchBranch(props: CaptureResultSheetProps): React.ReactElement {
         <Text className="text-text-dim text-sm">{t('validation.noMatchHint')}</Text>
 
         <Pressable
+          testID="capture-nomatch-pick-manually-button"
           onPress={props.onPickManually}
           accessibilityRole="button"
           className="px-4 py-4 rounded-md bg-surface border border-stroke">
@@ -454,6 +465,7 @@ function NoMatchBranch(props: CaptureResultSheetProps): React.ReactElement {
 
         {props.onCreateItem ? (
           <Pressable
+            testID="capture-nomatch-create-item-button"
             onPress={props.onCreateItem}
             accessibilityRole="button"
             className="px-4 py-4 rounded-md bg-gold-glow border border-gold">
@@ -463,6 +475,7 @@ function NoMatchBranch(props: CaptureResultSheetProps): React.ReactElement {
         ) : null}
 
         <Pressable
+          testID="capture-nomatch-retake-button"
           onPress={props.onRetake}
           accessibilityRole="button"
           className="px-4 py-4 rounded-md bg-surface-lo border border-stroke">

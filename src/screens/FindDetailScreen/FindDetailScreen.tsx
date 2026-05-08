@@ -132,7 +132,7 @@ export function FindDetailScreen() {
   }, [data, t]);
 
   return (
-    <SafeAreaView>
+    <SafeAreaView testID="find-detail-screen">
       <GoBackButton>
         <Text numberOfLines={1} className="text-xl font-bold text-text flex-1">
           {headerTitle}
@@ -140,6 +140,7 @@ export function FindDetailScreen() {
         {data ? (
           <View className="flex-row gap-2">
             <TouchableOpacity
+              testID="find-share-button"
               onPress={onShare}
               accessibilityRole="button"
               accessibilityLabel={t('find.share')}
@@ -147,6 +148,7 @@ export function FindDetailScreen() {
               <Text className="text-text text-base">↗</Text>
             </TouchableOpacity>
             <TouchableOpacity
+              testID="find-more-button"
               onPress={onPressMore}
               accessibilityRole="button"
               accessibilityLabel={t('moderation.report.more')}
@@ -227,6 +229,7 @@ function DetailBody({ data, initialReactions, router, shareCardRef, t }: DetailB
 
       <View className="px-4 pt-4 gap-4">
         <Pressable
+          testID="find-collection-link"
           onPress={() => router.push(`/collection/${collection.id}`)}
           accessibilityRole="button"
           accessibilityLabel={t('find.openCollection', { title: collection.title })}
@@ -246,6 +249,7 @@ function DetailBody({ data, initialReactions, router, shareCardRef, t }: DetailB
         </Pressable>
 
         <Pressable
+          testID="find-creator-link"
           onPress={() => router.push(`/user/${creator.id}`)}
           accessibilityRole="button"
           accessibilityLabel={t('find.openProfile', { name: creator.displayName })}
@@ -285,7 +289,12 @@ function DetailBody({ data, initialReactions, router, shareCardRef, t }: DetailB
           <Text className="text-sm italic text-text-muted">{t('find.notesPlaceholder')}</Text>
         )}
 
-        <ReactionBar counts={counts} mine={mine} onToggle={toggle} />
+        <ReactionBar
+          counts={counts}
+          mine={mine}
+          onToggle={toggle}
+          testIDPrefix={`find-detail-${find.id}-reaction`}
+        />
 
         <View className="flex-row gap-2">
           <MetaCard

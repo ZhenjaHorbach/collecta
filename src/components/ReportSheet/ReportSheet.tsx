@@ -49,6 +49,7 @@ export function ReportSheet({ visible, submitting, onSubmit, onClose }: ReportSh
           return (
             <TouchableOpacity
               key={r}
+              testID={`report-reason-${r}`}
               onPress={() => setReason(r)}
               accessibilityRole="button"
               accessibilityState={{ selected: active }}
@@ -65,6 +66,7 @@ export function ReportSheet({ visible, submitting, onSubmit, onClose }: ReportSh
         {t('moderation.report.commentLabel')}
       </Text>
       <Input
+        testID="report-comment-input"
         value={comment}
         onChangeText={setComment}
         placeholder={t('moderation.report.commentPlaceholder')}
@@ -78,6 +80,7 @@ export function ReportSheet({ visible, submitting, onSubmit, onClose }: ReportSh
       <View className="flex-row gap-2 mt-5">
         <View className="flex-1">
           <Button
+            testID="report-cancel-button"
             label={t('moderation.report.cancel')}
             variant="secondary"
             onPress={onClose}
@@ -86,6 +89,7 @@ export function ReportSheet({ visible, submitting, onSubmit, onClose }: ReportSh
         </View>
         <View className="flex-[2]">
           <Button
+            testID="report-submit-button"
             label={t('moderation.report.submit')}
             onPress={onPressSubmit}
             disabled={!reason}

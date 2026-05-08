@@ -47,6 +47,7 @@ export function ChooseCollectionSheet({
           keyExtractor={(c) => c.id}
           ListHeaderComponent={
             <Pressable
+              testID="choose-collection-auto"
               onPress={() => {
                 onPick(null);
                 onClose();
@@ -68,6 +69,7 @@ export function ChooseCollectionSheet({
           ItemSeparatorComponent={() => <View className="h-1.5" />}
           renderItem={({ item }) => (
             <Pressable
+              testID={`choose-collection-${item.id}`}
               onPress={() => {
                 onPick(item.id);
                 onClose();
