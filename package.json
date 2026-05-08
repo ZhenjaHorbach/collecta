@@ -20,6 +20,9 @@
   },
   "jest": {
     "preset": "jest-expo",
+    "setupFiles": [
+      "<rootDir>/jest.setup.ts"
+    ],
     "testMatch": [
       "**/__tests__/**/*.{ts,tsx}",
       "**/*.{spec,test}.{ts,tsx}"
@@ -86,6 +89,7 @@
   },
   "devDependencies": {
     "@anthropic-ai/sdk": "^0.92.0",
+    "@testing-library/react-native": "^13.3.3",
     "@types/jest": "^29.5.14",
     "@types/react": "~19.1.0",
     "babel-plugin-module-resolver": "^5.0.3",
@@ -99,6 +103,7 @@
     "jest-expo": "~54.0.17",
     "lint-staged": "^16.4.0",
     "prettier": "^3.8.3",
+    "react-test-renderer": "^19.1.0",
     "tsx": "^4.19.2",
     "typescript": "~5.9.2"
   },
