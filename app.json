@@ -12,7 +12,8 @@
       "supportsTablet": true,
       "bundleIdentifier": "com.horbachevgen.collecta",
       "infoPlist": {
-        "NSLocationWhenInUseUsageDescription": "Collecta uses your location to show nearby finds on the map."
+        "NSLocationWhenInUseUsageDescription": "Collecta uses your location to show nearby finds on the map.",
+        "NSPhotoLibraryUsageDescription": "Collecta needs access to your photos so you can attach preview images to the items in your collections."
       }
     },
     "android": {
@@ -56,7 +57,8 @@
         }
       ],
       "@journeyapps/react-native-quick-sqlite",
-      "expo-localization"
+      "expo-localization",
+      "expo-notifications"
     ],
     "experiments": {
       "typedRoutes": true,

@@ -9,7 +9,7 @@
 // reconcile (achievements check unlocked codes from the DB, not from previous
 // requests).
 
-import { emitProfileChanged, enqueueAchievement } from './achievement-toast.service';
+import { emitProfileChanged, enqueueAchievement, enqueueXp } from './achievement-toast.service';
 import { supabase } from './supabase.service';
 
 export type GamificationEvent = 'find' | 'reaction' | 'collection_complete' | 'recheck';
@@ -38,6 +38,10 @@ export async function awardXp(userId: string, event: GamificationEvent): Promise
       return;
     }
     if (!data) return;
+    // Fire the +XP popup before queuing achievement toasts. The toast already
+    // shows its own xp_reward, so we render only the base event delta here
+    // (find=10, reaction=5) — no double-counting.
+    enqueueXp(data.xp_delta);
     for (const a of data.new_achievements) {
       enqueueAchievement({
         code: a.code,

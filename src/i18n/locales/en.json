@@ -6,7 +6,8 @@
     "goBack": "Go back",
     "close": "Close",
     "cancel": "Cancel",
-    "error": "Something went wrong"
+    "error": "Something went wrong",
+    "tryAgain": "Try again"
   },
   "languages": {
     "en": "English",
@@ -61,10 +62,21 @@
       "errorTitle": "Verification failed"
     },
     "onboarding": {
-      "title": "What do you collect?",
-      "subtitle": "Pick at least 3. We'll show you trending collections in those areas.",
-      "comingSoon": "Interest picker coming soon",
-      "startCollecting": "Start collecting"
+      "skip": "Skip",
+      "next": "Next",
+      "startCollecting": "Start collecting",
+      "slide1": {
+        "title": "Discover real-world objects",
+        "subtitle": "Find collections of vintage signs, brutalist buildings, soviet mosaics — picked by people, not algorithms."
+      },
+      "slide2": {
+        "title": "Photograph & verify with AI",
+        "subtitle": "Snap a photo. Claude Vision checks if it matches the collection — advisory, never blocking."
+      },
+      "slide3": {
+        "title": "Build collections together",
+        "subtitle": "Reach the goal, unlock achievements, share what you've found with friends."
+      }
     }
   },
   "feed": {
@@ -234,7 +246,18 @@
           "aiHintPlaceholder": "What must be visible in the photo",
           "rarity": "Rarity",
           "funFact": "Fun fact",
-          "funFactPlaceholder": "One short interesting fact"
+          "funFactPlaceholder": "One short interesting fact",
+          "image": {
+            "label": "Preview image",
+            "hint": "Shown on the item card before someone finds it.",
+            "pick": "Pick from gallery",
+            "replace": "Replace",
+            "remove": "Remove",
+            "uploading": "Uploading…",
+            "permissionDenied": "Gallery access is required to pick a photo.",
+            "errorTitle": "Couldn't upload",
+            "errorBody": "Try again in a moment."
+          }
         }
       },
       "aiHint": {
@@ -447,7 +470,12 @@
     "sections": {
       "appearance": "Appearance",
       "capture": "Capture",
+      "notifications": "Notifications",
       "about": "About"
+    },
+    "pushNotifications": {
+      "label": "Push notifications",
+      "subtitle": "Get notified about achievements and friends' finds"
     },
     "highRes": {
       "label": "High-res uploads",

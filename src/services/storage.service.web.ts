@@ -57,4 +57,5 @@ export const StorageKeys = {
   prefAutoTagLocation: 'pref_auto_tag_location',
   prefAiVerification: 'pref_ai_verification',
   prefHighResUploads: 'pref_high_res_uploads',
+  prefPushNotifications: 'pref_push_notifications',
 } as const;

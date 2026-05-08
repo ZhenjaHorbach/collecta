@@ -34,6 +34,7 @@ yarn-error.*
 .env
 .env.*
 .env*.local
+.envrc
 
 # typescript
 *.tsbuildinfo
@@ -58,3 +59,5 @@ DerivedData/
 
 # supabase temp files
 supabase/.temp
+
+.build-metrics.jsonl

@@ -28,13 +28,14 @@ When you add a knob — anything a user might want to turn on/off, switch, pick 
 
 ## What the screen currently exposes
 
-| Section    | Setting                | Where it's read                              |
-| ---------- | ---------------------- | -------------------------------------------- |
-| Appearance | Theme                  | `useTheme` + NativeWind class swap           |
-| Appearance | Language               | `i18next` + `expo-localization`              |
-| Appearance | High-res uploads       | `useCapture.ts` → `compressImage` quality    |
-| Capture    | Auto-tag location      | `CameraScreen.tsx` → `setPendingLocation`    |
-| Capture    | AI verification        | `useCapture.ts` → bypass `validateFind` call |
-| About      | Version (display only) | `expo-constants` `expoConfig.version`        |
+| Section       | Setting                | Where it's read                                    |
+| ------------- | ---------------------- | -------------------------------------------------- |
+| Appearance    | Theme                  | `useTheme` + NativeWind class swap                 |
+| Appearance    | Language               | `i18next` + `expo-localization`                    |
+| Appearance    | High-res uploads       | `useCapture.ts` → `compressImage` quality          |
+| Capture       | Auto-tag location      | `CameraScreen.tsx` → `setPendingLocation`          |
+| Capture       | AI verification        | `useCapture.ts` → bypass `validateFind` call       |
+| Notifications | Push notifications     | `usePushTokenRegistration.ts` → gate token capture |
+| About         | Version (display only) | `expo-constants` `expoConfig.version`              |
 
 If you change any of those read paths, update this table.

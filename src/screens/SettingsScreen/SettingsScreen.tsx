@@ -87,6 +87,14 @@ export function SettingsScreen() {
             />
           </SettingsSection>
 
+          <SettingsSection title={t('settings.sections.notifications')}>
+            <SettingToggle
+              name="pushNotifications"
+              label={t('settings.pushNotifications.label')}
+              subtitle={t('settings.pushNotifications.subtitle')}
+            />
+          </SettingsSection>
+
           <SettingsSection title={t('settings.sections.about')}>
             <View className="flex-row items-center justify-between py-2">
               <Text className="text-sm font-semibold text-text">{t('settings.about.version')}</Text>

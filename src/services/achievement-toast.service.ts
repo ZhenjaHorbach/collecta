@@ -11,9 +11,11 @@ import type { AchievementToastData } from '@components/AchievementToast';
 
 type AchievementListener = (data: AchievementToastData) => void;
 type ProfileListener = () => void;
+type XpListener = (delta: number) => void;
 
 const achievementListeners = new Set<AchievementListener>();
 const profileListeners = new Set<ProfileListener>();
+const xpListeners = new Set<XpListener>();
 
 export function enqueueAchievement(data: AchievementToastData): void {
   achievementListeners.forEach((l) => l(data));
@@ -34,5 +36,17 @@ export function subscribeProfileChanged(listener: ProfileListener): () => void {
   profileListeners.add(listener);
   return () => {
     profileListeners.delete(listener);
+  };
+}
+
+export function enqueueXp(delta: number): void {
+  if (delta <= 0) return;
+  xpListeners.forEach((l) => l(delta));
+}
+
+export function subscribeXp(listener: XpListener): () => void {
+  xpListeners.add(listener);
+  return () => {
+    xpListeners.delete(listener);
   };
 }

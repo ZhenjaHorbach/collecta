@@ -12,6 +12,7 @@ import {
 } from 'react-native';
 import { useDebounce } from 'use-debounce';
 
+import { EmptyState } from '@components/EmptyState';
 import { Spinner } from '@components/Spinner';
 import { Tabs } from '@components/Tabs';
 import {
@@ -134,11 +135,7 @@ export function DiscoverScreen() {
         gap: GRID_GAP,
       }}
       ListHeaderComponent={renderHeader}
-      ListEmptyComponent={
-        <View className="px-6 py-10 items-center">
-          <Text className="text-text-muted text-base text-center">{t('discover.empty')}</Text>
-        </View>
-      }
+      ListEmptyComponent={<EmptyState icon="🔎" title={t('discover.empty')} />}
       renderItem={({ item }) => (
         <DiscoverCard
           collection={item}

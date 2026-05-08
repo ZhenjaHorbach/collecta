@@ -77,6 +77,8 @@ jobs:
           EXPO_PUBLIC_SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
           EXPO_PUBLIC_SUPABASE_ANON_KEY: ${{ secrets.SUPABASE_ANON_KEY }}
           EXPO_PUBLIC_POWERSYNC_URL: ${{ secrets.POWERSYNC_URL }}
+      - name: Post-build checks
+        run: bash scripts/post-build-checks.sh
       - name: Deploy to EAS Hosting
         run: eas deploy --non-interactive
         env:

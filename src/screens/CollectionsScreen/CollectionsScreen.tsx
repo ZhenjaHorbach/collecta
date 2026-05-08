@@ -11,6 +11,7 @@ import {
 } from 'react-native';
 
 import { CollectionCard } from '@components/CollectionCard';
+import { EmptyState } from '@components/EmptyState';
 import { SafeAreaView } from '@components/SafeAreaView';
 import { Spinner } from '@components/Spinner';
 import { Tabs } from '@components/Tabs';
@@ -142,11 +143,7 @@ function CollectionsList({
       refreshControl={
         <RefreshControl refreshing={loading} onRefresh={onRefresh} tintColor={spinnerColor} />
       }
-      ListEmptyComponent={
-        <View className="items-center justify-center py-20 px-6">
-          <Text className="text-text-muted text-base text-center">{emptyText}</Text>
-        </View>
-      }
+      ListEmptyComponent={<EmptyState icon="📦" title={emptyText} />}
       renderItem={({ item }) => (
         <CollectionCard collection={item} width={cellWidth} onPress={() => onPressItem(item.id)} />
       )}
