@@ -6,11 +6,12 @@ interface SafeAreaViewProps {
   children: ReactNode;
   className?: string;
   style?: StyleProp<ViewStyle>;
+  testID?: string;
 }
 
-export function SafeAreaView({ children, className, style }: SafeAreaViewProps) {
+export function SafeAreaView({ children, className, style, testID }: SafeAreaViewProps) {
   return (
-    <RNSafeAreaView className={`flex-1 bg-bg ${className ?? ''}`} style={style}>
+    <RNSafeAreaView testID={testID} className={`flex-1 bg-bg ${className ?? ''}`} style={style}>
       {children}
     </RNSafeAreaView>
   );

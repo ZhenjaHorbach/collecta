@@ -156,7 +156,7 @@ function MapBody({ apiKey, initialCenter, initialZoom, viewerLocation, t, colors
   }, [viewerLocation, visibleFinds]);
 
   return (
-    <View className="flex-1 bg-bg">
+    <View testID="map-screen" className="flex-1 bg-bg">
       <APIProvider apiKey={apiKey}>
         <View className="absolute top-0 left-0 right-0 bottom-0">
           <Map
@@ -185,6 +185,7 @@ function MapBody({ apiKey, initialCenter, initialZoom, viewerLocation, t, colors
         <View className="flex-row items-center gap-3 rounded-md bg-overlay border border-stroke-hi p-3 shadow-lg">
           <MaterialIcons name="search" size={17} color={colors.textDim} />
           <TextInput
+            testID="map-search-input"
             className="flex-1 text-text text-sm"
             placeholder={t('map.searchPlaceholder')}
             placeholderTextColor={colors.textDim}

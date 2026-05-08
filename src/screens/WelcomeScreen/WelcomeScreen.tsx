@@ -8,7 +8,7 @@ export function WelcomeScreen() {
   const { t } = useTranslation();
 
   return (
-    <View className="flex-1 bg-bg items-center justify-end pb-10 px-7">
+    <View testID="welcome-screen" className="flex-1 bg-bg items-center justify-end pb-10 px-7">
       <View className="w-full gap-4 mb-8">
         <Text className="text-5xl font-bold text-text leading-tight">
           {t('auth.welcome.title')}
@@ -17,6 +17,7 @@ export function WelcomeScreen() {
       </View>
       <View className="w-full gap-3">
         <Pressable
+          testID="welcome-signup-button"
           onPress={() => {
             router.push('/auth/sign-up' as Href);
           }}
@@ -26,6 +27,7 @@ export function WelcomeScreen() {
           </Text>
         </Pressable>
         <Pressable
+          testID="welcome-signin-button"
           onPress={() => router.push('/auth/sign-in' as Href)}
           className="w-full py-4 rounded-full border border-stroke-hi items-center active:opacity-75">
           <Text className="text-text font-semibold text-sm">{t('auth.welcome.haveAccount')}</Text>

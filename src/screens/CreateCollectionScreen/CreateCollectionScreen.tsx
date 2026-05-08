@@ -439,7 +439,7 @@ export function CreateCollectionScreen({ editingId }: CreateCollectionScreenProp
   }
 
   return (
-    <SafeAreaView>
+    <SafeAreaView testID="create-collection-screen">
       <GoBackButton icon="close">
         <View className="flex-1">
           <Text className="text-xl font-bold text-text">
@@ -458,11 +458,13 @@ export function CreateCollectionScreen({ editingId }: CreateCollectionScreenProp
         <View className="px-4 pt-2 pb-1">
           <View className="flex-row p-1 rounded-md bg-surface-lo border border-stroke">
             <ModeToggle
+              testID="create-mode-manual"
               active={creationMode === 'manual'}
               label={t('collections.create.mode.manual')}
               onPress={() => setCreationMode('manual')}
             />
             <ModeToggle
+              testID="create-mode-ai"
               active={creationMode === 'ai'}
               label={t('collections.create.mode.ai')}
               onPress={() => setCreationMode('ai')}
@@ -488,6 +490,7 @@ export function CreateCollectionScreen({ editingId }: CreateCollectionScreenProp
                   {t('collections.create.ai.promptLabel')}
                 </Text>
                 <Input
+                  testID="create-ai-prompt-input"
                   value={aiPrompt}
                   onChangeText={setAiPrompt}
                   placeholder={t('collections.create.ai.promptPlaceholder')}
@@ -521,6 +524,7 @@ export function CreateCollectionScreen({ editingId }: CreateCollectionScreenProp
               ) : (
                 <View className="mt-5">
                   <Button
+                    testID="create-ai-generate-button"
                     label={
                       aiAttempted
                         ? t('collections.create.ai.regenerate')
@@ -550,6 +554,7 @@ export function CreateCollectionScreen({ editingId }: CreateCollectionScreenProp
                 {t('collections.create.ai.draftBanner')}
               </Text>
               <TouchableOpacity
+                testID="create-ai-discard-button"
                 onPress={discardDraft}
                 accessibilityRole="button"
                 className="px-2 py-1">
@@ -567,6 +572,7 @@ export function CreateCollectionScreen({ editingId }: CreateCollectionScreenProp
             <View className="px-4 pt-2">
               <View className="rounded-lg p-4 bg-surface-lo border border-stroke flex-row items-center gap-3">
                 <TouchableOpacity
+                  testID="create-emoji-picker-button"
                   onPress={() => setEmojiPickerOpen(true)}
                   accessibilityRole="button"
                   accessibilityLabel={t('collections.create.emoji.pick')}
@@ -590,6 +596,7 @@ export function CreateCollectionScreen({ editingId }: CreateCollectionScreenProp
             <Section title={t('collections.create.sections.basics')}>
               <Field label={t('collections.create.fields.title')}>
                 <Input
+                  testID="create-title-input"
                   value={title}
                   onChangeText={setTitle}
                   placeholder={t('collections.create.fields.titlePlaceholder')}
@@ -597,6 +604,7 @@ export function CreateCollectionScreen({ editingId }: CreateCollectionScreenProp
               </Field>
               <Field label={t('collections.create.fields.description')} optional>
                 <Input
+                  testID="create-description-input"
                   value={description}
                   onChangeText={setDescription}
                   placeholder={t('collections.create.fields.descriptionPlaceholder')}
@@ -616,6 +624,7 @@ export function CreateCollectionScreen({ editingId }: CreateCollectionScreenProp
                     return (
                       <View key={c} className="flex-1 px-1">
                         <TouchableOpacity
+                          testID={`create-category-${c}`}
                           onPress={() => setCategory(c)}
                           accessibilityRole="button"
                           accessibilityState={{ selected: active }}
@@ -637,6 +646,7 @@ export function CreateCollectionScreen({ editingId }: CreateCollectionScreenProp
 
             <Section title={t('collections.create.sections.mode')} required>
               <ModeCard
+                testID="create-collection-mode-list"
                 active={mode === 'list'}
                 onPress={() => setMode('list')}
                 disabled={isEdit && anyItemHasFinds}
@@ -645,6 +655,7 @@ export function CreateCollectionScreen({ editingId }: CreateCollectionScreenProp
                 description={t('collections.create.modes.list.description')}
               />
               <ModeCard
+                testID="create-collection-mode-free"
                 active={mode === 'free'}
                 onPress={() => setMode('free')}
                 disabled={isEdit && anyItemHasFinds}
@@ -798,6 +809,7 @@ export function CreateCollectionScreen({ editingId }: CreateCollectionScreenProp
                   );
                 })}
                 <TouchableOpacity
+                  testID="create-add-item-button"
                   onPress={addItem}
                   accessibilityRole="button"
                   className="py-3 px-4 rounded-sm border border-dashed border-stroke-hi items-center justify-center mt-1">
@@ -826,6 +838,7 @@ export function CreateCollectionScreen({ editingId }: CreateCollectionScreenProp
             <Section title={t('collections.create.sections.privacy')}>
               <View className="flex-row gap-2">
                 <PrivacyChip
+                  testID="create-privacy-public"
                   active={privacy === 'public'}
                   onPress={() => setPrivacy('public')}
                   icon="🌐"
@@ -833,6 +846,7 @@ export function CreateCollectionScreen({ editingId }: CreateCollectionScreenProp
                   description={t('collections.create.privacy.public.description')}
                 />
                 <PrivacyChip
+                  testID="create-privacy-private"
                   active={privacy === 'private'}
                   onPress={() => setPrivacy('private')}
                   icon="🔒"
@@ -849,6 +863,7 @@ export function CreateCollectionScreen({ editingId }: CreateCollectionScreenProp
         <View className="absolute left-0 right-0 bottom-0 p-4 pt-3 bg-bg border-t border-stroke flex-row gap-2">
           <View className="flex-1">
             <Button
+              testID="create-cancel-button"
               label={t('collections.create.cancel')}
               variant="secondary"
               onPress={() => router.back()}
@@ -857,6 +872,7 @@ export function CreateCollectionScreen({ editingId }: CreateCollectionScreenProp
           </View>
           <View className="flex-[2]">
             <Button
+              testID="create-submit-button"
               label={isEdit ? t('collections.edit.submit') : t('collections.create.submit')}
               onPress={onCreate}
               disabled={!canCreate}
@@ -953,6 +969,7 @@ interface ModeCardProps {
   description: string;
   className?: string;
   disabled?: boolean;
+  testID?: string;
 }
 
 function ModeCard({
@@ -963,9 +980,11 @@ function ModeCard({
   description,
   className,
   disabled,
+  testID,
 }: ModeCardProps) {
   return (
     <TouchableOpacity
+      testID={testID}
       onPress={onPress}
       disabled={disabled}
       accessibilityRole="button"
@@ -991,11 +1010,13 @@ interface ModeToggleProps {
   active: boolean;
   label: string;
   onPress: () => void;
+  testID?: string;
 }
 
-function ModeToggle({ active, label, onPress }: ModeToggleProps) {
+function ModeToggle({ active, label, onPress, testID }: ModeToggleProps) {
   return (
     <TouchableOpacity
+      testID={testID}
       onPress={onPress}
       accessibilityRole="button"
       accessibilityState={{ selected: active }}
@@ -1139,11 +1160,13 @@ interface PrivacyChipProps {
   icon: string;
   label: string;
   description: string;
+  testID?: string;
 }
 
-function PrivacyChip({ active, onPress, icon, label, description }: PrivacyChipProps) {
+function PrivacyChip({ active, onPress, icon, label, description, testID }: PrivacyChipProps) {
   return (
     <TouchableOpacity
+      testID={testID}
       onPress={onPress}
       accessibilityRole="button"
       accessibilityState={{ selected: active }}

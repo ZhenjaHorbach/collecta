@@ -14,6 +14,7 @@ export interface MapPreviewProps {
   label: string;
   onOpenMap: () => void;
   openMapLabel: string;
+  testID?: string;
 }
 
 export function MapPreview({
@@ -25,11 +26,12 @@ export function MapPreview({
   label,
   onOpenMap,
   openMapLabel,
+  testID,
 }: MapPreviewProps): ReactElement {
   // Same Android quirk as MapScreen: track until image loads, then freeze.
   const [tracks, setTracks] = useState(Platform.OS === 'android');
   return (
-    <View className="h-[140px] rounded-md overflow-hidden border border-stroke">
+    <View testID={testID} className="h-[140px] rounded-md overflow-hidden border border-stroke">
       <MapView
         style={{ flex: 1 }}
         initialRegion={{

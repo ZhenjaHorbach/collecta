@@ -20,7 +20,7 @@ export function AchievementSheet({ achievement, onClose }: AchievementSheetProps
       onClose={onClose}
       contentClassName="bg-surface rounded-t-xl border-t border-stroke pt-3 px-5 pb-9">
       {achievement ? (
-        <View className="items-center gap-3">
+        <View testID={`achievement-sheet-${achievement.code}`} className="items-center gap-3">
           <View
             className={`h-20 w-20 items-center justify-center rounded-lg ${
               achievement.unlocked ? 'bg-gold' : 'bg-surface-hi border border-stroke'

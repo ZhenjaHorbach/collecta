@@ -52,9 +52,10 @@ export function OnboardingScreen() {
 
   return (
     <SafeAreaView>
-      <View className="flex-1">
+      <View testID="onboarding-screen" className="flex-1">
         <View className="flex-row justify-end px-6 pt-2">
           <TouchableOpacity
+            testID="onboarding-skip-button"
             onPress={finish}
             accessibilityRole="button"
             accessibilityLabel={t('auth.onboarding.skip')}
@@ -95,6 +96,7 @@ export function OnboardingScreen() {
             ))}
           </View>
           <TouchableOpacity
+            testID="onboarding-next-button"
             onPress={handleNext}
             accessibilityRole="button"
             className="w-full py-4 rounded-full bg-gold items-center">

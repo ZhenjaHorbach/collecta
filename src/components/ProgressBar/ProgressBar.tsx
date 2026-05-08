@@ -10,11 +10,12 @@ import Animated, {
 export interface ProgressBarProps {
   value: number;
   className?: string;
+  testID?: string;
 }
 
 const ANIM_MS = 600;
 
-export function ProgressBar({ value, className }: ProgressBarProps) {
+export function ProgressBar({ value, className, testID }: ProgressBarProps) {
   const clamped = Math.max(0, Math.min(1, value));
   const progress = useSharedValue(clamped);
   // Skip the initial mount: useSharedValue already seeds at `clamped`, so a
@@ -38,7 +39,13 @@ export function ProgressBar({ value, className }: ProgressBarProps) {
   }));
 
   return (
-    <View className={`h-2 rounded-md bg-surface-hi overflow-hidden ${className ?? ''}`}>
+    <View
+      testID={testID}
+      // Expose the value as accessibilityValue so tests can assert progress
+      // even when the visual width is animation-driven and unstable in jsdom.
+      accessibilityRole="progressbar"
+      accessibilityValue={{ now: Math.round(clamped * 100), min: 0, max: 100 }}
+      className={`h-2 rounded-md bg-surface-hi overflow-hidden ${className ?? ''}`}>
       <Animated.View className="h-full bg-gold rounded-md" style={style} />
     </View>
   );

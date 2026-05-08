@@ -83,7 +83,12 @@ export function DiscoverScreen() {
       </View>
       <CategoryStrip value={category} onChange={setCategory} />
       <View className="px-4 pt-3 pb-2">
-        <Tabs<DiscoverSort> options={sortOptions} value={sort} onChange={setSort} />
+        <Tabs<DiscoverSort>
+          options={sortOptions}
+          value={sort}
+          onChange={setSort}
+          testIDPrefix="discover-sort"
+        />
       </View>
       {featured ? (
         <View className="px-4 pt-2 pb-3">
@@ -118,6 +123,7 @@ export function DiscoverScreen() {
 
   return (
     <FlatList
+      testID="discover-screen"
       data={grid}
       keyExtractor={(item) => item.id}
       numColumns={GRID_COLUMNS}
@@ -135,7 +141,9 @@ export function DiscoverScreen() {
         gap: GRID_GAP,
       }}
       ListHeaderComponent={renderHeader}
-      ListEmptyComponent={<EmptyState icon="🔎" title={t('discover.empty')} />}
+      ListEmptyComponent={
+        <EmptyState testID="discover-empty" icon="🔎" title={t('discover.empty')} />
+      }
       renderItem={({ item }) => (
         <DiscoverCard
           collection={item}
@@ -159,6 +167,7 @@ function SearchBar({ value, onChange }: SearchBarProps) {
     <View className="flex-row items-center bg-surface-lo border border-stroke rounded-md px-3 h-11">
       <Text className="text-text-dim mr-2">⌕</Text>
       <TextInput
+        testID="discover-search-input"
         value={value}
         onChangeText={onChange}
         placeholder={t('discover.search')}
@@ -167,6 +176,7 @@ function SearchBar({ value, onChange }: SearchBarProps) {
       />
       {value.length > 0 ? (
         <TouchableOpacity
+          testID="discover-search-clear-button"
           onPress={() => onChange('')}
           accessibilityRole="button"
           accessibilityLabel="clear">
@@ -198,6 +208,7 @@ function CategoryStrip({ value, onChange }: CategoryStripProps) {
         const emoji = isAll ? '✨' : CATEGORY_EMOJI[item];
         return (
           <TouchableOpacity
+            testID={`discover-category-${isAll ? 'all' : item}`}
             onPress={() => onChange(isAll ? null : item)}
             accessibilityRole="button"
             accessibilityState={{ selected: active }}
@@ -226,6 +237,7 @@ function FeaturedCard({ collection, onPress }: CardProps) {
     collection.icon ?? (collection.category ? CATEGORY_EMOJI[collection.category] : '📦');
   return (
     <TouchableOpacity
+      testID={`discover-featured-${collection.id}`}
       onPress={onPress}
       accessibilityRole="button"
       accessibilityLabel={collection.title}
@@ -262,6 +274,7 @@ function DiscoverCard({ collection, width, onPress }: CardProps & { width: numbe
   // total count) doesn't stretch across the whole row.
   return (
     <TouchableOpacity
+      testID={`discover-card-${collection.id}`}
       onPress={onPress}
       accessibilityRole="button"
       accessibilityLabel={collection.title}

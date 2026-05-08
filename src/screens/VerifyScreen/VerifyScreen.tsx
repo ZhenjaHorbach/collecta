@@ -34,13 +34,14 @@ export function VerifyScreen() {
   return (
     <SafeAreaView>
       <GoBackButton />
-      <View className="flex-1 px-6 pt-2">
+      <View testID="verify-screen" className="flex-1 px-6 pt-2">
         <Text className="text-3xl font-bold text-text mb-2">{t('auth.verify.title')}</Text>
         <Text className="text-text-dim text-sm mb-8">
           {t('auth.verify.subtitle', { email: params.email ?? t('auth.verify.fallbackEmail') })}
         </Text>
 
         <Input
+          testID="verify-code-input"
           value={token}
           onChangeText={setToken}
           placeholder={t('auth.verify.codePlaceholder')}
@@ -50,6 +51,7 @@ export function VerifyScreen() {
         />
 
         <Button
+          testID="verify-submit-button"
           label={t('auth.verify.submit')}
           onPress={onVerify}
           loading={submitting}

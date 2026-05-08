@@ -21,6 +21,7 @@ export function LanguageSwitcher() {
           return (
             <TouchableOpacity
               key={lang}
+              testID={`language-${lang}`}
               onPress={() => onSelect(lang)}
               accessibilityRole="button"
               accessibilityState={{ selected: active }}

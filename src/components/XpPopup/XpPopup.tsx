@@ -49,6 +49,7 @@ export function XpPopup({ delta, onDismiss }: XpPopupProps) {
 
   return (
     <Animated.View
+      testID="xp-popup"
       pointerEvents="none"
       className="absolute bottom-32 left-0 right-0 z-50 items-center"
       style={style}>

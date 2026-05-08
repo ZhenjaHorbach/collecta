@@ -43,6 +43,21 @@ splits the import graph from the test graph. Existing patterns to mirror:
 | Component | See [Components](#components).                                                                                                                                                        |
 | Screen    | Don't — see [What we don't test](#what-we-dont-test).                                                                                                                                 |
 
+## Component tests vs testID — different jobs
+
+Jest component tests assert via `getByText` / `getByLabelText` /
+`fireEvent.press` on the **content** the user sees. They do **NOT**
+assert on `testID` — that's a Maestro contract documented in
+`.claude/rules/e2e.md`. Keeping them separate lets Jest tests survive
+i18n copy changes without retouching testIDs, and lets Maestro flows
+survive component refactors as long as the testID stays stable.
+
+When you add a new component test:
+
+- Use `screen.getByText(...)` for visible copy.
+- Use `screen.getByLabelText(...)` for accessibility-anchored elements.
+- Don't touch `testID` — it's only there for E2E.
+
 ## Components
 
 Tests live in `src/components/__tests__/<Name>.test.tsx`. **Bar is opt-in,

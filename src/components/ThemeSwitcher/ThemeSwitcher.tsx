@@ -16,6 +16,7 @@ export function ThemeSwitcher() {
           return (
             <TouchableOpacity
               key={opt}
+              testID={`theme-${opt}`}
               onPress={() => setPreference(opt)}
               accessibilityRole="button"
               accessibilityState={{ selected: active }}

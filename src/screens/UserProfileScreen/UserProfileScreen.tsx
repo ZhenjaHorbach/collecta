@@ -55,7 +55,7 @@ export function UserProfileScreen({ userId }: UserProfileScreenProps): ReactElem
   const unlockedCount = profile.achievements.filter((a) => a.unlocked).length;
 
   return (
-    <SafeAreaView>
+    <SafeAreaView testID="user-profile-screen">
       <ScrollView className="flex-1" contentContainerStyle={{ paddingBottom: 100 }}>
         <GoBackButton />
 

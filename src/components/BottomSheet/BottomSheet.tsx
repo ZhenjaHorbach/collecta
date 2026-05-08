@@ -21,7 +21,10 @@ export function BottomSheet({
 }: BottomSheetProps): React.ReactElement {
   return (
     <Modal visible={visible} transparent animationType="slide" onRequestClose={onClose}>
-      <Pressable className="flex-1 bg-overlay justify-end" onPress={onClose}>
+      <Pressable
+        testID="bottom-sheet-backdrop"
+        className="flex-1 bg-overlay justify-end"
+        onPress={onClose}>
         <Pressable onPress={(e) => e.stopPropagation()} className={contentClassName}>
           {showHandle ? (
             <View className="self-center w-9 h-1 rounded-full bg-stroke-hi mb-4" />

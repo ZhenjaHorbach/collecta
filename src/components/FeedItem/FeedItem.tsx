@@ -32,8 +32,11 @@ export function FeedItem({ item, initialReactions }: FeedItemProps): ReactElemen
   const { counts, mine, toggle } = useReactions(item.findId, initialReactions);
 
   return (
-    <View className="mb-4 overflow-hidden rounded-lg border border-stroke bg-surface">
+    <View
+      testID={`feed-item-${item.findId}`}
+      className="mb-4 overflow-hidden rounded-lg border border-stroke bg-surface">
       <Pressable
+        testID={`feed-item-${item.findId}-creator`}
         onPress={() => router.push(`/user/${item.creatorId}`)}
         className="flex-row items-center gap-3 px-4 py-3"
         accessibilityRole="button"
@@ -72,6 +75,7 @@ export function FeedItem({ item, initialReactions }: FeedItemProps): ReactElemen
       </Pressable>
 
       <Pressable
+        testID={`feed-item-${item.findId}-photo`}
         onPress={() => router.push(`/find/${item.findId}`)}
         accessibilityRole="button"
         accessibilityLabel={t('feed.findPhoto', {
@@ -88,6 +92,7 @@ export function FeedItem({ item, initialReactions }: FeedItemProps): ReactElemen
 
       <View className="gap-3 px-4 py-3">
         <Pressable
+          testID={`feed-item-${item.findId}-collection`}
           onPress={() => router.push(`/collection/${item.collectionId}`)}
           accessibilityRole="button"
           accessibilityLabel={t('feed.openCollection', { title: item.collectionTitle })}>
@@ -106,7 +111,12 @@ export function FeedItem({ item, initialReactions }: FeedItemProps): ReactElemen
           </Text>
         )}
 
-        <ReactionBar counts={counts} mine={mine} onToggle={toggle} />
+        <ReactionBar
+          counts={counts}
+          mine={mine}
+          onToggle={toggle}
+          testIDPrefix={`feed-item-${item.findId}-reaction`}
+        />
       </View>
     </View>
   );

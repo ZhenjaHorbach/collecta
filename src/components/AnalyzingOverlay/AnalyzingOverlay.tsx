@@ -63,7 +63,7 @@ export function AnalyzingOverlay({ photoUri, stage }: AnalyzingOverlayProps): Re
   const titleKey = stageLabelKey[stage] ?? 'camera.analyzing.title';
 
   return (
-    <View className="flex-1 bg-app-shell">
+    <View testID="analyzing-overlay" className="flex-1 bg-app-shell">
       <ExpoImage
         source={{ uri: photoUri }}
         style={{ width: '100%', height: '100%', position: 'absolute' }}

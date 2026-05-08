@@ -41,6 +41,7 @@ function DefaultFallback({ message, onRetry }: { message: string; onRetry: () =>
       <Text className="text-text text-lg font-bold text-center mb-2">{t('common.error')}</Text>
       <Text className="text-text-dim text-sm text-center mb-6 leading-snug">{message}</Text>
       <TouchableOpacity
+        testID="error-boundary-retry-button"
         onPress={onRetry}
         accessibilityRole="button"
         className="px-6 py-3 rounded-full bg-gold">

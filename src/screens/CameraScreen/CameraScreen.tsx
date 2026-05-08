@@ -396,6 +396,7 @@ export function CameraScreen() {
           <Text className="text-text text-xl font-semibold">{t('camera.permissionTitle')}</Text>
           <Text className="text-text-dim text-base text-center">{t('camera.permissionBody')}</Text>
           <Pressable
+            testID="camera-permission-grant-button"
             onPress={requestPermission}
             className="bg-gold rounded-md p-4 items-center w-full">
             <Text className="text-on-gold font-semibold">{t('camera.permissionGrant')}</Text>
@@ -526,7 +527,10 @@ export function CameraScreen() {
               {capture.error}
             </Text>
           ) : null}
-          <Pressable onPress={onRetake} className="bg-gold rounded-md p-4 items-center w-full">
+          <Pressable
+            testID="camera-error-retake-button"
+            onPress={onRetake}
+            className="bg-gold rounded-md p-4 items-center w-full">
             <Text className="text-on-gold font-semibold">{t('camera.retake')}</Text>
           </Pressable>
         </View>
@@ -535,7 +539,7 @@ export function CameraScreen() {
   }
 
   return (
-    <View className="flex-1 bg-app-shell">
+    <View testID="camera-screen" className="flex-1 bg-app-shell">
       <CameraView
         ref={cameraRef}
         style={StyleSheet.absoluteFill}
@@ -564,6 +568,7 @@ export function CameraScreen() {
           <View className="items-center pb-8 gap-4" pointerEvents="box-none">
             {cameraSettled ? (
               <TouchableOpacity
+                testID="camera-shutter-button"
                 onPress={onShutter}
                 accessibilityLabel={t('camera.shutter')}
                 className="w-20 h-20 rounded-xl bg-gold items-center justify-center"
@@ -572,6 +577,7 @@ export function CameraScreen() {
               <Spinner />
             )}
             <TouchableOpacity
+              testID="camera-pick-library-button"
               onPress={onPickFromLibrary}
               accessibilityRole="button"
               className="px-5 py-3 rounded-full bg-surface-hi border border-stroke active:opacity-75">

@@ -26,6 +26,7 @@ export function CollectionCard({ collection, onPress, width }: CollectionCardPro
 
   return (
     <TouchableOpacity
+      testID={`collection-card-${collection.id}`}
       onPress={onPress}
       accessibilityRole="button"
       style={width !== undefined ? { width } : undefined}

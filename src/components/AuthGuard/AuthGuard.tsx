@@ -22,7 +22,7 @@ export function AuthGuard({ children }: PropsWithChildren) {
   }, [session, loading, segments, router]);
 
   if (loading) {
-    return <Spinner className="bg-bg" />;
+    return <Spinner testID="auth-guard-loading" className="bg-bg" />;
   }
 
   return <>{children}</>;

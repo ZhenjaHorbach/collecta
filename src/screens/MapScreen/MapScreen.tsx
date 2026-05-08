@@ -116,7 +116,7 @@ function MapBody({ initialLocation, tightZoom, t, colors }: MapBodyProps) {
   }, [location, visibleFinds]);
 
   return (
-    <View className="flex-1 bg-bg">
+    <View testID="map-screen" className="flex-1 bg-bg">
       <ClusterMapView
         style={StyleSheet.absoluteFill}
         initialRegion={initialRegion}
@@ -145,6 +145,7 @@ function MapBody({ initialLocation, tightZoom, t, colors }: MapBodyProps) {
         {visibleFinds.map((f) => (
           <FindMarkerPin
             key={f.id}
+            testID={`map-marker-${f.id}`}
             lat={f.lat}
             lng={f.lng}
             photoUrl={f.photoUrl}
@@ -159,6 +160,7 @@ function MapBody({ initialLocation, tightZoom, t, colors }: MapBodyProps) {
         <View className="flex-row items-center gap-3 rounded-md bg-overlay border border-stroke-hi p-3 shadow-lg">
           <MaterialIcons name="search" size={17} color={colors.textDim} />
           <TextInput
+            testID="map-search-input"
             className="flex-1 text-text text-sm"
             placeholder={t('map.searchPlaceholder')}
             placeholderTextColor={colors.textDim}
@@ -225,9 +227,18 @@ interface FindMarkerPinProps {
   emoji: string | null;
   category: CollectionCategory;
   onPress: () => void;
+  testID?: string;
 }
 
-function FindMarkerPin({ lat, lng, photoUrl, emoji, category, onPress }: FindMarkerPinProps) {
+function FindMarkerPin({
+  lat,
+  lng,
+  photoUrl,
+  emoji,
+  category,
+  onPress,
+  testID,
+}: FindMarkerPinProps) {
   const [tracks, setTracks] = useState(Platform.OS === 'android');
   // Android renders a centered disk (no triangle pointer), so the anchor sits
   // at the bitmap centre. iOS keeps the photo-card layout with the apex at
@@ -241,6 +252,7 @@ function FindMarkerPin({ lat, lng, photoUrl, emoji, category, onPress }: FindMar
       tracksViewChanges={tracks}
       onPress={onPress}>
       <FindMarker
+        testID={testID}
         photoUrl={photoUrl}
         emoji={emoji}
         category={category}

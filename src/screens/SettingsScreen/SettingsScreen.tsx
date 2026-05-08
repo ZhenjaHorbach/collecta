@@ -37,7 +37,7 @@ export function SettingsScreen() {
   const version = Constants.expoConfig?.version ?? '—';
 
   return (
-    <SafeAreaView>
+    <SafeAreaView testID="settings-screen">
       <GoBackButton icon="close">
         <Text className="text-2xl font-bold text-text">{t('profile.settings')}</Text>
       </GoBackButton>
@@ -103,6 +103,7 @@ export function SettingsScreen() {
           </SettingsSection>
 
           <Pressable
+            testID="settings-signout-button"
             onPress={handleSignOut}
             accessibilityRole="button"
             accessibilityLabel={t('profile.signOut.action')}
@@ -147,6 +148,7 @@ function SettingToggle({ name, label, subtitle }: ToggleProps) {
         {subtitle ? <Text className="text-xs text-text-dim mt-0.5">{subtitle}</Text> : null}
       </View>
       <Switch
+        testID={`settings-toggle-${name}`}
         value={value}
         onValueChange={setValue}
         trackColor={{ true: colors.gold, false: colors.strokeHi }}

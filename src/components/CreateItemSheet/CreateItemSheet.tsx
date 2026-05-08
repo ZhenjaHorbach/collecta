@@ -76,7 +76,10 @@ export function CreateItemSheet({
         <Text className="text-text text-base font-semibold">
           {t('validation.createItem.title')}
         </Text>
-        <Pressable onPress={onClose} className="px-3 py-1 rounded-full bg-surface-hi">
+        <Pressable
+          testID="create-item-close-button"
+          onPress={onClose}
+          className="px-3 py-1 rounded-full bg-surface-hi">
           <Text className="text-text text-xs">{t('common.close')}</Text>
         </Pressable>
       </View>
@@ -90,6 +93,7 @@ export function CreateItemSheet({
             {t('validation.createItem.nameLabel')}
           </Text>
           <TextInput
+            testID="create-item-name-input"
             value={name}
             onChangeText={(next) => {
               setName(next);
@@ -108,6 +112,7 @@ export function CreateItemSheet({
             {t('validation.createItem.descriptionLabel')}
           </Text>
           <TextInput
+            testID="create-item-description-input"
             value={description}
             onChangeText={setDescription}
             placeholder={t('validation.createItem.descriptionPlaceholder')}
@@ -126,6 +131,7 @@ export function CreateItemSheet({
             {RARITIES.map((r) => (
               <Pressable
                 key={r}
+                testID={`create-item-rarity-${r}`}
                 onPress={() => setRarity(r)}
                 accessibilityRole="button"
                 className={`flex-1 px-3 py-2 rounded-md border items-center ${
@@ -146,6 +152,7 @@ export function CreateItemSheet({
       </ScrollView>
 
       <Pressable
+        testID="create-item-submit-button"
         onPress={() => {
           void submit();
         }}
