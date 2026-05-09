@@ -25,7 +25,7 @@ jobs:
   android:
     name: Run Maestro flows on Android
     runs-on: ubuntu-latest
-    timeout-minutes: 40
+    timeout-minutes: 60
     steps:
       - uses: actions/checkout@v4
 
@@ -56,6 +56,21 @@ jobs:
         run: |
           curl -Ls "https://get.maestro.mobile.dev" | bash -s -- --version 2.5.1
           echo "$HOME/.maestro/bin" >> "$GITHUB_PATH"
+
+      - name: Cache Gradle
+        # Gradle dep resolution + transformed AARs dominate the EAS build
+        # cold-start (~5-10 min). Key on files that affect the native
+        # dependency graph: package-lock (RN libs) + app.json/app.config.ts
+        # (plugins → autolinking output). android/ itself is gitignored
+        # (CNG regenerates it via `expo prebuild`), so we don't cache that.
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.gradle/caches
+            ~/.gradle/wrapper
+          key: ${{ runner.os }}-gradle-${{ hashFiles('package-lock.json', 'app.json', 'app.config.ts') }}
+          restore-keys: |
+            ${{ runner.os }}-gradle-
 
       - name: Seed Supabase test user
         # Provisions test@collecta.app + the seeded collection. Idempotent.

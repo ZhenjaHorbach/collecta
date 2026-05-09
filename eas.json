@@ -6,7 +6,11 @@
     "preview": {
       "distribution": "internal",
       "android": {
-        "buildType": "apk"
+        "buildType": "apk",
+        "gradleCommand": ":app:assembleRelease -PreactNativeArchitectures=x86_64"
+      },
+      "env": {
+        "GRADLE_OPTS": "-Xmx4g -XX:MaxMetaspaceSize=1g -Dfile.encoding=UTF-8"
       }
     },
     "production": {}
