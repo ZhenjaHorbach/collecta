@@ -1,0 +1,6 @@
+# Workspace defaults applied to every flow under maestro/flows/.
+# Per-flow `appId:` still wins; this is for cross-cutting settings.
+#
+# Docs: https://docs.maestro.dev/cli/test-suites-and-reports
+flows:
+  - flows/*.yaml

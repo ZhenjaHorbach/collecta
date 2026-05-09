@@ -12,6 +12,8 @@
     "format": "prettier --write .",
     "format:check": "prettier --check .",
     "test": "jest",
+    "test:e2e": "bash maestro/run.sh maestro/flows/",
+    "test:e2e:seed": "bash scripts/maestro-seed.sh",
     "react-compiler:check": "bash scripts/check-react-compiler.sh",
     "evals": "bash scripts/run-evals.sh",
     "design:sync": "bash scripts/sync-design.sh",

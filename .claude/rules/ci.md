@@ -44,6 +44,15 @@ Two domain-specific workflows — never combined into one "all evals" job.
 - Structural suite always runs on matching PRs (~1 Claude call, mem­oised)
 - Calibration suite (~20 Claude calls) only via `workflow_dispatch` with `include_calibration=true`
 
+### `.github/workflows/e2e.yml`
+
+- `workflow_dispatch` + Monday 09:00 UTC weekly canary
+- `ubuntu-latest` + `reactivecircus/android-emulator-runner@v2` (Android API 34, Pixel 6, virtual-scene camera)
+- Steps: seed Supabase test user → EAS local Android dev build → boot emulator → install APK → `maestro/run.sh maestro/flows/`
+- ~15-20 min/run; `concurrency: cancel-in-progress: false` so the seeded test user isn't trampled by a parallel run
+- `--debug-output debug` artifacts (screenshots/video) uploaded only on failure, 30-day retention
+- iOS coverage intentionally NOT planned — testIDs are platform-agnostic and macOS minutes are 10× the cost
+
 ### `.github/workflows/evals-collection.yml`
 
 - `pull_request` with `paths:` filter on `scripts/generate-collection.{ts,sh}`, the prompt, `src/agents/**`, or eval files
@@ -85,5 +94,8 @@ Pulls the design bundle from claude.ai/design into `.claude/design/` and opens a
 - `ANTHROPIC_API_KEY` — Claude API for evals
 - `SUPABASE_URL` -- Supabase project URL (Project → Settings → API)
 - `SUPABASE_ANON_KEY` — Supabase anon public key (Project → Settings → API)
+- `SUPABASE_SERVICE_ROLE_KEY` — Supabase admin key. **Server-only.** Used by `scripts/generate-collection.ts`, `scripts/maestro-seed.ts`, and edge functions. Never read via `EXPO_PUBLIC_*`; never reaches the device bundle.
 - `SUPABASE_ACCESS_TOKEN` — Supabase CLI auth (Account → Access Tokens)
 - `SUPABASE_PROJECT_ID` — Supabase project reference ID (Project → Settings → General)
+- `EXPO_PUBLIC_TEST_EMAIL` / `EXPO_PUBLIC_TEST_PASSWORD` — credentials for the seeded `test@collecta.app` account. Consumed by **both** `scripts/maestro-seed.ts` (server-side, to provision the account) and the app bundle (client-side, to render the `__DEV__`-only "Dev sign-in" button on the welcome screen — see `.claude/rules/e2e.md`). One source of truth, no drift. Also baked into the EAS local Android build in the `e2e.yml` workflow, so every Maestro run can sign in.
+- `EXPO_PUBLIC_POWERSYNC_URL` — PowerSync project URL. Inlined into the bundle by Metro / EAS, used by `@powersync/react-native` for offline sync.

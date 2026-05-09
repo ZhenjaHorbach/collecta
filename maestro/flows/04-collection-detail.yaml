@@ -1,0 +1,18 @@
+# Open the seeded test collection from Mine tab and verify the detail
+# screen renders with its action buttons. The collection is provisioned
+# by scripts/maestro-seed.ts (re-run if Mine tab is empty).
+appId: com.horbachevgen.collecta
+---
+- runFlow: 01-auth-bypass.yaml
+- tapOn:
+    id: 'tabbar-collections'
+- tapOn:
+    id: 'collections-tab-mine'
+- tapOn:
+    id: 'collection-card-.*'
+- assertVisible:
+    id: 'collection-detail-screen'
+- assertVisible:
+    id: 'collection-share-button'
+- assertVisible:
+    id: 'collection-more-button'

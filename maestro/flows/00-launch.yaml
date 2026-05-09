@@ -1,0 +1,19 @@
+# Smoke flow — verifies app launches and renders the welcome screen for an
+# unauthenticated user. No login, no DB writes; purely "Maestro can drive
+# our app at all".
+#
+# Run:
+#   maestro/run.sh maestro/flows/00-launch.yaml
+#
+# Prereqs: app must be installed on the active simulator/device. Build with
+# `npx expo run:android` once before the first run. See maestro/README.md.
+appId: com.horbachevgen.collecta
+---
+- launchApp:
+    clearState: true
+- assertVisible:
+    id: 'welcome-screen'
+- assertVisible:
+    id: 'welcome-signin-button'
+- assertVisible:
+    id: 'welcome-signup-button'

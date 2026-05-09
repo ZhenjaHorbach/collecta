@@ -1,0 +1,33 @@
+# Open the seeded collection, trigger Edit via the More menu (native
+# Alert on Android, ActionSheet on iOS), and verify the edit screen
+# mounts (it reuses CreateCollectionScreen with editingId). Backs out
+# without saving.
+#
+# Tapping "Edit collection" by text — native Alert/ActionSheet doesn't
+# expose testIDs, see .claude/rules/e2e.md (Don'ts → Exception).
+# Pixel emulator defaults to en, so the i18n string from en.json
+# (`collections.edit.trigger`) matches.
+appId: com.horbachevgen.collecta
+---
+- runFlow: 01-auth-bypass.yaml
+- tapOn:
+    id: 'tabbar-collections'
+- tapOn:
+    id: 'collections-tab-mine'
+- tapOn:
+    id: 'collection-card-.*'
+- assertVisible:
+    id: 'collection-detail-screen'
+- tapOn:
+    id: 'collection-more-button'
+- tapOn: 'Edit collection'
+- assertVisible:
+    id: 'create-collection-screen'
+- assertVisible:
+    id: 'create-title-input'
+- assertVisible:
+    id: 'create-submit-button'
+- tapOn:
+    id: 'create-cancel-button'
+- assertVisible:
+    id: 'collection-detail-screen'

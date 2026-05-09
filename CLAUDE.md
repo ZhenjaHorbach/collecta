@@ -110,6 +110,10 @@ src/
 supabase/
   migrations/   # SQL migration files
   functions/    # Edge functions
+maestro/
+  flows/        # Maestro E2E flow YAMLs (00-launch.yaml, …)
+  config.yaml   # Workspace-level Maestro config
+  README.md     # Local run + setup instructions
 ```
 
 Path aliases: `@components/*`, `@screens/*`, `@services/*`, `@hooks/*`, `@utils/*`, `@constants/*`, `@typings/*`, `@i18n` / `@i18n/*`, `~/*` (= `src/*`).

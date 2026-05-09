@@ -1,0 +1,26 @@
+# Verifies the inner tabs on Collections (Discover / Mine / Picked up)
+# switch screens. Discover is the default tab so it renders first.
+# `discover-search-input` only exists on the Discover tab — its absence
+# after switching to Mine/PickedUp is what proves the switch happened
+# (the parent `collections-screen` testID is shared).
+appId: com.horbachevgen.collecta
+---
+- runFlow: 01-auth-bypass.yaml
+- tapOn:
+    id: 'tabbar-collections'
+- assertVisible:
+    id: 'discover-screen'
+- assertVisible:
+    id: 'discover-search-input'
+- tapOn:
+    id: 'collections-tab-mine'
+- assertVisible:
+    id: 'collections-screen'
+- assertNotVisible:
+    id: 'discover-search-input'
+- tapOn:
+    id: 'collections-tab-pickedUp'
+- assertVisible:
+    id: 'collections-screen'
+- assertNotVisible:
+    id: 'discover-search-input'

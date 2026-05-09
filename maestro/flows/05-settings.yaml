@@ -1,0 +1,20 @@
+# Open Settings from Profile, toggle a setting, verify the screen
+# stays mounted (toggle didn't crash a re-render). Doesn't sign out —
+# that would invalidate the seeded session for the next flow.
+appId: com.horbachevgen.collecta
+---
+- runFlow: 01-auth-bypass.yaml
+- tapOn:
+    id: 'tabbar-profile'
+- tapOn:
+    id: 'profile-settings-button'
+- assertVisible:
+    id: 'settings-screen'
+- tapOn:
+    id: 'settings-toggle-highResUploads'
+- assertVisible:
+    id: 'settings-screen'
+- scrollUntilVisible:
+    element:
+      id: 'settings-signout-button'
+    direction: DOWN
