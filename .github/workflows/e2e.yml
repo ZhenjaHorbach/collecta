@@ -105,7 +105,17 @@ jobs:
           target: google_apis
           arch: x86_64
           profile: pixel_6
-          emulator-options: -no-snapshot -no-boot-anim -camera-back virtualscene -no-window -gpu swiftshader_indirect
+          # ram/heap bumped from defaults (2048/512) — API 34 + google_apis
+          # boots flaky at 2 GiB. cores: 2 matches ubuntu-latest vCPUs.
+          ram-size: 4096M
+          heap-size: 1024M
+          cores: 2
+          # `-camera-back virtualscene` requires GPU rendering; combined
+          # with `-no-window -gpu swiftshader_indirect` (software) the
+          # emulator crashes mid-boot on ubuntu-latest. None of the flows
+          # exercise the camera, so disable it. `-noaudio` avoids ALSA
+          # init failures in the headless runner.
+          emulator-options: -no-window -no-snapshot -no-boot-anim -noaudio -camera-back none -gpu swiftshader_indirect
           disable-animations: true
           script: |
             adb install build/app.apk
