@@ -1,0 +1,19 @@
+# Verifies the inner tabs on Collections (Discover / Mine / Picked up)
+# switch screens. Discover is the default tab so it renders first.
+appId: com.horbachevgen.collecta
+---
+- runFlow: 01-auth-bypass.yaml
+- tapOn:
+    id: 'tabbar-collections'
+- assertVisible:
+    id: 'discover-screen'
+- assertVisible:
+    id: 'discover-search-input'
+- tapOn:
+    id: 'collections-tab-mine'
+- assertVisible:
+    id: 'collections-screen'
+- tapOn:
+    id: 'collections-tab-pickedUp'
+- assertVisible:
+    id: 'collections-screen'

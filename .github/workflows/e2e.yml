@@ -1,0 +1,98 @@
+name: E2E (Maestro)
+
+# Runs the Maestro flow suite on an Android emulator. Manual + weekly
+# canary — surfaces UI regressions that lint/typecheck/Jest can't catch
+# (broken navigation, removed testIDs, sign-in regression).
+#
+# Cost: ~15-20 min/run. Weekly cron + manual = ~80 min/month, well
+# inside the 2000-min Linux free tier on private repos.
+#
+# CI runs Android-only — iOS would 10× the macOS minute cost without
+# adding signal (testIDs are platform-agnostic).
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: '0 9 * * 1'
+
+# Don't queue concurrent runs — emulator boot is heavy and the seeded
+# Supabase test user is shared.
+concurrency:
+  group: e2e-android
+  cancel-in-progress: false
+
+jobs:
+  android:
+    name: Run Maestro flows on Android
+    runs-on: ubuntu-latest
+    timeout-minutes: 40
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+      - run: npm ci
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 17
+
+      - name: Enable KVM
+        # AVD perf collapses without /dev/kvm — reactivecircus/android-emulator-runner
+        # documents this as a required step on ubuntu-latest.
+        run: |
+          echo 'KERNEL=="kvm", GROUP="kvm", MODE="0666", OPTIONS+="static_node=kvm"' \
+            | sudo tee /etc/udev/rules.d/99-kvm4all.rules
+          sudo udevadm control --reload-rules
+          sudo udevadm trigger --name-match=kvm
+
+      - name: Install Maestro CLI
+        run: |
+          curl -Ls "https://get.maestro.mobile.dev" | bash
+          echo "$HOME/.maestro/bin" >> "$GITHUB_PATH"
+
+      - name: Seed Supabase test user
+        # Provisions test@collecta.app + the seeded collection. Idempotent.
+        run: npm run test:e2e:seed
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+          EXPO_PUBLIC_TEST_EMAIL: ${{ secrets.EXPO_PUBLIC_TEST_EMAIL }}
+          EXPO_PUBLIC_TEST_PASSWORD: ${{ secrets.EXPO_PUBLIC_TEST_PASSWORD }}
+
+      - name: EAS local Android dev build
+        # Produces an installable APK with EXPO_PUBLIC_* baked in. Metro
+        # is not running in CI, so the bundle has to be pre-built.
+        run: npx eas-cli build --local --platform android --profile development --non-interactive --output build/app.apk
+        env:
+          EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
+          EXPO_PUBLIC_SUPABASE_URL: ${{ secrets.EXPO_PUBLIC_SUPABASE_URL }}
+          EXPO_PUBLIC_SUPABASE_ANON_KEY: ${{ secrets.EXPO_PUBLIC_SUPABASE_ANON_KEY }}
+          EXPO_PUBLIC_GOOGLE_MAPS_API_KEY: ${{ secrets.EXPO_PUBLIC_GOOGLE_MAPS_API_KEY }}
+          EXPO_PUBLIC_POWERSYNC_URL: ${{ secrets.EXPO_PUBLIC_POWERSYNC_URL }}
+          EXPO_PUBLIC_TEST_EMAIL: ${{ secrets.EXPO_PUBLIC_TEST_EMAIL }}
+          EXPO_PUBLIC_TEST_PASSWORD: ${{ secrets.EXPO_PUBLIC_TEST_PASSWORD }}
+
+      - name: Run Maestro flows on Android emulator
+        uses: reactivecircus/android-emulator-runner@v2
+        with:
+          api-level: 34
+          target: google_apis
+          arch: x86_64
+          profile: pixel_6
+          emulator-options: -no-snapshot -no-boot-anim -camera-back virtualscene -no-window -gpu swiftshader_indirect
+          disable-animations: true
+          script: |
+            adb install build/app.apk
+            bash maestro/run.sh maestro/flows/ --debug-output debug
+
+      - name: Upload Maestro debug artifacts
+        uses: actions/upload-artifact@v4
+        if: failure()
+        with:
+          name: maestro-debug-${{ github.run_number }}
+          path: debug/
+          retention-days: 30

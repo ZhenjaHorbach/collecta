@@ -3,6 +3,11 @@ import { useRouter } from 'expo-router';
 import type { Href } from 'expo-router';
 import { useTranslation } from 'react-i18next';
 
+import { signInWithEmail } from '@services/auth.service';
+
+const DEV_TEST_EMAIL = process.env.EXPO_PUBLIC_TEST_EMAIL;
+const DEV_TEST_PASSWORD = process.env.EXPO_PUBLIC_TEST_PASSWORD;
+
 export function WelcomeScreen() {
   const router = useRouter();
   const { t } = useTranslation();
@@ -32,6 +37,16 @@ export function WelcomeScreen() {
           className="w-full py-4 rounded-full border border-stroke-hi items-center active:opacity-75">
           <Text className="text-text font-semibold text-sm">{t('auth.welcome.haveAccount')}</Text>
         </Pressable>
+        {__DEV__ && DEV_TEST_EMAIL && DEV_TEST_PASSWORD && (
+          <Pressable
+            testID="welcome-dev-login"
+            onPress={() => {
+              void signInWithEmail(DEV_TEST_EMAIL, DEV_TEST_PASSWORD);
+            }}
+            className="w-full py-3 rounded-full border border-dashed border-stroke items-center active:opacity-75">
+            <Text className="text-text-dim text-xs">Dev sign-in</Text>
+          </Pressable>
+        )}
       </View>
     </View>
   );

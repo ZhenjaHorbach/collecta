@@ -1,0 +1,24 @@
+# Open the More menu, tap Delete collection, then cancel the
+# confirmation Alert. Verifies the destructive flow renders correctly
+# without actually removing the seeded collection (next flows still
+# need it).
+appId: com.horbachevgen.collecta
+---
+- runFlow: 01-auth-bypass.yaml
+- tapOn:
+    id: 'tabbar-collections'
+- tapOn:
+    id: 'collections-tab-mine'
+- tapOn:
+    id: 'collection-card-.*'
+- assertVisible:
+    id: 'collection-detail-screen'
+- tapOn:
+    id: 'collection-more-button'
+- tapOn: 'Delete collection'
+# The destructive confirm Alert is native and i18n-anchored — text
+# from en.json `collections.delete.{confirmTitle, confirmAction}`.
+- assertVisible: 'Delete collection?'
+- tapOn: 'Cancel'
+- assertVisible:
+    id: 'collection-detail-screen'

@@ -84,6 +84,45 @@ the props in the same PR — the pattern is in `EmptyState.tsx`.
   diffs only.
 - Don't snapshot the rendered tree.
 
+**Exception:** native OS modals (`Alert.alert`, `ActionSheetIOS`,
+permission dialogs, share sheets) don't propagate `testID` — the
+buttons are rendered by the OS, not RN. For these, `tapOn` by text
+is the only option. Keep flows in the en locale (Pixel emulator
+default) so the strings match what's in `en.json`. If a flow needs a
+non-en locale, switch via Settings first using `testID`s, then assert.
+
+## Text input on Android — out of scope for E2E
+
+Gboard on the Pixel emulator stalls Maestro's `inputText` (autocomplete
+intercepts `@` / `.` / `:`, `inputText` hits 120s `DEADLINE_EXCEEDED`).
+**Maestro flows on Android don't type into TextInputs.** Cover
+text-driven logic at the unit level (`useAuth`, `signInWithEmail`,
+`useDiscover` are all Jested in `src/{hooks,services}/__tests__/`).
+
+**For login — tap the "Dev sign-in" button** on the welcome screen
+(`testID="welcome-dev-login"`). Rendered only when `__DEV__ &&
+EXPO_PUBLIC_TEST_EMAIL && EXPO_PUBLIC_TEST_PASSWORD`, calls
+`signInWithEmail` on press; AuthGuard routes to `/(tabs)`.
+
+Reusable flow `maestro/flows/01-auth-bypass.yaml`:
+
+```yaml
+- launchApp:
+    clearState: true
+    permissions: { all: allow } # pre-grant location/camera
+- tapOn: { id: 'welcome-dev-login' }
+- extendedWaitUntil:
+    visible: { id: 'tabbar-feed' }
+    timeout: 15000
+```
+
+Post-login flows pull this in via `runFlow:` as a preamble.
+
+For other text fields (search, profile-edit), follow the same pattern
+— a `__DEV__`-gated button that sets the value programmatically. Don't
+reach for clipper / appium-settings / `openLink` deep links / runScript
+shell-outs.
+
 ## Drift signals
 
 - `testID` is `string | undefined` — typos compile fine. Grep before

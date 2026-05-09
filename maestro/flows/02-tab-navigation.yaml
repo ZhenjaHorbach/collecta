@@ -1,0 +1,22 @@
+# Verifies tab navigation: each tab routes to its screen and back to
+# Feed. Catches regressions in (tabs)/_layout.tsx, route registration,
+# and screen mounts.
+appId: com.horbachevgen.collecta
+---
+- runFlow: 01-auth-bypass.yaml
+- tapOn:
+    id: 'tabbar-map'
+- assertVisible:
+    id: 'map-screen'
+- tapOn:
+    id: 'tabbar-collections'
+- assertVisible:
+    id: 'collections-screen'
+- tapOn:
+    id: 'tabbar-profile'
+- assertVisible:
+    id: 'profile-screen'
+- tapOn:
+    id: 'tabbar-feed'
+- assertVisible:
+    id: 'feed-screen'

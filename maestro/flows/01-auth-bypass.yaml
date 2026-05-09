@@ -1,0 +1,23 @@
+# Authenticated entry point — taps the dev-only "Dev sign-in" button
+# on the welcome screen. Used as a `runFlow:` preamble in every
+# post-login flow.
+#
+# Prereqs:
+#   - scripts/maestro-seed.sh has seeded test@collecta.app
+#   - EXPO_PUBLIC_TEST_EMAIL + EXPO_PUBLIC_TEST_PASSWORD in .env
+#
+# See maestro/README.md (Authenticated flows) and
+# .claude/rules/e2e.md (text-input section).
+appId: com.horbachevgen.collecta
+---
+- stopApp
+- launchApp:
+    clearState: true
+    permissions:
+      all: allow
+- tapOn:
+    id: 'welcome-dev-login'
+- extendedWaitUntil:
+    visible:
+      id: 'tabbar-feed'
+    timeout: 15000
