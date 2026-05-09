@@ -1,23 +1,24 @@
 #!/usr/bin/env bash
 # Wrapper around `maestro test` that handles the Android-specific bootstrap
-# Maestro 1.41 doesn't do automatically:
+# Maestro doesn't do automatically (verified on 1.41 and 2.5.1, on Apple
+# Silicon — auto-bootstrap fails with `tcp:7001 closed`):
 #   1. ensures ANDROID_HOME / PATH are set so adb is callable
 #   2. confirms an emulator is connected
 #   3. installs the Maestro driver APK + test APK if missing (extracts
-#      from ~/.maestro/maestro/lib/maestro-client-1.41.0.jar)
+#      them from `maestro-client*.jar` in ~/.maestro/)
 #   4. sets up `adb forward tcp:7001`
 #   5. starts the driver instrumentation in the background if no driver
 #      process is on the device yet
 #   6. exec's `maestro test "$@"`
 #
+# Version-agnostic: works with whatever Maestro is installed (no hardcoded
+# version anywhere). When upstream ships a working Android auto-bootstrap
+# this wrapper collapses to `exec maestro test "$@"` and can be deleted.
+#
 # Usage:
 #   maestro/run.sh maestro/flows/00-launch.yaml
 #   maestro/run.sh maestro/flows/                     # all flows
 #   maestro/run.sh maestro/flows/00-launch.yaml --debug-output debug
-#
-# Once Maestro 2.x ships a working Android auto-bootstrap (or we drop to a
-# version that already does), this wrapper collapses to
-# `exec maestro test "$@"` and can be deleted.
 #
 # NOT included: keyboard helpers. Flows can't type on the Android
 # emulator (Gboard stalls `inputText`). Auth uses the dev-only
@@ -35,7 +36,10 @@ if [[ -f .env ]]; then
   set +a
 fi
 
-# 1. ANDROID_HOME — Maestro silently fails without adb on the path.
+# 1. ANDROID_HOME — Maestro silently fails without adb on the path. The
+# default is the macOS-local install path; on CI (Linux) ANDROID_HOME is
+# already exported by the Android emulator action, so the fallback is
+# never used there.
 export ANDROID_HOME="${ANDROID_HOME:-$HOME/Library/Android/sdk}"
 export PATH="$PATH:$ANDROID_HOME/platform-tools:$ANDROID_HOME/emulator:$HOME/.maestro/bin"
 
@@ -63,10 +67,10 @@ adb shell pm list packages | grep -q '^package:dev.mobile.maestro.test$' || need
 
 if [[ $need_install -eq 1 ]]; then
   echo "[maestro/run] driver not installed; extracting from maestro-client.jar"
-  jar="$HOME/.maestro/maestro/lib/maestro-client-1.41.0.jar"
-  if [[ ! -f "$jar" ]]; then
-    jar=$(find "$HOME/.maestro" -name 'maestro-client*.jar' 2>/dev/null | head -1)
-  fi
+  # Find whichever maestro-client*.jar the installed CLI shipped with —
+  # 1.x ships maestro-client-X.Y.Z.jar in ~/.maestro/maestro/lib, 2.x
+  # ships maestro-client.jar in ~/.maestro/lib.
+  jar=$(find "$HOME/.maestro" -name 'maestro-client*.jar' 2>/dev/null | head -1)
   if [[ -z "${jar:-}" ]] || [[ ! -f "$jar" ]]; then
     echo "::error::Couldn't find maestro-client*.jar in ~/.maestro/" >&2
     exit 1

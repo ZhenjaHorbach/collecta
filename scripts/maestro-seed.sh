@@ -6,7 +6,8 @@
 #   scripts/maestro-seed.sh
 #
 # Required env (loaded from .env locally; CI passes via workflow `env:`):
-#   SUPABASE_URL                — project URL
+#   EXPO_PUBLIC_SUPABASE_URL    — project URL (same var the bundle uses,
+#                                 deduped from server-side SUPABASE_URL)
 #   SUPABASE_SERVICE_ROLE_KEY   — service role key (admin, server-only)
 #   EXPO_PUBLIC_TEST_PASSWORD   — password for the seeded test account
 #                                 (same var the Welcome dev sign-in
@@ -27,8 +28,8 @@ if [[ -f .env ]]; then
   set +a
 fi
 
-if [[ -z "${SUPABASE_URL:-}" ]]; then
-  echo "::error::SUPABASE_URL is required" >&2
+if [[ -z "${EXPO_PUBLIC_SUPABASE_URL:-}" && -z "${SUPABASE_URL:-}" ]]; then
+  echo "::error::EXPO_PUBLIC_SUPABASE_URL is required" >&2
   exit 1
 fi
 if [[ -z "${SUPABASE_SERVICE_ROLE_KEY:-}" ]]; then

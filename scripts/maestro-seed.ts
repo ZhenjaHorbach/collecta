@@ -29,10 +29,15 @@ const TEST_USERNAME = 'maestro_test';
 const TEST_DISPLAY_NAME = 'Maestro Test';
 
 async function main(): Promise<void> {
-  const url = process.env.SUPABASE_URL;
+  // Reuse EXPO_PUBLIC_SUPABASE_URL (also baked into the bundle) so CI
+  // and local .env need only one URL secret. Service role key stays
+  // un-prefixed — it must never reach the client bundle.
+  const url = process.env.EXPO_PUBLIC_SUPABASE_URL ?? process.env.SUPABASE_URL;
   const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
   if (!url || !serviceKey) {
-    throw new Error('SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY are required (admin operations).');
+    throw new Error(
+      'EXPO_PUBLIC_SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY are required (admin operations).'
+    );
   }
   if (!TEST_PASSWORD) {
     throw new Error(
@@ -83,15 +88,17 @@ async function main(): Promise<void> {
   // The on-user-created trigger handles this for new accounts, but an
   // upsert here keeps the row valid even if migrations changed the
   // trigger shape.
-  const { error: upsertErr } = await admin.from('users').upsert(
-    {
-      id: userId,
-      username: TEST_USERNAME,
-      display_name: TEST_DISPLAY_NAME,
-    },
-    { onConflict: 'id' }
-  );
-  if (upsertErr) throw upsertErr;
+  await admin
+    .from('users')
+    .upsert(
+      {
+        id: userId,
+        username: TEST_USERNAME,
+        display_name: TEST_DISPLAY_NAME,
+      },
+      { onConflict: 'id' }
+    )
+    .throwOnError();
 
   // 3. Cleanup residue. Order matters: child rows before parents to
   // satisfy FK constraints even if cascading isn't set up everywhere.
@@ -106,7 +113,7 @@ async function main(): Promise<void> {
   // collection-detail flows have something deterministic to anchor on.
   // Title is intentionally generic — flows match the testID by regex
   // (collection-card-.*), not by copy.
-  const { error: insertErr } = await admin
+  await admin
     .from('collections')
     .insert({
       creator_id: userId,
@@ -115,7 +122,6 @@ async function main(): Promise<void> {
       is_public: true,
     })
     .throwOnError();
-  if (insertErr) throw insertErr;
 
   console.log('[maestro-seed] seeded test collection');
   console.log('[maestro-seed] done.');

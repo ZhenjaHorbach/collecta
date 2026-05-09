@@ -41,7 +41,9 @@ export function WelcomeScreen() {
           <Pressable
             testID="welcome-dev-login"
             onPress={() => {
-              void signInWithEmail(DEV_TEST_EMAIL, DEV_TEST_PASSWORD);
+              signInWithEmail(DEV_TEST_EMAIL, DEV_TEST_PASSWORD).catch((err) => {
+                console.warn('[welcome] dev-login failed:', err);
+              });
             }}
             className="w-full py-3 rounded-full border border-dashed border-stroke items-center active:opacity-75">
             <Text className="text-text-dim text-xs">Dev sign-in</Text>
