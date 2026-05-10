@@ -3,7 +3,7 @@ import Constants from 'expo-constants';
 import * as Linking from 'expo-linking';
 import * as Location from 'expo-location';
 import * as Notifications from 'expo-notifications';
-import { useCallback, useEffect, useState, type ReactNode } from 'react';
+import { useCallback, useEffect, useRef, useState, type ReactNode } from 'react';
 import { useTranslation } from 'react-i18next';
 import { AppState, Platform, Pressable, ScrollView, Switch, Text, View } from 'react-native';
 
@@ -222,12 +222,16 @@ function normalizeStatus(status: string | undefined): PermissionStatus {
 // don't auto-resync after the user toggles a permission in system settings
 // and returns to the app, so we force a re-read on AppState 'active'.
 function useAppActiveRefresh(refresh: () => void | Promise<void>): void {
+  const refreshRef = useRef(refresh);
+  useEffect(() => {
+    refreshRef.current = refresh;
+  }, [refresh]);
   useEffect(() => {
     const sub = AppState.addEventListener('change', (state) => {
-      if (state === 'active') void refresh();
+      if (state === 'active') void refreshRef.current();
     });
     return () => sub.remove();
-  }, [refresh]);
+  }, []);
 }
 
 // Tap behavior shared by every permission row:
@@ -237,12 +241,7 @@ function useAppActiveRefresh(refresh: () => void | Promise<void>): void {
 //   undetermined   → request. If still not granted, fall through.
 //   denied         → request. Native dialog won't re-show after the first
 //                    deny on iOS / "don't ask again" on Android, but the
-//                    call still resolves; we then route to system settings.
-//                    On web, the browser silently denies once it has
-//                    persisted a "block" decision — Web Permissions API
-//                    has no programmatic re-prompt, so we surface a notify
-//                    explaining how to reset the permission via the lock
-//                    icon in the address bar.
+//                    call still resolves;
 
 interface WebDeniedHelp {
   title: string;
@@ -259,7 +258,19 @@ async function settleOrOpenSettings(
     if (Platform.OS !== 'web') await Linking.openSettings();
     return;
   }
-  const next = await request();
+  let next: { status: string };
+  try {
+    next = await request();
+  } catch (e) {
+    // Some browsers throw `DOMException` when the permission API is locked
+    // out (iframe without permissions-policy, hardware unreachable, secure
+    // context required). Surface the failure with the same browser-help
+    // notify instead of silently swallowing — the action the user needs to
+    // take is the same as a denied state.
+    console.warn('[settings] permission request failed', e);
+    void notify(webDeniedHelp);
+    return;
+  }
   if (next.status === 'granted') return;
   if (Platform.OS === 'web') {
     void notify(webDeniedHelp);

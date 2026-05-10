@@ -36,6 +36,12 @@ export function useDocumentTitle(): void {
     if (Platform.OS !== 'web') return;
     if (typeof document === 'undefined') return;
     const key = pathToTitleKey(pathname);
+    if (!key && __DEV__) {
+      // Surface unregistered routes during development so a new screen
+      // doesn't ship with the bare app name as its tab title. Production
+      // bundles strip this warning under the standard `__DEV__` guard.
+      console.warn('[useDocumentTitle] no title key for pathname:', pathname);
+    }
     document.title = key ? `${t(key)} — ${APP_NAME}` : APP_NAME;
   }, [pathname, t]);
 }
