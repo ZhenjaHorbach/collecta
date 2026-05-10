@@ -13,6 +13,18 @@ function decodeBase64(base64: string): Uint8Array {
   return out;
 }
 
+// Infer the upload extension from a URI. `blob:` and `data:` URIs (web)
+// don't carry a path-based extension — `split('.').pop()` happens to fall
+// through to JPEG for them, but only by accident. Be explicit so the
+// behaviour doesn't break if the input format ever changes.
+//
+// `compressImage` on web always encodes JPEG, so `jpg` is the right
+// fallback for opaque URIs. Native paths still carry .jpg/.png suffixes.
+export function inferUploadExtension(localUri: string): 'png' | 'jpg' {
+  if (localUri.startsWith('blob:') || localUri.startsWith('data:')) return 'jpg';
+  return localUri.split('.').pop()?.toLowerCase() === 'png' ? 'png' : 'jpg';
+}
+
 // Read the bytes behind `localUri` as a Uint8Array, ready for upload.
 //
 // Web: fetch the blob:/data: URL and copy its arrayBuffer. Blob URLs from

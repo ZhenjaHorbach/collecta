@@ -13,7 +13,7 @@ jest.mock('@hooks/useThemeVars', () => ({
 // eslint-disable-next-line import/first
 import { ConfirmDialogHost } from '../ConfirmDialog/ConfirmDialogHost';
 // eslint-disable-next-line import/first
-import { confirm, notify } from '../ConfirmDialog/state';
+import { actionSheet, confirm, notify } from '../ConfirmDialog/state';
 
 beforeEach(() => {
   jest.useFakeTimers();
@@ -100,5 +100,60 @@ describe('ConfirmDialog', () => {
     fireEvent.press(screen.getByTestId('confirm-dialog-ok'));
     await flushTimersAndPromises();
     expect(resolved).toBe(true);
+  });
+
+  it('renders an action button per entry and resolves with the picked index', async () => {
+    render(<ConfirmDialogHost />);
+    let resolved: number | null | undefined;
+    act(() => {
+      void actionSheet({
+        title: 'More',
+        cancelLabel: 'Close',
+        actions: [{ label: 'Edit' }, { label: 'Delete', destructive: true }],
+      }).then((v) => {
+        resolved = v;
+      });
+    });
+    expect(screen.getByTestId('confirm-dialog-action-0')).toBeTruthy();
+    expect(screen.getByTestId('confirm-dialog-action-1')).toBeTruthy();
+    expect(screen.getByText('Edit')).toBeTruthy();
+    expect(screen.getByText('Delete')).toBeTruthy();
+    fireEvent.press(screen.getByTestId('confirm-dialog-action-1'));
+    await flushTimersAndPromises();
+    expect(resolved).toBe(1);
+  });
+
+  it('resolves null when the action sheet is cancelled', async () => {
+    render(<ConfirmDialogHost />);
+    let resolved: number | null | undefined = -1;
+    act(() => {
+      void actionSheet({
+        title: 'More',
+        cancelLabel: 'Close',
+        actions: [{ label: 'Edit' }, { label: 'Delete', destructive: true }],
+      }).then((v) => {
+        resolved = v;
+      });
+    });
+    fireEvent.press(screen.getByTestId('confirm-dialog-cancel'));
+    await flushTimersAndPromises();
+    expect(resolved).toBeNull();
+  });
+
+  it('resolves null when the action sheet backdrop is tapped', async () => {
+    render(<ConfirmDialogHost />);
+    let resolved: number | null | undefined = -1;
+    act(() => {
+      void actionSheet({
+        title: 'More',
+        cancelLabel: 'Close',
+        actions: [{ label: 'Edit' }],
+      }).then((v) => {
+        resolved = v;
+      });
+    });
+    fireEvent.press(screen.getByTestId('confirm-dialog-backdrop'));
+    await flushTimersAndPromises();
+    expect(resolved).toBeNull();
   });
 });

@@ -17,6 +17,7 @@
     "react-compiler:check": "bash scripts/check-react-compiler.sh",
     "evals": "bash scripts/run-evals.sh",
     "design:sync": "bash scripts/sync-design.sh",
+    "icons:generate": "bash scripts/generate-icons.sh",
     "types:gen": "supabase gen types typescript --project-id $SUPABASE_PROJECT_ID --schema public | awk '/^} as const/{print; exit} {print}' > src/types/database.ts",
     "prepare": "husky"
   },

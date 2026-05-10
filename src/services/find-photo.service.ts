@@ -1,11 +1,11 @@
-import { readBytes } from '@utils/files.utils';
+import { inferUploadExtension, readBytes } from '@utils/files.utils';
 
 import { supabase } from './supabase.service';
 
 const BUCKET = 'finds-photos';
 
 export async function uploadFindPhoto(localUri: string, userId: string): Promise<string> {
-  const ext = localUri.split('.').pop()?.toLowerCase() === 'png' ? 'png' : 'jpg';
+  const ext = inferUploadExtension(localUri);
   const objectKey = `${userId}/${Date.now()}-${Math.random().toString(36).slice(2, 8)}.${ext}`;
 
   const bytes = await readBytes(localUri);
