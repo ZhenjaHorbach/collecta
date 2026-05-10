@@ -1,14 +1,7 @@
 import { useRouter } from 'expo-router';
 import { useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import {
-  FlatList,
-  RefreshControl,
-  Text,
-  TouchableOpacity,
-  useWindowDimensions,
-  View,
-} from 'react-native';
+import { FlatList, RefreshControl, Text, TouchableOpacity, View } from 'react-native';
 
 import { CollectionCard } from '@components/CollectionCard';
 import { EmptyState } from '@components/EmptyState';
@@ -17,6 +10,7 @@ import { Spinner } from '@components/Spinner';
 import { Tabs } from '@components/Tabs';
 import { useCollectionsDeleteRealtime } from '@hooks/useCollectionsDeleteRealtime';
 import { useColors } from '@hooks/useColors';
+import { useGridCellWidth } from '@hooks/useGridCellWidth';
 import { useMyCollections } from '@hooks/useMyCollections';
 import { DiscoverScreen } from '@screens/DiscoverScreen';
 import type { CollectionWithProgress } from '@services/collections.service';
@@ -34,8 +28,11 @@ export function CollectionsScreen() {
   const { t } = useTranslation();
   const router = useRouter();
   const colors = useColors();
-  const { width: screenWidth } = useWindowDimensions();
-  const cellWidth = (screenWidth - GRID_PADDING * 2 - GRID_GAP * (GRID_COLUMNS - 1)) / GRID_COLUMNS;
+  const cellWidth = useGridCellWidth({
+    padding: GRID_PADDING,
+    gap: GRID_GAP,
+    columns: GRID_COLUMNS,
+  });
   const [tab, setTab] = useState<TabKey>('discover');
   const { mine, pickedUp, loading, error, refetch } = useMyCollections();
 

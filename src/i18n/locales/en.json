@@ -135,6 +135,9 @@
     "chooseItem": "Where does this photo go?",
     "noCollections": "Create a collection first to save your finds.",
     "pickFromLibrary": "Choose from gallery",
+    "pickFile": "Select a photo",
+    "pickFileTitle": "Add to your collection",
+    "pickFileHint": "Pick an image from your computer to add to your collection.",
     "libraryPermissionDenied": "Gallery access is required to pick a photo.",
     "captureTitle": "New find",
     "addToCollection": "Add to collection",
@@ -471,7 +474,29 @@
       "appearance": "Appearance",
       "capture": "Capture",
       "notifications": "Notifications",
+      "permissions": "Permissions",
       "about": "About"
+    },
+    "permissions": {
+      "location": {
+        "label": "Location",
+        "subtitle": "Tag finds with where you took them"
+      },
+      "camera": {
+        "label": "Camera",
+        "subtitle": "Take photos of your finds"
+      },
+      "notifications": {
+        "label": "Notifications",
+        "subtitle": "Achievements and friends' activity"
+      },
+      "status": {
+        "granted": "Granted",
+        "denied": "Denied",
+        "undetermined": "Not asked"
+      },
+      "webDeniedTitle": "Browser blocked this permission",
+      "webDeniedBody": "Click the lock or info icon in your browser's address bar, open Site settings, and reset the permission. Then try again."
     },
     "pushNotifications": {
       "label": "Push notifications",

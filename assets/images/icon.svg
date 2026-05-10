@@ -1,0 +1,15 @@
+<svg width="1024" height="1024" viewBox="0 0 1024 1024" xmlns="http://www.w3.org/2000/svg">
+  <!-- Collecta brand mark: viewfinder frame + center subject dot on a
+       round gold disc. Render PNG variants via `scripts/generate-icons.sh`.
+       Transparent corners — iOS applies a rounded-square mask anyway and
+       Android adaptive can mask to a circle, but the visible content is
+       designed as a circle either way. -->
+  <circle cx="512" cy="512" r="512" fill="#D97706"/>
+  <g stroke="#FFFFFF" stroke-width="80" stroke-linecap="round" stroke-linejoin="round" fill="none">
+    <path d="M 280 420 L 280 280 L 420 280"/>
+    <path d="M 604 280 L 744 280 L 744 420"/>
+    <path d="M 744 604 L 744 744 L 604 744"/>
+    <path d="M 420 744 L 280 744 L 280 604"/>
+  </g>
+  <circle cx="512" cy="512" r="80" fill="#FFFFFF"/>
+</svg>

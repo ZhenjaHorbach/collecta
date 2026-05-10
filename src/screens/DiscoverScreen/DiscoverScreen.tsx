@@ -2,14 +2,7 @@ import { Image } from 'expo-image';
 import { useRouter } from 'expo-router';
 import { useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import {
-  FlatList,
-  Text,
-  TextInput,
-  TouchableOpacity,
-  useWindowDimensions,
-  View,
-} from 'react-native';
+import { FlatList, Text, TextInput, TouchableOpacity, View } from 'react-native';
 import { useDebounce } from 'use-debounce';
 
 import { EmptyState } from '@components/EmptyState';
@@ -23,6 +16,7 @@ import {
 import { useCollectionsDeleteRealtime } from '@hooks/useCollectionsDeleteRealtime';
 import { useColors } from '@hooks/useColors';
 import { useDiscover } from '@hooks/useDiscover';
+import { useGridCellWidth } from '@hooks/useGridCellWidth';
 import type { DiscoverCollection, DiscoverSort } from '@services/discover.service';
 
 const SEARCH_DEBOUNCE_MS = 300;
@@ -40,8 +34,11 @@ const GRID_COLUMNS = 2;
 export function DiscoverScreen() {
   const { t } = useTranslation();
   const router = useRouter();
-  const { width: screenWidth } = useWindowDimensions();
-  const cellWidth = (screenWidth - GRID_PADDING * 2 - GRID_GAP * (GRID_COLUMNS - 1)) / GRID_COLUMNS;
+  const cellWidth = useGridCellWidth({
+    padding: GRID_PADDING,
+    gap: GRID_GAP,
+    columns: GRID_COLUMNS,
+  });
   const [category, setCategory] = useState<CollectionCategory | null>(null);
   const [searchInput, setSearchInput] = useState('');
   const [sort, setSort] = useState<DiscoverSort>('popular');

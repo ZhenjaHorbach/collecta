@@ -5,12 +5,19 @@ import { SafeAreaView } from '@components/SafeAreaView';
 import { Spinner } from '@components/Spinner';
 import { useAuth } from '@hooks/useAuth';
 import { useColors } from '@hooks/useColors';
+import { useGridCellWidth } from '@hooks/useGridCellWidth';
 import { useUserProfile, type ProfileAchievement } from '@hooks/useUserProfile';
 import { getDisplayStreak, levelForXp } from '@utils/streak.utils';
 import { useRouter } from 'expo-router';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Image, Pressable, ScrollView, Text, View } from 'react-native';
+
+// Achievement grid: 4 columns inside px-5 outer padding (20 px each side),
+// gap-2 between cells (8 px).
+const ACHIEVEMENT_PADDING = 20;
+const ACHIEVEMENT_GAP = 8;
+const ACHIEVEMENT_COLUMNS = 4;
 
 export function ProfileScreen() {
   const { t } = useTranslation();
@@ -19,6 +26,11 @@ export function ProfileScreen() {
   const router = useRouter();
   const colors = useColors();
   const [activeAchievement, setActiveAchievement] = useState<ProfileAchievement | null>(null);
+  const achievementCellWidth = useGridCellWidth({
+    padding: ACHIEVEMENT_PADDING,
+    gap: ACHIEVEMENT_GAP,
+    columns: ACHIEVEMENT_COLUMNS,
+  });
 
   if (loading) {
     return (
@@ -141,6 +153,7 @@ export function ProfileScreen() {
                 <AchievementCell
                   key={a.id}
                   achievement={a}
+                  width={achievementCellWidth}
                   onPress={() => setActiveAchievement(a)}
                 />
               ))}
@@ -179,10 +192,11 @@ function StatCell({ value, label, suffix }: StatCellProps) {
 
 interface AchievementCellProps {
   achievement: ProfileAchievement;
+  width: number;
   onPress: () => void;
 }
 
-function AchievementCell({ achievement, onPress }: AchievementCellProps) {
+function AchievementCell({ achievement, width, onPress }: AchievementCellProps) {
   const earned = achievement.unlocked;
   return (
     <Pressable
@@ -190,7 +204,8 @@ function AchievementCell({ achievement, onPress }: AchievementCellProps) {
       onPress={onPress}
       accessibilityRole="button"
       accessibilityLabel={achievement.title}
-      className={`w-[22%] aspect-[0.9] items-center justify-center rounded-md border p-2 ${
+      style={{ width }}
+      className={`aspect-[0.9] items-center justify-center rounded-md border p-2 ${
         earned ? 'border-stroke bg-surface' : 'border-stroke/40 bg-surface-lo opacity-40'
       }`}>
       <View

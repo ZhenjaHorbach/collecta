@@ -3,16 +3,17 @@ import '@i18n';
 
 import { AchievementToastHost } from '@components/AchievementToast';
 import { AuthGuard } from '@components/AuthGuard';
+import { ConfirmDialogHost } from '@components/ConfirmDialog';
 import { ErrorBoundary } from '@components/ErrorBoundary';
 import { XpPopupHost } from '@components/XpPopup';
+import { useDbLifecycle } from '@hooks/useDbLifecycle';
+import { useDocumentTitle } from '@hooks/useDocumentTitle';
 import { usePushTokenRegistration } from '@hooks/usePushTokenRegistration';
 import { useTheme } from '@hooks/useTheme';
 import { useThemeVars } from '@hooks/useThemeVars';
 import { DarkTheme, DefaultTheme, ThemeProvider } from '@react-navigation/native';
-import { connector, db } from '@services/database.service';
 import { Stack } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
-import { useEffect } from 'react';
 import { View } from 'react-native';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import 'react-native-reanimated';
@@ -21,13 +22,8 @@ export default function RootLayout() {
   const { resolved } = useTheme();
   const themeVars = useThemeVars();
   usePushTokenRegistration();
-
-  useEffect(() => {
-    db.connect(connector);
-    return () => {
-      db.disconnect();
-    };
-  }, []);
+  useDbLifecycle();
+  useDocumentTitle();
 
   const isDark = resolved === 'dark';
 
@@ -59,6 +55,7 @@ export default function RootLayout() {
             </AuthGuard>
             <XpPopupHost />
             <AchievementToastHost />
+            <ConfirmDialogHost />
           </ErrorBoundary>
           <StatusBar style={isDark ? 'light' : 'dark'} />
         </View>

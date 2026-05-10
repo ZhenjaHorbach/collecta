@@ -19,7 +19,16 @@ const glyphByIcon: Record<Icon, string> = {
 export function GoBackButton({ icon = 'back', onPress, children }: GoBackButtonProps) {
   const router = useRouter();
   const { t } = useTranslation();
-  const handlePress = onPress ?? (() => router.back());
+  // After a hard reload on web the navigation stack is empty, so router.back()
+  // is a no-op — fall back to the tabs root so the button never feels dead.
+  const defaultBack = (): void => {
+    if (router.canGoBack()) {
+      router.back();
+    } else {
+      router.replace('/(tabs)');
+    }
+  };
+  const handlePress = onPress ?? defaultBack;
 
   return (
     <View className="px-4 pt-2 pb-3 flex-row items-center gap-3">
