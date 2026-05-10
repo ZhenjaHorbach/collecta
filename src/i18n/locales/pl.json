@@ -143,6 +143,9 @@
     "chooseItem": "Gdzie dodać to zdjęcie?",
     "noCollections": "Najpierw utwórz kolekcję, aby zapisywać znaleziska.",
     "pickFromLibrary": "Wybierz z galerii",
+    "pickFile": "Wybierz zdjęcie",
+    "pickFileTitle": "Dodaj do kolekcji",
+    "pickFileHint": "Wybierz obraz z komputera, aby dodać go do kolekcji.",
     "libraryPermissionDenied": "Wymagany jest dostęp do galerii, aby wybrać zdjęcie.",
     "captureTitle": "Nowe znalezisko",
     "addToCollection": "Dodaj do kolekcji",
@@ -483,7 +486,29 @@
       "appearance": "Wygląd",
       "capture": "Aparat",
       "notifications": "Powiadomienia",
+      "permissions": "Uprawnienia",
       "about": "O aplikacji"
+    },
+    "permissions": {
+      "location": {
+        "label": "Lokalizacja",
+        "subtitle": "Oznaczaj miejsca znalezisk"
+      },
+      "camera": {
+        "label": "Aparat",
+        "subtitle": "Rób zdjęcia znalezisk"
+      },
+      "notifications": {
+        "label": "Powiadomienia",
+        "subtitle": "Osiągnięcia i aktywność znajomych"
+      },
+      "status": {
+        "granted": "Przyznane",
+        "denied": "Odrzucone",
+        "undetermined": "Nie pytano"
+      },
+      "webDeniedTitle": "Przeglądarka zablokowała to uprawnienie",
+      "webDeniedBody": "Kliknij ikonę kłódki lub informacji w pasku adresu, otwórz ustawienia witryny i zresetuj uprawnienie. Następnie spróbuj ponownie."
     },
     "pushNotifications": {
       "label": "Powiadomienia push",

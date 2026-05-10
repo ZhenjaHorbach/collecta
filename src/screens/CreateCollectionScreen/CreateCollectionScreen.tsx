@@ -2,9 +2,10 @@ import { Image } from 'expo-image';
 import { useRouter } from 'expo-router';
 import { useEffect, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { ActivityIndicator, Alert, ScrollView, Text, TouchableOpacity, View } from 'react-native';
+import { ActivityIndicator, ScrollView, Text, TouchableOpacity, View } from 'react-native';
 
 import { Button } from '@components/Button';
+import { ConfirmDialogHost, notify } from '@components/ConfirmDialog';
 import { EmojiPickerSheet } from '@components/EmojiPickerSheet';
 import { GoBackButton } from '@components/GoBackButton';
 import { Input } from '@components/Input';
@@ -298,7 +299,11 @@ export function CreateCollectionScreen({ editingId }: CreateCollectionScreenProp
       if (ok) {
         router.replace(`/collection/${editingId}`);
       } else {
-        Alert.alert(t('collections.edit.errorTitle'), t('collections.edit.errorBody'));
+        void notify({
+          title: t('collections.edit.errorTitle'),
+          body: t('collections.edit.errorBody'),
+          buttonLabel: t('common.close'),
+        });
       }
       return;
     }
@@ -319,7 +324,11 @@ export function CreateCollectionScreen({ editingId }: CreateCollectionScreenProp
     if (id) {
       router.replace(`/collection/${id}`);
     } else {
-      Alert.alert(t('collections.create.errorTitle'), t('common.unknownError'));
+      void notify({
+        title: t('collections.create.errorTitle'),
+        body: t('common.unknownError'),
+        buttonLabel: t('common.close'),
+      });
     }
   };
 
@@ -355,10 +364,11 @@ export function CreateCollectionScreen({ editingId }: CreateCollectionScreenProp
       const ImagePicker = await import('expo-image-picker');
       const perm = await ImagePicker.requestMediaLibraryPermissionsAsync();
       if (!perm.granted) {
-        Alert.alert(
-          t('collections.create.items.fields.image.errorTitle'),
-          t('collections.create.items.fields.image.permissionDenied')
-        );
+        void notify({
+          title: t('collections.create.items.fields.image.errorTitle'),
+          body: t('collections.create.items.fields.image.permissionDenied'),
+          buttonLabel: t('common.close'),
+        });
         return;
       }
       const result = await ImagePicker.launchImageLibraryAsync({
@@ -387,10 +397,11 @@ export function CreateCollectionScreen({ editingId }: CreateCollectionScreenProp
       }
     } catch (err) {
       console.warn('[create-collection] image upload failed', err);
-      Alert.alert(
-        t('collections.create.items.fields.image.errorTitle'),
-        t('collections.create.items.fields.image.errorBody')
-      );
+      void notify({
+        title: t('collections.create.items.fields.image.errorTitle'),
+        body: t('collections.create.items.fields.image.errorBody'),
+        buttonLabel: t('common.close'),
+      });
     } finally {
       setUploadingItemIds((prev) => {
         const next = new Set(prev);
@@ -891,6 +902,9 @@ export function CreateCollectionScreen({ editingId }: CreateCollectionScreenProp
         }}
         onClose={() => setEmojiPickerOpen(false)}
       />
+      {/* Per-screen host so notify/confirm overlays render above iOS's
+          native modal presentation of this Stack.Screen. */}
+      <ConfirmDialogHost />
     </SafeAreaView>
   );
 }

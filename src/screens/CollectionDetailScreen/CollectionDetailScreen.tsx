@@ -5,16 +5,15 @@ import { useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import {
   ActionSheetIOS,
-  Alert,
   FlatList,
   Platform,
   Share,
   Text,
   TouchableOpacity,
-  useWindowDimensions,
   View,
 } from 'react-native';
 
+import { actionSheet, confirm, notify } from '@components/ConfirmDialog';
 import { GoBackButton } from '@components/GoBackButton';
 import { ProgressBar } from '@components/ProgressBar';
 import { ReportSheet } from '@components/ReportSheet';
@@ -25,6 +24,7 @@ import { useAuth } from '@hooks/useAuth';
 import { useCollection } from '@hooks/useCollection';
 import { useDeleteCollection } from '@hooks/useDeleteCollection';
 import { useForkCollection } from '@hooks/useForkCollection';
+import { useGridCellWidth } from '@hooks/useGridCellWidth';
 import { useReport } from '@hooks/useReport';
 import type {
   CollectionDetail,
@@ -59,23 +59,26 @@ export function CollectionDetailScreen() {
     setReportSheetOpen(true);
   };
 
-  const onConfirmDelete = () => {
+  const onConfirmDelete = async (): Promise<void> => {
     if (!data) return;
-    Alert.alert(t('collections.delete.confirmTitle'), t('collections.delete.confirmBody'), [
-      { text: t('common.cancel'), style: 'cancel' },
-      {
-        text: t('collections.delete.confirmAction'),
-        style: 'destructive',
-        onPress: async () => {
-          const ok = await runDelete(data.id);
-          if (ok) {
-            router.replace('/(tabs)/collections');
-            return;
-          }
-          Alert.alert(t('collections.delete.errorTitle'), t('collections.delete.errorBody'));
-        },
-      },
-    ]);
+    const ok = await confirm({
+      title: t('collections.delete.confirmTitle'),
+      body: t('collections.delete.confirmBody'),
+      confirmLabel: t('collections.delete.confirmAction'),
+      cancelLabel: t('common.cancel'),
+      destructive: true,
+    });
+    if (!ok) return;
+    const success = await runDelete(data.id);
+    if (success) {
+      router.replace('/(tabs)/collections');
+      return;
+    }
+    void notify({
+      title: t('collections.delete.errorTitle'),
+      body: t('collections.delete.errorBody'),
+      buttonLabel: t('common.close'),
+    });
   };
 
   const onPressMore = () => {
@@ -97,7 +100,7 @@ export function CollectionDetailScreen() {
           if (data) router.push(`/collection/edit/${data.id}`);
           return;
         }
-        if (selected === 2) onConfirmDelete();
+        if (selected === 2) void onConfirmDelete();
         return;
       }
       if (selected === 1) openReportSheet();
@@ -114,22 +117,22 @@ export function CollectionDetailScreen() {
       );
       return;
     }
-    if (isOwner) {
-      Alert.alert(t('moderation.report.more'), undefined, [
-        { text: t('common.close'), style: 'cancel' },
-        { text: options[1], onPress: () => onSelected(1) },
-        { text: options[2], style: 'destructive', onPress: () => onSelected(2) },
-      ]);
-      return;
-    }
-    Alert.alert(t('moderation.report.more'), undefined, [
-      { text: t('common.close'), style: 'cancel' },
-      {
-        text: options[1],
-        style: 'destructive',
-        onPress: () => onSelected(1),
-      },
-    ]);
+    // Strip the cancel slot — actionSheet renders its own cancel — and pass
+    // the rest. The picked index maps back to the original `options` array
+    // by adding 1 (skipping the cancel at 0).
+    const visible = options.slice(1);
+    const destructiveIdx = isOwner ? visible.length - 1 : 0;
+    void actionSheet({
+      title: t('moderation.report.more'),
+      cancelLabel: t('common.close'),
+      actions: visible.map((label, i) => ({
+        label,
+        destructive: i === destructiveIdx,
+      })),
+    }).then((picked) => {
+      if (picked == null) return;
+      onSelected(picked + 1);
+    });
   };
 
   const onSubmitReport = async (reason: ReportReason, comment: string) => {
@@ -142,18 +145,27 @@ export function CollectionDetailScreen() {
     });
     if (!err) {
       setReportSheetOpen(false);
-      Alert.alert(t('moderation.report.successTitle'), t('moderation.report.successBody'));
+      void notify({
+        title: t('moderation.report.successTitle'),
+        body: t('moderation.report.successBody'),
+        buttonLabel: t('common.close'),
+      });
       return;
     }
     if (err.code === 'already_reported') {
       setReportSheetOpen(false);
-      Alert.alert(
-        t('moderation.report.successTitle'),
-        t('moderation.report.errors.alreadyReported')
-      );
+      void notify({
+        title: t('moderation.report.successTitle'),
+        body: t('moderation.report.errors.alreadyReported'),
+        buttonLabel: t('common.close'),
+      });
       return;
     }
-    Alert.alert(t('common.unknownError'), t(reportErrorKey(err)));
+    void notify({
+      title: t('common.unknownError'),
+      body: t(reportErrorKey(err)),
+      buttonLabel: t('common.close'),
+    });
   };
 
   return (
@@ -233,19 +245,30 @@ const GRID_GAP = 8;
 function DetailBody({ data, isOwner }: { data: CollectionDetail; isOwner: boolean }) {
   const { t } = useTranslation();
   const router = useRouter();
-  const { width: screenWidth } = useWindowDimensions();
-  const cellSize = (screenWidth - GRID_PADDING * 2 - GRID_GAP * (GRID_COLUMNS - 1)) / GRID_COLUMNS;
+  const cellSize = useGridCellWidth({
+    padding: GRID_PADDING,
+    gap: GRID_GAP,
+    columns: GRID_COLUMNS,
+  });
   const fork = useForkCollection(isOwner ? undefined : data.id, data.creator_id);
 
   const onFork = async () => {
     const newId = await fork.fork();
     if (newId) {
-      Alert.alert(t('collections.fork.successToastTitle'), t('collections.fork.successToastBody'));
+      void notify({
+        title: t('collections.fork.successToastTitle'),
+        body: t('collections.fork.successToastBody'),
+        buttonLabel: t('common.close'),
+      });
       router.replace(`/collection/${newId}`);
       return;
     }
     if (fork.error) {
-      Alert.alert(t('collections.fork.errorTitle'), t('collections.fork.errorBody'));
+      void notify({
+        title: t('collections.fork.errorTitle'),
+        body: t('collections.fork.errorBody'),
+        buttonLabel: t('common.close'),
+      });
     }
   };
 

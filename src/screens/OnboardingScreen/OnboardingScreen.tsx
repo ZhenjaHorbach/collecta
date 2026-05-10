@@ -1,4 +1,5 @@
 import { SafeAreaView } from '@components/SafeAreaView';
+import { MAX_CONTENT_WIDTH } from '@constants/layout';
 import { useRouter } from 'expo-router';
 import { useCallback, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
@@ -26,7 +27,10 @@ const SLIDES: readonly Slide[] = [
 export function OnboardingScreen() {
   const router = useRouter();
   const { t } = useTranslation();
-  const { width } = useWindowDimensions();
+  const { width: rawWidth } = useWindowDimensions();
+  // SafeAreaView caps the rendering area; useWindowDimensions still reports
+  // the full viewport, so clamp before sizing horizontal pager slides.
+  const width = Math.min(rawWidth, MAX_CONTENT_WIDTH);
   const [index, setIndex] = useState(0);
   const listRef = useRef<FlatList<Slide>>(null);
 

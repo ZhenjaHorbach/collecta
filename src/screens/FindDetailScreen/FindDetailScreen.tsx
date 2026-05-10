@@ -5,18 +5,19 @@ import { useCallback, useMemo, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import {
   ActionSheetIOS,
-  Alert,
   Platform,
   Pressable,
   ScrollView,
   Text,
   TouchableOpacity,
+  useWindowDimensions,
   View,
   type View as RNView,
 } from 'react-native';
 import { Gesture, GestureDetector } from 'react-native-gesture-handler';
 import Animated, { useAnimatedStyle, useSharedValue, withTiming } from 'react-native-reanimated';
 
+import { actionSheet, notify } from '@components/ConfirmDialog';
 import { GoBackButton } from '@components/GoBackButton';
 import { ReactionBar } from '@components/ReactionBar';
 import { ReportSheet } from '@components/ReportSheet';
@@ -25,6 +26,7 @@ import { Spinner } from '@components/Spinner';
 import { MapPreview } from '@components/MapPreview';
 import { FindShareCard } from '@components/share';
 import { CATEGORY_EMOJI, type CollectionCategory } from '@constants/categories';
+import { MAX_CONTENT_WIDTH } from '@constants/layout';
 import { useAuth } from '@hooks/useAuth';
 import { useFindDetail } from '@hooks/useFindDetail';
 import { useReactions } from '@hooks/useReactions';
@@ -83,11 +85,19 @@ export function FindDetailScreen() {
       );
       return;
     }
-    Alert.alert(t('moderation.report.more'), undefined, [
-      { text: t('common.close'), style: 'cancel' },
-      ...(isOwner ? [{ text: t('find.retake'), onPress: onRetake }] : []),
-      { text: t('find.report'), style: 'destructive' as const, onPress: openSheet },
-    ]);
+    // labels[0] / handlers[0] is the cancel slot — actionSheet has its own
+    // cancel button, so skip it and pass labels 1..n.
+    void actionSheet({
+      title: t('moderation.report.more'),
+      cancelLabel: t('common.close'),
+      actions: labels.slice(1).map((label, idx) => ({
+        label,
+        destructive: idx === labels.length - 2, // last is "report"
+      })),
+    }).then((picked) => {
+      if (picked == null) return;
+      handlers[picked + 1]?.();
+    });
   }, [data, isOwner, resetReport, router, t]);
 
   const onSubmitReport = useCallback(
@@ -101,18 +111,27 @@ export function FindDetailScreen() {
       });
       if (!err) {
         setReportSheetOpen(false);
-        Alert.alert(t('moderation.report.successTitle'), t('moderation.report.successBody'));
+        void notify({
+          title: t('moderation.report.successTitle'),
+          body: t('moderation.report.successBody'),
+          buttonLabel: t('common.close'),
+        });
         return;
       }
       if (err.code === 'already_reported') {
         setReportSheetOpen(false);
-        Alert.alert(
-          t('moderation.report.successTitle'),
-          t('moderation.report.errors.alreadyReported')
-        );
+        void notify({
+          title: t('moderation.report.successTitle'),
+          body: t('moderation.report.errors.alreadyReported'),
+          buttonLabel: t('common.close'),
+        });
         return;
       }
-      Alert.alert(t('common.unknownError'), t(reportErrorKey(err)));
+      void notify({
+        title: t('common.unknownError'),
+        body: t(reportErrorKey(err)),
+        buttonLabel: t('common.close'),
+      });
     },
     [data, submitReport, t]
   );
@@ -358,11 +377,24 @@ interface HeroPhotoProps {
   aiLabel: string;
 }
 
+// Hero photo aspect: phone-like 1:1.1 (W:H). Capped at HERO_MAX_HEIGHT so
+// the photo doesn't eat the full viewport on tablets / desktop web; the
+// width is also capped via SafeAreaView's MAX_CONTENT_WIDTH so the cap
+// triggers naturally above ~545 px viewport width.
+const HERO_ASPECT = 1.1;
+const HERO_MAX_HEIGHT = 600;
+
 function HeroPhoto({ photoUrl, aiPercent, aiLabel }: HeroPhotoProps) {
   const scale = useSharedValue(1);
   const focalX = useSharedValue(0);
   const focalY = useSharedValue(0);
   const baseScale = useSharedValue(1);
+  const { width: rawWidth } = useWindowDimensions();
+  // Computed pixel height — explicit because RN-Web's percentage `height: 100%`
+  // doesn't reliably resolve against an `aspect-ratio`-derived parent height,
+  // which left the inner image collapsed (rendered, but 0 px tall).
+  const heroWidth = Math.min(rawWidth, MAX_CONTENT_WIDTH);
+  const heroHeight = Math.min(heroWidth * HERO_ASPECT, HERO_MAX_HEIGHT);
 
   const pinch = Gesture.Pinch()
     .onUpdate((e) => {
@@ -383,9 +415,14 @@ function HeroPhoto({ photoUrl, aiPercent, aiLabel }: HeroPhotoProps) {
   }));
 
   return (
-    <View className="aspect-[1/1.1] overflow-hidden bg-surface">
+    <View style={{ height: heroHeight }} className="overflow-hidden bg-surface">
       <GestureDetector gesture={pinch}>
-        <Animated.View className="w-full h-full" style={animatedStyle}>
+        {/* Inline width/height instead of className — NativeWind's className
+            resolution doesn't always reach Animated.View's underlying div on
+            web, leaving the img-host with no height and the photo invisible
+            despite loading successfully. Inline + animatedStyle still composes
+            via Reanimated. */}
+        <Animated.View style={[{ width: '100%', height: '100%' }, animatedStyle]}>
           <Image
             source={{ uri: photoUrl }}
             style={{ width: '100%', height: '100%' }}

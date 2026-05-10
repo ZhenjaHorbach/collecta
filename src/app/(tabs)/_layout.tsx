@@ -1,10 +1,13 @@
+import { notify } from '@components/ConfirmDialog';
 import { HapticTab } from '@components/HapticTab';
 import { IconSymbol } from '@components/IconSymbol';
+import { MAX_CONTENT_WIDTH } from '@constants/layout';
 import { useColors } from '@hooks/useColors';
+import { useHasCamera } from '@hooks/useHasCamera';
 import { useMyCollections } from '@hooks/useMyCollections';
 import { Tabs } from 'expo-router';
 import { useTranslation } from 'react-i18next';
-import { Alert, TouchableOpacity, View } from 'react-native';
+import { Platform, TouchableOpacity, View } from 'react-native';
 
 function CameraTabButton({
   onPress,
@@ -12,6 +15,7 @@ function CameraTabButton({
   bgColor,
   iconColor,
   glowColor,
+  iconName,
   disabled,
 }: {
   onPress?: (e: unknown) => void;
@@ -19,6 +23,7 @@ function CameraTabButton({
   bgColor: string;
   iconColor: string;
   glowColor: string;
+  iconName: 'camera.fill' | 'photo.fill';
   disabled?: boolean;
 }) {
   return (
@@ -46,7 +51,7 @@ function CameraTabButton({
           elevation: disabled ? 0 : 10,
           opacity: disabled ? 0.4 : 1,
         }}>
-        <IconSymbol name="camera.fill" size={28} color={iconColor} />
+        <IconSymbol name={iconName} size={28} color={iconColor} />
       </View>
     </TouchableOpacity>
   );
@@ -61,84 +66,109 @@ export default function TabLayout() {
   // focus, which catches the post-creation refresh.
   const { mine, pickedUp, loading } = useMyCollections();
   const cameraDisabled = !loading && mine.length === 0 && pickedUp.length === 0;
+  // No camera on the device → swap the shutter icon for a photo-library icon
+  // so the affordance matches what the screen now does (file picker).
+  // `null` (web probe in flight) keeps the camera icon by default.
+  const hasCamera = useHasCamera();
+  const tabIconName: 'camera.fill' | 'photo.fill' =
+    hasCamera === false ? 'photo.fill' : 'camera.fill';
 
   return (
-    <Tabs
-      screenOptions={{
-        headerShown: false,
-        tabBarButton: HapticTab,
-        tabBarStyle: {
-          backgroundColor: colors.surfaceLo,
-          borderTopColor: colors.stroke,
-          height: 88,
-          paddingBottom: 28,
-          paddingTop: 10,
-        },
-        tabBarActiveTintColor: colors.gold,
-        tabBarInactiveTintColor: colors.textMuted,
-        tabBarLabelStyle: {
-          fontSize: 10.5,
-          fontWeight: '600',
-          letterSpacing: 0.2,
-        },
-      }}>
-      <Tabs.Screen
-        name="index"
-        options={{
-          title: t('tabs.feed'),
-          tabBarButtonTestID: 'tabbar-feed',
-          tabBarIcon: ({ color }) => <IconSymbol name="house.fill" size={24} color={color} />,
-        }}
-      />
-      <Tabs.Screen
-        name="map"
-        options={{
-          title: t('tabs.map'),
-          tabBarButtonTestID: 'tabbar-map',
-          tabBarIcon: ({ color }) => <IconSymbol name="map" size={24} color={color} />,
-        }}
-      />
-      <Tabs.Screen
-        name="camera"
-        options={{
-          title: '',
-          tabBarButton: (props) => (
-            <CameraTabButton
-              onPress={
-                cameraDisabled
-                  ? () => {
-                      Alert.alert(t('tabs.cameraDisabled.title'), t('tabs.cameraDisabled.body'));
-                    }
-                  : (props.onPress as ((e: unknown) => void) | undefined)
-              }
-              label={t('tabs.camera')}
-              bgColor={colors.gold}
-              iconColor={colors.onGold}
-              glowColor={colors.gold}
-              disabled={cameraDisabled}
-            />
-          ),
-          tabBarStyle: { display: 'none' },
-        }}
-      />
-      <Tabs.Screen
-        name="collections"
-        options={{
-          title: t('tabs.collections'),
-          tabBarButtonTestID: 'tabbar-collections',
-          tabBarIcon: ({ color }) => (
-            <IconSymbol name="square.grid.2x2.fill" size={24} color={color} />
-          ),
-        }}
-      />
-      <Tabs.Screen
-        name="profile"
-        options={{
-          title: t('tabs.profile'),
-          tabBarButtonTestID: 'tabbar-profile',
-          tabBarIcon: ({ color }) => <IconSymbol name="person.fill" size={24} color={color} />,
-        }}
-      />
-    </Tabs>
+    <View className="flex-1 bg-bg">
+      <Tabs
+        screenOptions={{
+          headerShown: false,
+          tabBarButton: HapticTab,
+          tabBarStyle: {
+            backgroundColor: colors.surfaceLo,
+            borderTopColor: colors.stroke,
+            borderTopLeftRadius: 22,
+            borderTopRightRadius: 22,
+            height: 88,
+            // iOS home-indicator needs the asymmetric paddingBottom; on web /
+            // Android the items just look bottom-heavy. Balance the padding
+            // there so icons + labels sit visually centered in the bar.
+            paddingTop: Platform.OS === 'ios' ? 10 : 19,
+            paddingBottom: Platform.OS === 'ios' ? 28 : 19,
+            // Match the SafeAreaView content cap so the tab row centres on
+            // tablet / desktop web instead of stretching edge-to-edge. The
+            // wrapping <View className="bg-bg"> paints behind the gap so the
+            // sides aren't transparent (html background was showing through).
+            width: '100%',
+            maxWidth: MAX_CONTENT_WIDTH,
+            alignSelf: 'center',
+          },
+          tabBarActiveTintColor: colors.gold,
+          tabBarInactiveTintColor: colors.textMuted,
+          tabBarLabelStyle: {
+            fontSize: 10.5,
+            fontWeight: '600',
+            letterSpacing: 0.2,
+          },
+        }}>
+        <Tabs.Screen
+          name="index"
+          options={{
+            title: t('tabs.feed'),
+            tabBarButtonTestID: 'tabbar-feed',
+            tabBarIcon: ({ color }) => <IconSymbol name="house.fill" size={24} color={color} />,
+          }}
+        />
+        <Tabs.Screen
+          name="map"
+          options={{
+            title: t('tabs.map'),
+            tabBarButtonTestID: 'tabbar-map',
+            tabBarIcon: ({ color }) => <IconSymbol name="map" size={24} color={color} />,
+          }}
+        />
+        <Tabs.Screen
+          name="camera"
+          options={{
+            title: '',
+            tabBarButton: (props) => (
+              <CameraTabButton
+                onPress={
+                  cameraDisabled
+                    ? () => {
+                        void notify({
+                          title: t('tabs.cameraDisabled.title'),
+                          body: t('tabs.cameraDisabled.body'),
+                          buttonLabel: t('common.close'),
+                        });
+                      }
+                    : (props.onPress as ((e: unknown) => void) | undefined)
+                }
+                label={t('tabs.camera')}
+                bgColor={colors.gold}
+                iconColor={colors.onGold}
+                glowColor={colors.gold}
+                iconName={tabIconName}
+                disabled={cameraDisabled}
+              />
+            ),
+            tabBarStyle: { display: 'none' },
+          }}
+        />
+        <Tabs.Screen
+          name="collections"
+          options={{
+            title: t('tabs.collections'),
+            tabBarButtonTestID: 'tabbar-collections',
+            tabBarIcon: ({ color }) => (
+              <IconSymbol name="square.grid.2x2.fill" size={24} color={color} />
+            ),
+          }}
+        />
+        <Tabs.Screen
+          name="profile"
+          options={{
+            title: t('tabs.profile'),
+            tabBarButtonTestID: 'tabbar-profile',
+            tabBarIcon: ({ color }) => <IconSymbol name="person.fill" size={24} color={color} />,
+          }}
+        />
+      </Tabs>
+    </View>
   );
 }

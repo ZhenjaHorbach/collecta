@@ -1,4 +1,5 @@
 import { Button } from '@components/Button';
+import { notify } from '@components/ConfirmDialog';
 import { GoBackButton } from '@components/GoBackButton';
 import { Input } from '@components/Input';
 import { SafeAreaView } from '@components/SafeAreaView';
@@ -7,7 +8,7 @@ import { useRouter } from 'expo-router';
 import type { Href } from 'expo-router';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Alert, Text, View } from 'react-native';
+import { Text, View } from 'react-native';
 
 export function SignUpScreen() {
   const router = useRouter();
@@ -28,10 +29,11 @@ export function SignUpScreen() {
         router.replace(`/auth/verify?email=${encodeURIComponent(trimmedEmail)}` as Href);
       }
     } catch (err) {
-      Alert.alert(
-        t('auth.signUp.errorTitle'),
-        err instanceof Error ? err.message : t('common.unknownError')
-      );
+      void notify({
+        title: t('auth.signUp.errorTitle'),
+        body: err instanceof Error ? err.message : t('common.unknownError'),
+        buttonLabel: t('common.close'),
+      });
     } finally {
       setSubmitting(false);
     }
@@ -43,10 +45,11 @@ export function SignUpScreen() {
       await signInWithGoogle();
       router.replace('/(tabs)');
     } catch (err) {
-      Alert.alert(
-        t('auth.signUp.googleErrorTitle'),
-        err instanceof Error ? err.message : t('common.unknownError')
-      );
+      void notify({
+        title: t('auth.signUp.googleErrorTitle'),
+        body: err instanceof Error ? err.message : t('common.unknownError'),
+        buttonLabel: t('common.close'),
+      });
     } finally {
       setSubmitting(false);
     }

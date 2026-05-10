@@ -1,4 +1,5 @@
 import { Button } from '@components/Button';
+import { notify } from '@components/ConfirmDialog';
 import { GoBackButton } from '@components/GoBackButton';
 import { Input } from '@components/Input';
 import { SafeAreaView } from '@components/SafeAreaView';
@@ -6,7 +7,7 @@ import { verifyEmailOtp } from '@services/auth.service';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Alert, Text, View } from 'react-native';
+import { Text, View } from 'react-native';
 
 export function VerifyScreen() {
   const router = useRouter();
@@ -22,10 +23,11 @@ export function VerifyScreen() {
       await verifyEmailOtp(params.email, token.trim());
       router.replace('/(tabs)');
     } catch (err) {
-      Alert.alert(
-        t('auth.verify.errorTitle'),
-        err instanceof Error ? err.message : t('common.unknownError')
-      );
+      void notify({
+        title: t('auth.verify.errorTitle'),
+        body: err instanceof Error ? err.message : t('common.unknownError'),
+        buttonLabel: t('common.close'),
+      });
     } finally {
       setSubmitting(false);
     }

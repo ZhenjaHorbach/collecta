@@ -15,6 +15,7 @@ const MAPPING = {
   'chevron.right': 'chevron-right',
   map: 'map',
   'camera.fill': 'photo-camera',
+  'photo.fill': 'photo-library',
   'square.grid.2x2.fill': 'apps',
   'person.fill': 'person',
   gear: 'settings',

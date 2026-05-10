@@ -1,11 +1,10 @@
 import { CameraView, useCameraPermissions } from 'expo-camera';
-import * as FileSystem from 'expo-file-system/legacy';
+import * as Linking from 'expo-linking';
 
 import { router, useFocusEffect, useLocalSearchParams } from 'expo-router';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import {
-  Alert,
   FlatList,
   Modal,
   Pressable,
@@ -20,13 +19,16 @@ import { SafeAreaView as RNSafeAreaView } from 'react-native-safe-area-context';
 import { ActiveCollectionChip, ChooseCollectionSheet } from '@components/ActiveCollectionChip';
 import { AnalyzingOverlay } from '@components/AnalyzingOverlay';
 import { CaptureResultSheet } from '@components/CaptureResultSheet';
+import { notify } from '@components/ConfirmDialog';
 import { CreateItemSheet } from '@components/CreateItemSheet';
 import { GoBackButton } from '@components/GoBackButton';
 import { SafeAreaView } from '@components/SafeAreaView';
 import { Spinner } from '@components/Spinner';
+import { MAX_CONTENT_CLASS } from '@constants/layout';
 import { useActiveCollection } from '@hooks/useActiveCollection';
 import { useAuth } from '@hooks/useAuth';
 import { useCapture } from '@hooks/useCapture';
+import { useHasCamera } from '@hooks/useHasCamera';
 import { useSetting } from '@hooks/useSetting';
 import { useUserLocation } from '@hooks/useUserLocation';
 import {
@@ -39,6 +41,7 @@ import {
   type CollectionWithProgress,
 } from '@services/collections.service';
 import { extractGpsFromExif } from '@utils/exif.utils';
+import { persistTempPhoto } from '@utils/files.utils';
 
 export function CameraScreen() {
   const { t } = useTranslation();
@@ -46,6 +49,7 @@ export function CameraScreen() {
   const params = useLocalSearchParams<{ collection_item_id?: string }>();
   const initialItemId = params.collection_item_id ?? null;
 
+  const hasCamera = useHasCamera();
   const [permission, requestPermission] = useCameraPermissions();
   const [photoUri, setPhotoUri] = useState<string | null>(null);
   const [rawPhotoUri, setRawPhotoUri] = useState<string | null>(null);
@@ -251,8 +255,7 @@ export function CameraScreen() {
       const photo = await cam.takePictureAsync({ quality: 0.7, exif: false });
       if (!photo?.uri) return;
 
-      const stableUri = `${FileSystem.documentDirectory}photo_${Date.now()}.jpg`;
-      await FileSystem.copyAsync({ from: photo.uri, to: stableUri });
+      const stableUri = await persistTempPhoto(photo.uri);
 
       const tagged = autoTagLocation ? deviceLocation : null;
       setPhotoUri(stableUri);
@@ -277,7 +280,11 @@ export function CameraScreen() {
       const ImagePicker = await import('expo-image-picker');
       const perm = await ImagePicker.requestMediaLibraryPermissionsAsync();
       if (!perm.granted) {
-        Alert.alert(t('camera.permissionTitle'), t('camera.libraryPermissionDenied'));
+        void notify({
+          title: t('camera.permissionTitle'),
+          body: t('camera.libraryPermissionDenied'),
+          buttonLabel: t('common.close'),
+        });
         return;
       }
       const result = await ImagePicker.launchImageLibraryAsync({
@@ -287,8 +294,7 @@ export function CameraScreen() {
       });
       if (result.canceled || !result.assets?.[0]) return;
       const picked = result.assets[0];
-      const stableUri = `${FileSystem.documentDirectory}photo_${Date.now()}.jpg`;
-      await FileSystem.copyAsync({ from: picked.uri, to: stableUri });
+      const stableUri = await persistTempPhoto(picked.uri);
       const exifLoc = autoTagLocation ? extractGpsFromExif(picked.exif) : null;
       setPhotoUri(stableUri);
       setRawPhotoUri(stableUri);
@@ -382,13 +388,29 @@ export function CameraScreen() {
       router.back();
     } catch (e) {
       console.warn('[onSave] commit failed', e);
-      Alert.alert(t('common.error'), t('camera.errorSave'));
+      void notify({
+        title: t('common.error'),
+        body: t('camera.errorSave'),
+        buttonLabel: t('common.close'),
+      });
     }
   }, [user, capture, clearLocal, note, resolvedContext, t]);
 
-  if (!permission) return <Spinner />;
+  // Web probe still in flight — avoid flashing the permission screen before
+  // we know whether to render shutter UI or the file-picker fallback.
+  if (hasCamera === null) return <Spinner />;
 
-  if (!permission.granted) {
+  if (hasCamera && !permission) return <Spinner />;
+
+  if (hasCamera && !permission?.granted) {
+    // After the first deny on iOS / "don't ask again" on Android,
+    // requestPermission() resolves immediately with denied without showing
+    // the system dialog. Fall through to Linking.openSettings() so the
+    // button always lands somewhere actionable instead of silently no-op'ing.
+    const onGrantPress = async (): Promise<void> => {
+      const next = await requestPermission();
+      if (!next.granted) await Linking.openSettings();
+    };
     return (
       <SafeAreaView>
         <GoBackButton icon="close" />
@@ -397,7 +419,9 @@ export function CameraScreen() {
           <Text className="text-text-dim text-base text-center">{t('camera.permissionBody')}</Text>
           <Pressable
             testID="camera-permission-grant-button"
-            onPress={requestPermission}
+            onPress={() => {
+              void onGrantPress();
+            }}
             className="bg-gold rounded-md p-4 items-center w-full">
             <Text className="text-on-gold font-semibold">{t('camera.permissionGrant')}</Text>
           </Pressable>
@@ -539,15 +563,19 @@ export function CameraScreen() {
   }
 
   return (
-    <View testID="camera-screen" className="flex-1 bg-app-shell">
-      <CameraView
-        ref={cameraRef}
-        style={StyleSheet.absoluteFill}
-        facing="back"
-        onCameraReady={() => setCameraReady(true)}
-      />
+    <View testID="camera-screen" className={hasCamera ? 'flex-1 bg-app-shell' : 'flex-1 bg-bg'}>
+      {hasCamera ? (
+        <CameraView
+          ref={cameraRef}
+          style={StyleSheet.absoluteFill}
+          facing="back"
+          onCameraReady={() => setCameraReady(true)}
+        />
+      ) : null}
       <RNSafeAreaView style={StyleSheet.absoluteFill} pointerEvents="box-none">
-        <View className="flex-1 justify-between p-4" pointerEvents="box-none">
+        <View
+          className={`flex-1 justify-between p-4 ${MAX_CONTENT_CLASS}`}
+          pointerEvents="box-none">
           <View className="gap-3" pointerEvents="box-none">
             <GoBackButton icon="close" onPress={onClose} />
             {!initialItemId ? (
@@ -565,25 +593,53 @@ export function CameraScreen() {
               />
             ) : null}
           </View>
-          <View className="items-center pb-8 gap-4" pointerEvents="box-none">
-            {cameraSettled ? (
+          {hasCamera ? (
+            <View className="items-center pb-8 gap-4" pointerEvents="box-none">
+              {cameraSettled ? (
+                <TouchableOpacity
+                  testID="camera-shutter-button"
+                  onPress={onShutter}
+                  accessibilityLabel={t('camera.shutter')}
+                  className="w-20 h-20 rounded-xl bg-gold items-center justify-center"
+                />
+              ) : (
+                <Spinner />
+              )}
               <TouchableOpacity
-                testID="camera-shutter-button"
-                onPress={onShutter}
-                accessibilityLabel={t('camera.shutter')}
-                className="w-20 h-20 rounded-xl bg-gold items-center justify-center"
-              />
-            ) : (
-              <Spinner />
-            )}
-            <TouchableOpacity
-              testID="camera-pick-library-button"
-              onPress={onPickFromLibrary}
-              accessibilityRole="button"
-              className="px-5 py-3 rounded-full bg-surface-hi border border-stroke active:opacity-75">
-              <Text className="text-text text-sm font-semibold">{t('camera.pickFromLibrary')}</Text>
-            </TouchableOpacity>
-          </View>
+                testID="camera-pick-library-button"
+                onPress={onPickFromLibrary}
+                accessibilityRole="button"
+                className="px-5 py-3 rounded-full bg-surface-hi border border-stroke active:opacity-75">
+                <Text className="text-text text-sm font-semibold">
+                  {t('camera.pickFromLibrary')}
+                </Text>
+              </TouchableOpacity>
+            </View>
+          ) : (
+            <View
+              className="flex-1 items-center justify-center gap-5 pb-8"
+              pointerEvents="box-none">
+              <View className="w-28 h-28 rounded-xl bg-surface border border-stroke items-center justify-center">
+                <Text className="text-6xl">🖼️</Text>
+              </View>
+              <View className="items-center gap-2 px-6">
+                <Text className="text-text text-xl font-bold text-center">
+                  {t('camera.pickFileTitle')}
+                </Text>
+                <Text className="text-text-dim text-sm text-center">
+                  {t('camera.pickFileHint')}
+                </Text>
+              </View>
+              <TouchableOpacity
+                testID="camera-pick-file-button"
+                onPress={onPickFromLibrary}
+                accessibilityRole="button"
+                accessibilityLabel={t('camera.pickFile')}
+                className="bg-gold rounded-md px-6 py-4 items-center active:opacity-75">
+                <Text className="text-on-gold text-base font-semibold">{t('camera.pickFile')}</Text>
+              </TouchableOpacity>
+            </View>
+          )}
         </View>
       </RNSafeAreaView>
 

@@ -5,14 +5,20 @@
 /* eslint-disable import/first */
 const mockUpload = jest.fn();
 const mockRemove = jest.fn();
+const mockReadAsStringAsync = jest.fn();
+const mockPlatformState = { OS: 'ios' as 'ios' | 'android' | 'web' };
+
+jest.mock('react-native', () => ({
+  Platform: {
+    get OS() {
+      return mockPlatformState.OS;
+    },
+  },
+}));
 
 jest.mock('expo-file-system/legacy', () => ({
   EncodingType: { Base64: 'base64' },
-  readAsStringAsync: jest.fn(
-    async () =>
-      // empty PNG-ish base64 — content doesn't matter, only that decode runs
-      'AAAA'
-  ),
+  readAsStringAsync: (...args: unknown[]) => mockReadAsStringAsync(...args),
 }));
 
 jest.mock('../supabase.service', () => ({
@@ -37,8 +43,12 @@ import { deleteFindPhoto, uploadFindPhoto } from '../find-photo.service';
 beforeEach(() => {
   mockUpload.mockReset();
   mockRemove.mockReset();
+  mockReadAsStringAsync.mockReset();
+  // empty base64 — content doesn't matter, only that decode runs
+  mockReadAsStringAsync.mockResolvedValue('AAAA');
   mockUpload.mockResolvedValue({ data: { path: 'ok' }, error: null });
   mockRemove.mockResolvedValue({ data: null, error: null });
+  mockPlatformState.OS = 'ios';
 });
 
 describe('uploadFindPhoto', () => {
@@ -61,6 +71,24 @@ describe('uploadFindPhoto', () => {
   it('throws when the upload fails', async () => {
     mockUpload.mockResolvedValueOnce({ data: null, error: new Error('quota') });
     await expect(uploadFindPhoto('file:///tmp/photo.jpg', 'u')).rejects.toThrow('quota');
+  });
+
+  it('reads bytes via fetch on web (FileSystem.readAsStringAsync is unavailable)', async () => {
+    mockPlatformState.OS = 'web';
+    const buffer = new Uint8Array([1, 2, 3]).buffer;
+    const fetchMock = jest.fn(async () => ({ arrayBuffer: async () => buffer }));
+    const original = globalThis.fetch;
+    globalThis.fetch = fetchMock as unknown as typeof fetch;
+    try {
+      await uploadFindPhoto('blob:https://example.com/abc-123', 'user-web');
+    } finally {
+      globalThis.fetch = original;
+    }
+    expect(fetchMock).toHaveBeenCalledWith('blob:https://example.com/abc-123');
+    expect(mockReadAsStringAsync).not.toHaveBeenCalled();
+    const [, body] = mockUpload.mock.calls[0];
+    expect(body).toBeInstanceOf(Uint8Array);
+    expect((body as Uint8Array).length).toBe(3);
   });
 });
 
