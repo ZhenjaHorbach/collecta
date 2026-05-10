@@ -97,12 +97,7 @@ export function ConfirmDialogHost() {
                     className={`items-center justify-center rounded-md px-4 py-3 active:opacity-75 ${
                       a.destructive ? 'bg-coral' : 'bg-surface-hi border border-stroke'
                     }`}>
-                    <Text
-                      className={`text-sm font-semibold ${
-                        a.destructive ? 'text-text' : 'text-text'
-                      }`}>
-                      {a.label}
-                    </Text>
+                    <Text className="text-sm font-semibold text-text">{a.label}</Text>
                   </Pressable>
                 ))}
                 <Pressable

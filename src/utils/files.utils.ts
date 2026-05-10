@@ -15,13 +15,21 @@ function decodeBase64(base64: string): Uint8Array {
 
 // Read the bytes behind `localUri` as a Uint8Array, ready for upload.
 //
-// Web: fetch the blob:/data: URL and copy its arrayBuffer.
+// Web: fetch the blob:/data: URL and copy its arrayBuffer. Blob URLs from
+// `compressImage` would otherwise leak until page unload — `readBytes` is
+// the last consumer of the URI in the upload pipeline, so we revoke here.
 // Native: read the file as base64 + decode (FileSystem.readAsStringAsync).
 export async function readBytes(localUri: string): Promise<Uint8Array> {
   if (Platform.OS === 'web') {
-    const response = await fetch(localUri);
-    const buffer = await response.arrayBuffer();
-    return new Uint8Array(buffer);
+    try {
+      const response = await fetch(localUri);
+      const buffer = await response.arrayBuffer();
+      return new Uint8Array(buffer);
+    } finally {
+      if (localUri.startsWith('blob:') && typeof URL !== 'undefined' && URL.revokeObjectURL) {
+        URL.revokeObjectURL(localUri);
+      }
+    }
   }
   const base64 = await FileSystem.readAsStringAsync(localUri, {
     encoding: FileSystem.EncodingType.Base64,

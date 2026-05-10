@@ -702,7 +702,7 @@ export function CreateCollectionScreen({ editingId }: CreateCollectionScreenProp
                             <Image
                               source={{ uri: item.exampleImageUrl }}
                               contentFit="cover"
-                              className="w-full h-full"
+                              style={{ width: '100%', height: '100%' }}
                             />
                           </TouchableOpacity>
                         ) : null}
@@ -1121,7 +1121,7 @@ function ItemImageField({ url, uploading, onPick, onRemove }: ItemImageFieldProp
             <Image
               source={{ uri: url ?? undefined }}
               contentFit="cover"
-              className="w-full h-full"
+              style={{ width: '100%', height: '100%' }}
             />
           ) : (
             <Text className="text-2xl">🖼️</Text>
