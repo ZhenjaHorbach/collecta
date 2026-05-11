@@ -71,12 +71,16 @@ jobs:
       - run: npm ci
       - name: Install EAS CLI
         run: npm install -g eas-cli
+      # Pull EXPO_PUBLIC_* and other build-time env from EAS Env so EAS
+      # is the single source of truth. New public vars added via
+      # `eas env:create production` reach the next deploy with no
+      # workflow change. Requires EXPO_TOKEN with env:read scope.
+      - name: Pull environment from EAS
+        run: eas env:pull --environment production --path .env.local --non-interactive
+        env:
+          EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
       - name: Export web build
         run: npx expo export --platform web
-        env:
-          EXPO_PUBLIC_SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
-          EXPO_PUBLIC_SUPABASE_ANON_KEY: ${{ secrets.SUPABASE_ANON_KEY }}
-          EXPO_PUBLIC_POWERSYNC_URL: ${{ secrets.POWERSYNC_URL }}
       - name: Post-build checks
         run: bash scripts/post-build-checks.sh
       - name: Deploy to EAS Hosting
