@@ -3,7 +3,7 @@ import { notify } from '@components/ConfirmDialog';
 import { GoBackButton } from '@components/GoBackButton';
 import { Input } from '@components/Input';
 import { SafeAreaView } from '@components/SafeAreaView';
-import { signInWithGoogle, signUpWithEmail } from '@services/auth.service';
+import { signUpWithEmail } from '@services/auth.service';
 import { useRouter } from 'expo-router';
 import type { Href } from 'expo-router';
 import { useState } from 'react';
@@ -31,22 +31,6 @@ export function SignUpScreen() {
     } catch (err) {
       void notify({
         title: t('auth.signUp.errorTitle'),
-        body: err instanceof Error ? err.message : t('common.unknownError'),
-        buttonLabel: t('common.close'),
-      });
-    } finally {
-      setSubmitting(false);
-    }
-  };
-
-  const onGoogle = async () => {
-    setSubmitting(true);
-    try {
-      await signInWithGoogle();
-      router.replace('/(tabs)');
-    } catch (err) {
-      void notify({
-        title: t('auth.signUp.googleErrorTitle'),
         body: err instanceof Error ? err.message : t('common.unknownError'),
         buttonLabel: t('common.close'),
       });
@@ -87,21 +71,6 @@ export function SignUpScreen() {
           label={t('auth.signUp.submit')}
           onPress={onSignUp}
           loading={submitting}
-          className="mb-3"
-        />
-
-        <View className="flex-row items-center my-4 gap-3">
-          <View className="flex-1 h-px bg-stroke" />
-          <Text className="text-text-muted text-xs">{t('common.or')}</Text>
-          <View className="flex-1 h-px bg-stroke" />
-        </View>
-
-        <Button
-          testID="signup-google-button"
-          label={t('auth.signUp.continueWithGoogle')}
-          variant="secondary"
-          onPress={onGoogle}
-          disabled={submitting}
         />
       </View>
     </SafeAreaView>
