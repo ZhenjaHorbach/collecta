@@ -3,6 +3,7 @@ import { notify } from '@components/ConfirmDialog';
 import { GoBackButton } from '@components/GoBackButton';
 import { Input } from '@components/Input';
 import { SafeAreaView } from '@components/SafeAreaView';
+import { WebForm } from '@components/WebForm';
 import { signUpWithEmail } from '@services/auth.service';
 import { useRouter } from 'expo-router';
 import type { Href } from 'expo-router';
@@ -46,32 +47,34 @@ export function SignUpScreen() {
         <Text className="text-3xl font-bold text-text mb-2">{t('auth.signUp.title')}</Text>
         <Text className="text-text-dim text-sm mb-8">{t('auth.signUp.subtitle')}</Text>
 
-        <View className="gap-3 mb-4">
-          <Input
-            testID="signup-email-input"
-            value={email}
-            onChangeText={setEmail}
-            placeholder={t('auth.signUp.emailPlaceholder')}
-            autoCapitalize="none"
-            keyboardType="email-address"
-            autoComplete="email"
-          />
-          <Input
-            testID="signup-password-input"
-            value={password}
-            onChangeText={setPassword}
-            placeholder={t('auth.signUp.passwordPlaceholder')}
-            secureTextEntry
-            autoComplete="password-new"
-          />
-        </View>
+        <WebForm onSubmit={onSignUp}>
+          <View className="gap-3 mb-4">
+            <Input
+              testID="signup-email-input"
+              value={email}
+              onChangeText={setEmail}
+              placeholder={t('auth.signUp.emailPlaceholder')}
+              autoCapitalize="none"
+              keyboardType="email-address"
+              autoComplete="email"
+            />
+            <Input
+              testID="signup-password-input"
+              value={password}
+              onChangeText={setPassword}
+              placeholder={t('auth.signUp.passwordPlaceholder')}
+              secureTextEntry
+              autoComplete="password-new"
+            />
+          </View>
 
-        <Button
-          testID="signup-submit-button"
-          label={t('auth.signUp.submit')}
-          onPress={onSignUp}
-          loading={submitting}
-        />
+          <Button
+            testID="signup-submit-button"
+            label={t('auth.signUp.submit')}
+            onPress={onSignUp}
+            loading={submitting}
+          />
+        </WebForm>
       </View>
     </SafeAreaView>
   );

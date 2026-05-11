@@ -3,6 +3,7 @@ import { notify } from '@components/ConfirmDialog';
 import { GoBackButton } from '@components/GoBackButton';
 import { Input } from '@components/Input';
 import { SafeAreaView } from '@components/SafeAreaView';
+import { WebForm } from '@components/WebForm';
 import { signInWithEmail } from '@services/auth.service';
 import { useRouter } from 'expo-router';
 import { useState } from 'react';
@@ -40,32 +41,34 @@ export function SignInScreen() {
         <Text className="text-3xl font-bold text-text mb-2">{t('auth.signIn.title')}</Text>
         <Text className="text-text-dim text-sm mb-8">{t('auth.signIn.subtitle')}</Text>
 
-        <View className="gap-3 mb-4">
-          <Input
-            testID="signin-email-input"
-            value={email}
-            onChangeText={setEmail}
-            placeholder={t('auth.signIn.emailPlaceholder')}
-            autoCapitalize="none"
-            keyboardType="email-address"
-            autoComplete="email"
-          />
-          <Input
-            testID="signin-password-input"
-            value={password}
-            onChangeText={setPassword}
-            placeholder={t('auth.signIn.passwordPlaceholder')}
-            secureTextEntry
-            autoComplete="password"
-          />
-        </View>
+        <WebForm onSubmit={onSignIn}>
+          <View className="gap-3 mb-4">
+            <Input
+              testID="signin-email-input"
+              value={email}
+              onChangeText={setEmail}
+              placeholder={t('auth.signIn.emailPlaceholder')}
+              autoCapitalize="none"
+              keyboardType="email-address"
+              autoComplete="email"
+            />
+            <Input
+              testID="signin-password-input"
+              value={password}
+              onChangeText={setPassword}
+              placeholder={t('auth.signIn.passwordPlaceholder')}
+              secureTextEntry
+              autoComplete="password"
+            />
+          </View>
 
-        <Button
-          testID="signin-submit-button"
-          label={t('auth.signIn.submit')}
-          onPress={onSignIn}
-          loading={submitting}
-        />
+          <Button
+            testID="signin-submit-button"
+            label={t('auth.signIn.submit')}
+            onPress={onSignIn}
+            loading={submitting}
+          />
+        </WebForm>
       </View>
     </SafeAreaView>
   );
