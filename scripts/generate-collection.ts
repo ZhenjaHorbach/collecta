@@ -216,11 +216,6 @@ export async function generateCollection(): Promise<GenerateResult> {
 
   // Image fetch with the rewritten queries. Pure HTTP, no Anthropic.
   const imagesByName = await fetchImagesByName(coord.plan.itemNames, queries.byName);
-  // Wikimedia rate-limits `upload.wikimedia.org` for unauthenticated mobile
-  // traffic (HTTP 429). Mirror every fetched URL into our Storage bucket so
-  // the device only ever loads from Supabase — see src/agents/image-mirror.
-  // Requires SUPABASE_SERVICE_ROLE_KEY; if absent we keep the external URLs
-  // and warn so a dry-run still produces a migration.
   const supabaseUrl = process.env.SUPABASE_URL;
   const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
   const mirrored =
