@@ -96,8 +96,10 @@ export function AnalyzingOverlay({ photoUri, stage }: AnalyzingOverlayProps): Re
           style={pulseStyle}>
           <Text className="text-on-gold text-[28px]">✦</Text>
         </Animated.View>
-        <Text className="text-text text-lg font-semibold text-center">{t(titleKey)}</Text>
-        <Text className="text-text-dim text-sm text-center">{t('camera.analyzing.subtitle')}</Text>
+        <Text className="text-on-scrim text-lg font-semibold text-center">{t(titleKey)}</Text>
+        <Text className="text-on-scrim-dim text-sm text-center">
+          {t('camera.analyzing.subtitle')}
+        </Text>
       </View>
     </View>
   );
