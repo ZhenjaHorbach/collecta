@@ -202,7 +202,7 @@ function PhotoHeader({
       />
       <RNSafeAreaView edges={['top']} className="absolute top-0 left-0 right-0">
         <GoBackButton icon="close" onPress={onClose}>
-          <Text className="text-text font-semibold">{t('camera.captureTitle')}</Text>
+          <Text className="text-on-scrim font-semibold">{t('camera.captureTitle')}</Text>
         </GoBackButton>
       </RNSafeAreaView>
       <View
