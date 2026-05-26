@@ -51,7 +51,8 @@
       "submit": "Зареєструватися",
       "continueWithGoogle": "Продовжити з Google",
       "errorTitle": "Не вдалося зареєструватися",
-      "googleErrorTitle": "Помилка входу через Google"
+      "googleErrorTitle": "Помилка входу через Google",
+      "emailAlreadyRegistered": "Цей email вже зареєстровано. Увійди в наявний акаунт."
     },
     "verify": {
       "title": "Перевір пошту",

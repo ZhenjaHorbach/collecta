@@ -7,6 +7,13 @@ WebBrowser.maybeCompleteAuthSession();
 
 const REDIRECT_URL = Linking.createURL('auth/callback');
 
+export class EmailAlreadyRegisteredError extends Error {
+  constructor() {
+    super('email_already_registered');
+    this.name = 'EmailAlreadyRegisteredError';
+  }
+}
+
 export async function signUpWithEmail(email: string, password: string) {
   const { data, error } = await supabase.auth.signUp({
     email,
@@ -14,6 +21,9 @@ export async function signUpWithEmail(email: string, password: string) {
     options: { emailRedirectTo: REDIRECT_URL },
   });
   if (error) throw error;
+  if (data.user && (data.user.identities?.length ?? 0) === 0) {
+    throw new EmailAlreadyRegisteredError();
+  }
   return data;
 }
 

@@ -51,7 +51,8 @@
       "submit": "Zarejestruj się",
       "continueWithGoogle": "Kontynuuj z Google",
       "errorTitle": "Rejestracja nie powiodła się",
-      "googleErrorTitle": "Błąd logowania przez Google"
+      "googleErrorTitle": "Błąd logowania przez Google",
+      "emailAlreadyRegistered": "Ten email jest już zarejestrowany. Zaloguj się zamiast tego."
     },
     "verify": {
       "title": "Sprawdź swoją pocztę",

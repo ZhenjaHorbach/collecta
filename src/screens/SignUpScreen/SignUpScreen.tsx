@@ -4,7 +4,7 @@ import { GoBackButton } from '@components/GoBackButton';
 import { Input } from '@components/Input';
 import { SafeAreaView } from '@components/SafeAreaView';
 import { WebForm } from '@components/WebForm';
-import { signUpWithEmail } from '@services/auth.service';
+import { EmailAlreadyRegisteredError, signUpWithEmail } from '@services/auth.service';
 import { useRouter } from 'expo-router';
 import type { Href } from 'expo-router';
 import { useState } from 'react';
@@ -30,9 +30,15 @@ export function SignUpScreen() {
         router.replace(`/auth/verify?email=${encodeURIComponent(trimmedEmail)}` as Href);
       }
     } catch (err) {
+      const body =
+        err instanceof EmailAlreadyRegisteredError
+          ? t('auth.signUp.emailAlreadyRegistered')
+          : err instanceof Error
+            ? err.message
+            : t('common.unknownError');
       void notify({
         title: t('auth.signUp.errorTitle'),
-        body: err instanceof Error ? err.message : t('common.unknownError'),
+        body,
         buttonLabel: t('common.close'),
       });
     } finally {
