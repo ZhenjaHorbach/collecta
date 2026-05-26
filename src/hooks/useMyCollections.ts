@@ -22,10 +22,10 @@ export function useMyCollections() {
   const [state, setState] = useState<State>(INITIAL);
 
   const load = useCallback(async () => {
-    if (!user) {
-      setState({ mine: [], pickedUp: [], loading: false, error: null });
-      return;
-    }
+    // Wait for auth — flipping loading=false on a brief !user tick used to
+    // surface as the "empty / failed" UI for a frame. AuthGuard keeps
+    // signed-out users off these screens, so staying in loading is safe.
+    if (!user) return;
     setState((s) => ({ ...s, loading: true, error: null }));
     try {
       const [mine, pickedUp] = await Promise.all([

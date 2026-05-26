@@ -22,18 +22,19 @@ beforeEach(() => {
 });
 
 describe('useCollection', () => {
-  it('skips the call when id is undefined', async () => {
+  it('skips the call and stays in loading when id is undefined', async () => {
     mockUseAuth.mockReturnValue({ user: { id: 'u' } });
     const { result } = renderHook(() => useCollection(undefined));
-    await waitFor(() => expect(result.current.loading).toBe(false));
+    // We deliberately stay in loading rather than flipping to !loading +
+    expect(result.current.loading).toBe(true);
     expect(mockGetCollection).not.toHaveBeenCalled();
     expect(result.current.data).toBeNull();
   });
 
-  it('skips the call when there is no user', async () => {
+  it('skips the call and stays in loading when there is no user', async () => {
     mockUseAuth.mockReturnValue({ user: null });
     const { result } = renderHook(() => useCollection('c1'));
-    await waitFor(() => expect(result.current.loading).toBe(false));
+    expect(result.current.loading).toBe(true);
     expect(mockGetCollection).not.toHaveBeenCalled();
   });
 
