@@ -37,6 +37,7 @@ import { shareCardImage } from '@services/share.service';
 import { formatFindDateTime } from '@utils/datetime.utils';
 import { formatCoords } from '@utils/geocode.utils';
 import { buildFindUrl } from '@utils/links.utils';
+import { withReturnTo } from '@utils/return-to.utils';
 
 type TranslateFn = ReturnType<typeof useTranslation>['t'];
 
@@ -60,7 +61,7 @@ export function FindDetailScreen() {
     };
     const onRetake = () => {
       if (!data) return;
-      router.push(`/(tabs)/camera?collection_item_id=${data.item.id}`);
+      router.push(withReturnTo(`/(tabs)/camera?collection_item_id=${data.item.id}`, `/find/${id}`));
     };
 
     const labels: string[] = [t('common.close')];
@@ -98,7 +99,7 @@ export function FindDetailScreen() {
       if (picked == null) return;
       handlers[picked + 1]?.();
     });
-  }, [data, isOwner, resetReport, router, t]);
+  }, [data, id, isOwner, resetReport, router, t]);
 
   const onSubmitReport = useCallback(
     async (reason: ReportReason, comment: string) => {

@@ -1,8 +1,10 @@
 import { Image } from 'expo-image';
+import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Text, TouchableOpacity, View } from 'react-native';
 
 import { ProgressBar } from '@components/ProgressBar';
+import { PulsePlaceholder } from '@components/PulsePlaceholder';
 import { CATEGORY_EMOJI } from '@constants/categories';
 import type { CollectionWithProgress } from '@services/collections.service';
 
@@ -23,6 +25,7 @@ export function CollectionCard({ collection, onPress, width }: CollectionCardPro
   const progress = total > 0 ? found / total : 0;
   const emoji =
     collection.icon ?? (collection.category ? CATEGORY_EMOJI[collection.category] : '📦');
+  const [coverLoaded, setCoverLoaded] = useState(false);
 
   return (
     <TouchableOpacity
@@ -37,7 +40,10 @@ export function CollectionCard({ collection, onPress, width }: CollectionCardPro
             source={{ uri: collection.cover_image_url }}
             style={{ flex: 1 }}
             contentFit="cover"
+            transition={200}
+            onLoad={() => setCoverLoaded(true)}
           />
+          {!coverLoaded ? <PulsePlaceholder /> : null}
         </View>
       ) : (
         <View className="w-full h-24 bg-surface-hi items-center justify-center">
