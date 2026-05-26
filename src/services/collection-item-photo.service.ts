@@ -26,12 +26,17 @@ function objectKeyFromPublicUrl(publicUrl: string): string | null {
   return i === -1 ? null : publicUrl.slice(i + marker.length);
 }
 
-// Returns true when the URL points at our bucket — used to decide whether
-// a "replace" / "remove" should also delete the storage object. URLs from
-// the AI pipeline (Wikipedia / Unsplash) live elsewhere and must not be
-// touched.
-export function isOwnedCollectionItemPhoto(url: string | null | undefined): boolean {
-  return Boolean(url) && url!.includes(`/${BUCKET}/`);
+// Returns true when the URL points at the caller's own folder in our bucket
+// — used to decide whether a "replace" / "remove" should also delete the
+// storage object. Mirrored AI-pipeline images (under the system user's
+// folder) are shared across items and must NEVER be deleted by a single
+// user's edit. External URLs (legacy rows that didn't go through the mirror)
+// also live elsewhere and shouldn't be touched.
+export function isOwnedCollectionItemPhoto(
+  url: string | null | undefined,
+  userId: string
+): boolean {
+  return Boolean(url) && url!.includes(`/${BUCKET}/${userId}/`);
 }
 
 export async function deleteCollectionItemPhoto(publicUrl: string): Promise<void> {

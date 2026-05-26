@@ -40,25 +40,37 @@ import {
 /* eslint-enable import/first */
 
 describe('isOwnedCollectionItemPhoto', () => {
-  it('returns true for URLs in our bucket', () => {
+  it('returns true for URLs in the caller-userId folder of our bucket', () => {
     expect(
       isOwnedCollectionItemPhoto(
-        'https://stub.supabase.co/storage/v1/object/public/collection-item-images/u/k.jpg'
+        'https://stub.supabase.co/storage/v1/object/public/collection-item-images/u/k.jpg',
+        'u'
       )
     ).toBe(true);
   });
 
+  it('returns false for URLs in our bucket but a different user folder (shared AI mirror)', () => {
+    // Mirrored AI images live under the system user's folder. A user
+    // editing their item must not delete the shared cache object.
+    expect(
+      isOwnedCollectionItemPhoto(
+        'https://stub.supabase.co/storage/v1/object/public/collection-item-images/00000000-0000-0000-0000-000000000001/wiki-cache/abc.jpg',
+        'u'
+      )
+    ).toBe(false);
+  });
+
   it('returns false for AI pipeline (Wikipedia / Unsplash) URLs', () => {
     expect(
-      isOwnedCollectionItemPhoto('https://upload.wikimedia.org/wikipedia/commons/door.jpg')
+      isOwnedCollectionItemPhoto('https://upload.wikimedia.org/wikipedia/commons/door.jpg', 'u')
     ).toBe(false);
-    expect(isOwnedCollectionItemPhoto('https://images.unsplash.com/photo-123')).toBe(false);
+    expect(isOwnedCollectionItemPhoto('https://images.unsplash.com/photo-123', 'u')).toBe(false);
   });
 
   it('returns false for null/undefined/empty', () => {
-    expect(isOwnedCollectionItemPhoto(null)).toBe(false);
-    expect(isOwnedCollectionItemPhoto(undefined)).toBe(false);
-    expect(isOwnedCollectionItemPhoto('')).toBe(false);
+    expect(isOwnedCollectionItemPhoto(null, 'u')).toBe(false);
+    expect(isOwnedCollectionItemPhoto(undefined, 'u')).toBe(false);
+    expect(isOwnedCollectionItemPhoto('', 'u')).toBe(false);
   });
 });
 

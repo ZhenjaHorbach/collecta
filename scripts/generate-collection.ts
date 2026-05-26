@@ -27,6 +27,7 @@ import { resolve } from 'node:path';
 import { COLLECTION_CATEGORIES, type CollectionCategory } from '../src/constants/categories';
 import { runCoordinator } from '../src/agents/coordinator';
 import { fetchExampleImagesForNames } from '../src/agents/image-fetcher';
+import { mirrorImagesByName } from '../src/agents/image-mirror';
 import { mergeAndValidate, type MergedCollection } from '../src/agents/merge';
 import { runDescriptions } from '../src/agents/subagent-descriptions';
 import { runFunFacts } from '../src/agents/subagent-funfact';
@@ -215,13 +216,29 @@ export async function generateCollection(): Promise<GenerateResult> {
 
   // Image fetch with the rewritten queries. Pure HTTP, no Anthropic.
   const imagesByName = await fetchImagesByName(coord.plan.itemNames, queries.byName);
+  // Wikimedia rate-limits `upload.wikimedia.org` for unauthenticated mobile
+  // traffic (HTTP 429). Mirror every fetched URL into our Storage bucket so
+  // the device only ever loads from Supabase — see src/agents/image-mirror.
+  // Requires SUPABASE_SERVICE_ROLE_KEY; if absent we keep the external URLs
+  // and warn so a dry-run still produces a migration.
+  const supabaseUrl = process.env.SUPABASE_URL;
+  const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+  const mirrored =
+    supabaseUrl && serviceRoleKey
+      ? await mirrorImagesByName(imagesByName, { supabaseUrl, serviceRoleKey })
+      : imagesByName;
+  if (!supabaseUrl || !serviceRoleKey) {
+    console.warn(
+      '[generate-collection] SUPABASE_SERVICE_ROLE_KEY missing — skipping image mirror, external URLs will be saved as-is'
+    );
+  }
   const merged = mergeAndValidate(
     coord.plan,
     descs.data,
     hints.data,
     rarity.data,
     facts.data,
-    imagesByName
+    mirrored
   );
 
   const aggregate: NormalizedUsage = sumUsage(

@@ -390,7 +390,7 @@ export function CreateCollectionScreen({ editingId }: CreateCollectionScreenProp
       const url = await uploadCollectionItemPhoto(picked.uri, user.id);
       updateItem(id, { exampleImageUrl: url });
 
-      if (previous && isOwnedCollectionItemPhoto(previous)) {
+      if (previous && isOwnedCollectionItemPhoto(previous, user.id)) {
         deleteCollectionItemPhoto(previous).catch((err) => {
           console.warn('[create-collection] failed to delete old preview', err);
         });
@@ -415,7 +415,7 @@ export function CreateCollectionScreen({ editingId }: CreateCollectionScreenProp
     if (uploadingItemIds.has(id)) return;
     const previous = items.find((it) => it.id === id)?.exampleImageUrl ?? null;
     updateItem(id, { exampleImageUrl: null });
-    if (previous && isOwnedCollectionItemPhoto(previous)) {
+    if (previous && user && isOwnedCollectionItemPhoto(previous, user.id)) {
       deleteCollectionItemPhoto(previous).catch((err) => {
         console.warn('[create-collection] failed to delete preview', err);
       });
