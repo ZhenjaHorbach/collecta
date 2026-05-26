@@ -47,6 +47,8 @@ import { sumUsage, type Locale } from '../../../src/agents/types.ts';
 // @ts-ignore — Deno requires .ts extension on relative imports
 import { fetchExampleImagesForNames } from '../../../src/agents/image-fetcher.ts';
 // @ts-ignore — Deno requires .ts extension on relative imports
+import { mirrorImagesByName } from '../../../src/agents/image-mirror.ts';
+// @ts-ignore — Deno requires .ts extension on relative imports
 import { runImageQueryRewriter } from '../../../src/agents/subagent-image-query.ts';
 
 const SUPABASE_URL = Deno.env.get('SUPABASE_URL')!;
@@ -165,7 +167,12 @@ Deno.serve(async (req: Request) => {
   // Wikipedia / Unsplash outage never blocks the collection itself; we
   // just end up with null image URLs and the UI falls back to category
   // emojis.
-  const imagesByName: Record<string, string | null> = {};
+  //
+  // Then mirror each fetched URL into our Storage bucket — Wikimedia
+  // rate-limits `upload.wikimedia.org` per-IP for mobile clients (HTTP 429),
+  // so storing external URLs in the DB shows up as permanent loading
+  // placeholders on-device. See src/agents/image-mirror.ts.
+  let imagesByName: Record<string, string | null> = {};
   try {
     const queriesForFetch = coord.plan.itemNames.map((n: string) => queries.byName[n] ?? n);
     const byQuery = await fetchExampleImagesForNames(queriesForFetch);
@@ -173,8 +180,13 @@ Deno.serve(async (req: Request) => {
       const q = queries.byName[name] ?? name;
       imagesByName[name] = byQuery[q] ?? null;
     }
+    imagesByName = await mirrorImagesByName(imagesByName, {
+      supabaseUrl: SUPABASE_URL,
+      serviceRoleKey: SERVICE_ROLE_KEY,
+      client: admin,
+    });
   } catch (err) {
-    console.error('image fetch failed', err);
+    console.error('image fetch/mirror failed', err);
   }
 
   let merged;

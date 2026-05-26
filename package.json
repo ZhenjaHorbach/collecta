@@ -19,6 +19,8 @@
     "design:sync": "bash scripts/sync-design.sh",
     "icons:generate": "bash scripts/generate-icons.sh",
     "screenshots:generate": "bash scripts/generate-screenshots.sh",
+    "collections:generate": "bash scripts/generate-collection.sh",
+    "images:backfill": "bash scripts/backfill-collection-images.sh",
     "types:gen": "supabase gen types typescript --project-id $SUPABASE_PROJECT_ID --schema public | awk '/^} as const/{print; exit} {print}' > src/types/database.ts",
     "prepare": "husky"
   },

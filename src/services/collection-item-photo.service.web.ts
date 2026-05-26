@@ -11,8 +11,11 @@ export function uploadCollectionItemPhoto(_localUri: string, _userId: string): P
   return Promise.reject(new Error('uploadCollectionItemPhoto is not supported on web'));
 }
 
-export function isOwnedCollectionItemPhoto(url: string | null | undefined): boolean {
-  return Boolean(url) && url!.includes(`/${BUCKET}/`);
+export function isOwnedCollectionItemPhoto(
+  url: string | null | undefined,
+  userId: string
+): boolean {
+  return Boolean(url) && url!.includes(`/${BUCKET}/${userId}/`);
 }
 
 export function deleteCollectionItemPhoto(_publicUrl: string): Promise<void> {
