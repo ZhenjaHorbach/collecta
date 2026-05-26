@@ -1,0 +1,54 @@
+name: Backfill collection images
+
+# Safety net for `example_image_url` / `cover_image_url` rows that ended up
+# pointing at external hosts (Wikipedia / Unsplash) instead of our Storage
+# mirror. Both code paths that write these columns now mirror at write-time
+# (scripts/generate-collection.ts + supabase/functions/generate-collection),
+# but a regression or third path would silently 429 on-device — this cron
+# catches it within two weeks and re-mirrors.
+#
+# Idempotent: rows already pointing at the bucket are skipped (`isMirroredUrl`
+# in src/agents/image-mirror.ts). On a clean DB the job takes ~5 seconds.
+
+on:
+  schedule:
+    # 1st and 15th of each month at 07:00 UTC. Off-peak for the EU/US/AU mix
+    # and staggered from the weekly generator (Tuesdays 09:00 UTC).
+    - cron: '0 7 1,15 * *'
+  workflow_dispatch:
+    inputs:
+      dry_run:
+        description: 'Dry-run (report only, no DB writes)'
+        type: boolean
+        default: false
+
+permissions:
+  contents: read
+
+concurrency:
+  group: backfill-collection-images
+  cancel-in-progress: false
+
+jobs:
+  backfill:
+    name: Mirror lingering external image URLs
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+      - run: npm ci
+
+      - name: Run backfill
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+        run: |
+          if [[ "${{ inputs.dry_run }}" == "true" ]]; then
+            bash scripts/backfill-collection-images.sh --dry
+          else
+            bash scripts/backfill-collection-images.sh
+          fi

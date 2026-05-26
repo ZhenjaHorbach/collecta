@@ -34,6 +34,11 @@ jobs:
           ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
           SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
           SUPABASE_ANON_KEY: ${{ secrets.SUPABASE_ANON_KEY }}
+          # Service role needed by mirrorImagesByName to upload mirrored
+          # reference images into the Storage bucket. Without it the script
+          # warns and falls back to writing external Wikipedia URLs that
+          # later get rate-limited on-device.
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
         run: |
           OUTPUT=$(scripts/generate-collection.sh)
           echo "$OUTPUT" | tee /tmp/gen.json

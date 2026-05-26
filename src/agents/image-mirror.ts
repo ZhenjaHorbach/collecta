@@ -9,11 +9,11 @@
 // Idempotent: same source URL → same storage key (SHA-1 of URL). Re-uploading
 // is a cheap upsert.
 //
-// Self-contained (uses Node's crypto + global fetch + supabase-js). Runs from
-// scripts only — never imported from app code, edge functions, or hooks.
+// Self-contained: Web Crypto + global fetch + supabase-js → works in both
+// Node (scripts) and Deno (edge functions). Never imported from app code or
+// hooks.
 
 import { createClient, type SupabaseClient } from '@supabase/supabase-js';
-import { createHash } from 'node:crypto';
 
 const BUCKET = 'collection-item-images';
 // Mirrored images live under the system user so they're cleanly separated
@@ -116,6 +116,16 @@ export function isMirroredUrl(url: string): boolean {
   return url.includes(`/${BUCKET}/`);
 }
 
+// SHA-1 of a UTF-8 string as lowercase hex via Web Crypto (works in both Node
+// 18+ and Deno without a `node:crypto` import).
+async function sha1Hex(input: string): Promise<string> {
+  const bytes = new TextEncoder().encode(input);
+  const digest = await crypto.subtle.digest('SHA-1', bytes);
+  return Array.from(new Uint8Array(digest))
+    .map((b) => b.toString(16).padStart(2, '0'))
+    .join('');
+}
+
 // Download bytes from `url` (with a polite UA so Wikimedia answers) and
 // upload to Storage under a stable hashed key. Returns the public URL of
 // the mirrored object, or `null` if the fetch / upload failed.
@@ -163,7 +173,7 @@ export async function mirrorImageToStorage(
     return null;
   }
 
-  const hash = createHash('sha1').update(fetchUrl).digest('hex').slice(0, 16);
+  const hash = (await sha1Hex(fetchUrl)).slice(0, 16);
   const objectKey = `${CACHE_PREFIX}/${hash}.${ext}`;
 
   const client = opts.client ?? createClient(opts.supabaseUrl, opts.serviceRoleKey);
