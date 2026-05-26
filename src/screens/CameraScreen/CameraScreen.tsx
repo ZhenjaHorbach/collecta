@@ -1,7 +1,7 @@
 import { CameraView, useCameraPermissions } from 'expo-camera';
 import * as Linking from 'expo-linking';
 
-import { router, useFocusEffect, useLocalSearchParams } from 'expo-router';
+import { useFocusEffect, useLocalSearchParams } from 'expo-router';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import {
@@ -42,12 +42,14 @@ import {
 } from '@services/collections.service';
 import { extractGpsFromExif } from '@utils/exif.utils';
 import { persistTempPhoto } from '@utils/files.utils';
+import { goBackOrReturn } from '@utils/return-to.utils';
 
 export function CameraScreen() {
   const { t } = useTranslation();
   const { user } = useAuth();
-  const params = useLocalSearchParams<{ collection_item_id?: string }>();
+  const params = useLocalSearchParams<{ collection_item_id?: string; return_to?: string }>();
   const initialItemId = params.collection_item_id ?? null;
+  const returnTo = params.return_to ?? null;
 
   const hasCamera = useHasCamera();
   const [permission, requestPermission] = useCameraPermissions();
@@ -272,8 +274,8 @@ export function CameraScreen() {
 
   const onClose = useCallback((): void => {
     discard();
-    router.back();
-  }, [discard]);
+    goBackOrReturn(returnTo);
+  }, [discard, returnTo]);
 
   const onPickFromLibrary = useCallback(async (): Promise<void> => {
     try {
@@ -385,7 +387,7 @@ export function CameraScreen() {
         collectionItemIdOverride: resolvedContext?.item.id,
       });
       clearLocal();
-      router.back();
+      goBackOrReturn(returnTo);
     } catch (e) {
       console.warn('[onSave] commit failed', e);
       void notify({
@@ -394,7 +396,7 @@ export function CameraScreen() {
         buttonLabel: t('common.close'),
       });
     }
-  }, [user, capture, clearLocal, note, resolvedContext, t]);
+  }, [user, capture, clearLocal, note, resolvedContext, t, returnTo]);
 
   // Web probe still in flight — avoid flashing the permission screen before
   // we know whether to render shutter UI or the file-picker fallback.

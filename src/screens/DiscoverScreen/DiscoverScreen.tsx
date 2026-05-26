@@ -6,6 +6,7 @@ import { FlatList, Text, TextInput, TouchableOpacity, View } from 'react-native'
 import { useDebounce } from 'use-debounce';
 
 import { EmptyState } from '@components/EmptyState';
+import { PulsePlaceholder } from '@components/PulsePlaceholder';
 import { Spinner } from '@components/Spinner';
 import { Tabs } from '@components/Tabs';
 import {
@@ -265,6 +266,10 @@ function DiscoverCard({ collection, width, onPress }: CardProps & { width: numbe
   const { t } = useTranslation();
   const emoji =
     collection.icon ?? (collection.category ? CATEGORY_EMOJI[collection.category] : '📦');
+  // Pulsing placeholder over the cover slot until the image finishes loading
+  // — same pattern as CollectionCard so the user doesn't see the empty
+  // surface flash before the photo arrives.
+  const [coverLoaded, setCoverLoaded] = useState(false);
   // width comes from useWindowDimensions in the parent, so it has to live in
   // an inline style — that's the explicit "dynamic runtime values" exception.
   // We pin width here instead of using flex-1 so a lone trailing card (odd
@@ -283,7 +288,10 @@ function DiscoverCard({ collection, width, onPress }: CardProps & { width: numbe
             source={{ uri: collection.cover_image_url }}
             style={{ flex: 1 }}
             contentFit="cover"
+            transition={200}
+            onLoad={() => setCoverLoaded(true)}
           />
+          {!coverLoaded ? <PulsePlaceholder /> : null}
         </View>
       ) : (
         <View className="w-full h-24 rounded-sm bg-surface-hi mb-2 items-center justify-center">

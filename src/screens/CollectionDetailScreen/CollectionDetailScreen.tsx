@@ -16,6 +16,7 @@ import {
 import { actionSheet, confirm, notify } from '@components/ConfirmDialog';
 import { GoBackButton } from '@components/GoBackButton';
 import { ProgressBar } from '@components/ProgressBar';
+import { PulsePlaceholder } from '@components/PulsePlaceholder';
 import { ReportSheet } from '@components/ReportSheet';
 import { SafeAreaView } from '@components/SafeAreaView';
 import { Spinner } from '@components/Spinner';
@@ -32,6 +33,7 @@ import type {
   Find,
 } from '@services/collections.service';
 import type { ReportError, ReportReason } from '@services/moderation.service';
+import { withReturnTo } from '@utils/return-to.utils';
 
 export function CollectionDetailScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
@@ -369,7 +371,13 @@ function DetailBody({ data, isOwner }: { data: CollectionDetail; isOwner: boolea
             onPress={() => {
               if (ownFind) router.push(`/find/${ownFind.id}`);
               else if (refFind) router.push(`/find/${refFind.id}`);
-              else if (isOwner) router.push(`/(tabs)/camera?collection_item_id=${item.id}`);
+              else if (isOwner)
+                router.push(
+                  withReturnTo(
+                    `/(tabs)/camera?collection_item_id=${item.id}`,
+                    `/collection/${data.id}`
+                  )
+                );
             }}
           />
         );
@@ -531,6 +539,10 @@ function ItemCell({
   // than a real find — drives the "Example" badge so the user knows this
   // photo isn't theirs (or anyone's) yet.
   const isExample = !find && Boolean(item.example_image_url);
+  // Hold a pulsing placeholder over the cell until the cover actually paints,
+  // otherwise the user sees an empty surface (or recycled image) flash before
+  // the real photo lands.
+  const [coverLoaded, setCoverLoaded] = useState(false);
 
   return (
     <TouchableOpacity
@@ -546,7 +558,16 @@ function ItemCell({
       style={{ width: size, height: size }}
       className={`rounded-md overflow-hidden bg-surface border border-stroke ${disabled ? 'opacity-40' : ''}`}>
       {photo ? (
-        <Image source={{ uri: photo }} style={{ flex: 1 }} contentFit="cover" />
+        <>
+          <Image
+            source={{ uri: photo }}
+            style={{ flex: 1 }}
+            contentFit="cover"
+            transition={200}
+            onLoad={() => setCoverLoaded(true)}
+          />
+          {!coverLoaded ? <PulsePlaceholder /> : null}
+        </>
       ) : (
         <View className="flex-1 items-center justify-center bg-surface-hi">
           <Text className="text-3xl">📷</Text>
