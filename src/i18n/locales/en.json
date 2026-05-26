@@ -51,7 +51,8 @@
       "submit": "Sign up",
       "continueWithGoogle": "Continue with Google",
       "errorTitle": "Sign up failed",
-      "googleErrorTitle": "Google sign in failed"
+      "googleErrorTitle": "Google sign in failed",
+      "emailAlreadyRegistered": "This email is already registered. Please sign in instead."
     },
     "verify": {
       "title": "Check your email",

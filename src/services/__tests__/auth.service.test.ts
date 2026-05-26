@@ -35,6 +35,7 @@ jest.mock('../supabase.service', () => ({
 }));
 
 import {
+  EmailAlreadyRegisteredError,
   signInWithEmail,
   signInWithGoogle,
   signOut,
@@ -55,7 +56,10 @@ beforeEach(() => {
 
 describe('signUpWithEmail', () => {
   it('passes email + password and the auth/callback redirect URL', async () => {
-    mockSignUp.mockResolvedValue({ data: { user: { id: 'u' } }, error: null });
+    mockSignUp.mockResolvedValue({
+      data: { user: { id: 'u', identities: [{ id: 'i1' }] } },
+      error: null,
+    });
     await signUpWithEmail('a@b.co', 'pw');
     expect(mockSignUp).toHaveBeenCalledWith({
       email: 'a@b.co',
@@ -67,6 +71,16 @@ describe('signUpWithEmail', () => {
   it('throws on error', async () => {
     mockSignUp.mockResolvedValue({ data: null, error: new Error('weak password') });
     await expect(signUpWithEmail('a@b.co', 'x')).rejects.toThrow('weak password');
+  });
+
+  it('throws EmailAlreadyRegisteredError when Supabase returns user with empty identities', async () => {
+    mockSignUp.mockResolvedValue({
+      data: { user: { id: 'u', identities: [] }, session: null },
+      error: null,
+    });
+    await expect(signUpWithEmail('used@b.co', 'pw')).rejects.toBeInstanceOf(
+      EmailAlreadyRegisteredError
+    );
   });
 });
 
