@@ -67,3 +67,10 @@ supabase/.temp
 # Maestro debug output (screenshots/video on flow failure, regenerated each run)
 /maestro/debug
 /maestro/.maestro
+
+# store submission credentials — never commit
+/play-service-account.json
+/AuthKey_*.p8
+
+# store screenshots (regenerated from .claude/design via scripts/generate-screenshots.sh)
+/screenshots

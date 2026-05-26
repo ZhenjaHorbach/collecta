@@ -99,3 +99,15 @@ Pulls the design bundle from claude.ai/design into `.claude/design/` and opens a
 - `SUPABASE_PROJECT_ID` — Supabase project reference ID (Project → Settings → General)
 - `EXPO_PUBLIC_TEST_EMAIL` / `EXPO_PUBLIC_TEST_PASSWORD` — credentials for the seeded `test@collecta.app` account. Consumed by **both** `scripts/maestro-seed.ts` (server-side, to provision the account) and the app bundle (client-side, to render the `__DEV__`-only "Dev sign-in" button on the welcome screen — see `.claude/rules/e2e.md`). One source of truth, no drift. Also baked into the EAS local Android build in the `e2e.yml` workflow, so every Maestro run can sign in.
 - `EXPO_PUBLIC_POWERSYNC_URL` — PowerSync project URL. Inlined into the bundle by Metro / EAS, used by `@powersync/react-native` for offline sync.
+- `PLAY_SERVICE_ACCOUNT_JSON` — full JSON content of the Google Play service-account key (Google Cloud Console → IAM → Service Accounts → Keys → JSON). Consumed by `release.yml` only — written to `./play-service-account.json` before `eas submit` (path matches `eas.json → submit.production.android.serviceAccountKeyPath`), wiped after. Rotation: replace the secret with a new JSON; no workflow change needed.
+
+## Release (`.github/workflows/release.yml`)
+
+Production Android build + submit to Play Internal. Triggers:
+
+- `workflow_dispatch` — manual run with optional `submit` input. Lets you build a trial AAB without uploading.
+- `push: tags v*.*.*` — semver tag drives full build + submit. Cut a release via `git tag v1.0.1 && git push origin v1.0.1`.
+
+Two jobs: `build` (EAS Cloud, m-medium, ~6 min) → `submit` (writes `PLAY_SERVICE_ACCOUNT_JSON` to file, runs `eas submit --id <build_id>`). `concurrency: cancel-in-progress: false` because Play rejects duplicate versionCodes — never cancel an in-flight release.
+
+iOS submit is **intentionally not in this workflow** until Apple Developer registration completes — add a parallel `submit-ios` job referencing `ASC_API_KEY_ID` / `ASC_API_KEY_ISSUER_ID` / `ASC_API_KEY_P8` secrets once `eas.json` has the iOS submit block filled in.

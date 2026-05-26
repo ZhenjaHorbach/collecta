@@ -1,0 +1,123 @@
+name: Release
+
+# Production release to Play Store (Android only — iOS waits on Apple Developer).
+#
+# Two triggers:
+#   - workflow_dispatch — manual run from Actions UI. Choose whether to
+#     also submit, or only build the AAB. Useful for trial builds.
+#   - push: tags v*.*.* — semantic-version tag drives a full build+submit.
+#     Cut a release by `git tag v1.0.1 && git push origin v1.0.1`.
+#
+# Build runs on EAS Cloud (not --local on a GH runner) — m-medium is
+# tuned, ~6m for our project; GH 4-core would take ~30m and hit free-tier
+# minute budgets fast. Cost: ~$1-2 per prod build.
+#
+# Version numbers live remote (eas.json → cli.appVersionSource: "remote"):
+# EAS keeps the buildNumber/versionCode counter on its servers and bumps
+# on each build with `autoIncrement`. Local app.json is the floor on
+# first switch; after that, the local value is ignored. One source of
+# truth across humans, CI, and re-runs.
+
+on:
+  workflow_dispatch:
+    inputs:
+      submit:
+        description: Submit the build to Play Internal after building
+        type: boolean
+        default: false
+  push:
+    tags:
+      - 'v*.*.*'
+
+# Don't queue concurrent runs — EAS counter advances per build, and
+# Play Console rejects duplicate versionCodes.
+concurrency:
+  group: release-android
+  cancel-in-progress: false
+
+jobs:
+  build:
+    name: Build Android AAB on EAS Cloud
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    outputs:
+      build_id: ${{ steps.build.outputs.build_id }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+      - run: npm ci
+
+      - name: Install EAS CLI
+        run: npm install -g eas-cli
+
+      - name: Trigger EAS Cloud build
+        id: build
+        # --non-interactive + --no-wait would return immediately with a build URL;
+        # we wait so `submit` can chain off the same build artefact via --latest.
+        # `--json` makes the build id machine-readable for downstream steps.
+        run: |
+          json=$(eas build \
+            --platform android \
+            --profile production \
+            --non-interactive \
+            --json)
+          echo "$json"
+          id=$(echo "$json" | jq -r '.[0].id')
+          if [ -z "$id" ] || [ "$id" = "null" ]; then
+            echo "::error::Failed to parse build id from EAS output"
+            exit 1
+          fi
+          echo "build_id=$id" >> "$GITHUB_OUTPUT"
+        env:
+          EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
+
+  submit:
+    name: Submit to Play Internal
+    runs-on: ubuntu-latest
+    needs: build
+    # Tag pushes always submit. Manual runs submit only when the
+    # `submit` input is true — gives a way to build without uploading.
+    if: github.event_name == 'push' || inputs.submit == true
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+      - run: npm ci
+
+      - name: Install EAS CLI
+        run: npm install -g eas-cli
+
+      # Variant A — service account JSON lives in a GH secret as a JSON
+      # string. We write it to ./play-service-account.json (path matches
+      # eas.json → submit.production.android.serviceAccountKeyPath), run
+      # the submit, and wipe the file in `always()` so a failed submit
+      # doesn't leave it on the runner cache.
+      - name: Write Play service account JSON
+        run: |
+          if [ -z "${PLAY_SERVICE_ACCOUNT_JSON}" ]; then
+            echo "::error::PLAY_SERVICE_ACCOUNT_JSON secret is not set"
+            exit 1
+          fi
+          printf '%s' "${PLAY_SERVICE_ACCOUNT_JSON}" > ./play-service-account.json
+        env:
+          PLAY_SERVICE_ACCOUNT_JSON: ${{ secrets.PLAY_SERVICE_ACCOUNT_JSON }}
+
+      - name: Submit AAB to Play Internal track
+        run: |
+          eas submit \
+            --platform android \
+            --profile production \
+            --id "${{ needs.build.outputs.build_id }}" \
+            --non-interactive
+        env:
+          EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
+
+      - name: Cleanup service account file
+        if: always()
+        run: rm -f ./play-service-account.json

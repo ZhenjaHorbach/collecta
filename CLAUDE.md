@@ -52,6 +52,62 @@ Slash commands live in `.claude/commands/`:
 - `/deploy-supabase` — deploy migrations + edge functions
 - `/new-screen` — scaffold a new screen folder
 
+## Release
+
+Three EAS Build profiles in `eas.json`:
+
+- `development` — dev client, internal distribution, iOS Simulator allowed. For local dev builds via `eas build --profile development`.
+- `preview` — Android APK x86_64, used by the e2e workflow on every PR (see `.claude/rules/ci.md`).
+- `production` — store-bound: iOS `m-medium` build, Android `app-bundle` (`.aab`), `autoIncrement: true` so EAS bumps `versionCode` / `buildNumber` per build.
+
+`submit.production.android` references `./play-service-account.json` (gitignored — the JSON the user downloads from Google Cloud → IAM → Service Accounts after linking to Play Console). `submit.production.ios` is intentionally absent — fill in `appleId` / `ascAppId` / `appleTeamId` once the Apple Developer account exists and the App Store Connect record is created. EAS schema rejects empty strings, so leave the section out until you have real values.
+
+`version` in `app.json` is the human-facing version (`1.0.0`). Native build numbers (iOS `buildNumber`, Android `versionCode`) are managed **remotely by EAS** (`cli.appVersionSource: "remote"` in `eas.json`) and auto-incremented on every production build. The local `app.json` value is the floor on first switch; after that, the local copy is ignored — never hand-edit. One source of truth across humans, CI, and re-runs.
+
+### TestFlight / Play Internal flow
+
+Day-to-day: tag-driven release via `.github/workflows/release.yml`:
+
+```
+git tag v1.0.1
+git push origin v1.0.1
+# → CI builds Android AAB on EAS Cloud (~6 min) → submits to Play Internal
+```
+
+Or manual run from Actions → Release → Run workflow (with optional `submit` toggle).
+
+One-time setup (local, before the first release):
+
+```
+eas login
+eas secret:create --name EXPO_PUBLIC_GOOGLE_MAPS_API_KEY --value AIza...
+# (other EXPO_PUBLIC_* secrets — see .env)
+
+# Seed the EAS-managed version counter from app.json. Required after enabling
+# appVersionSource: "remote". Subsequent builds auto-increment from there.
+eas build:version:set --platform android --non-interactive
+```
+
+Manual ad-hoc builds (bypass CI):
+
+```
+eas build --platform android --profile production
+eas submit  --platform android --profile production   # → Play internal
+eas submit  --platform ios     --profile production   # → TestFlight (once iOS submit block is filled)
+```
+
+`eas build` runs `prebuild` in the cloud worker (per `Native projects (CNG)` above) and uses the latest committed `app.json`. Never trigger a production build from a dirty working tree — the build will reflect uncommitted changes that won't reach teammates.
+
+GitHub Secrets required by `release.yml`: `EXPO_TOKEN` (build/submit scope) and `PLAY_SERVICE_ACCOUNT_JSON` (full JSON string of the Google Play service-account key). See `.claude/rules/ci.md` → Secrets.
+
+### Store screenshots
+
+`npm run screenshots:generate` renders the HTML mockups in `.claude/design/collecta/` to PNG via headless Chrome (`puppeteer-core` devDep, uses local Chrome — `CHROME_PATH` env overrides). Output lands in `screenshots/{ios-67,android-phone}/` (gitignored, regenerated each run). Sizes: 1290×2796 for App Store 6.7", 1080×1920 for Play Store phone.
+
+The script seeds `localStorage.collecta.screen` per render so it can capture `feed` / `map` / `collections` / `profile`. Screens that depend on React state (`detail`, `camera`, `create`) are not reachable from localStorage and are intentionally skipped — add them by extending the mockup with a URL-param entry-point if needed.
+
+If `.claude/design/collecta/` is stale, run `npm run design:sync -- '<hand-off-url>'` first.
+
 ## Scripts
 
 Every script in `scripts/` is invoked through a `.sh` wrapper — workflows and humans both call the `.sh`, never `npx tsx` or `node` directly. The wrapper loads `.env` (CI uses workflow `env:`), validates required vars with `::error::`, and `exec`s the sibling `.ts`. Adding a script: write `<name>.ts` + `<name>.sh`, `chmod +x` the sh, reference the sh from workflows. Mirror `scripts/run-evals.sh`, `scripts/sync-design.sh`, `scripts/generate-achievement.sh`.
