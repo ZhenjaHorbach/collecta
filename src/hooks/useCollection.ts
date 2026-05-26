@@ -16,10 +16,13 @@ export function useCollection(id: string | undefined) {
   const [state, setState] = useState<State>(INITIAL);
 
   const load = useCallback(async () => {
-    if (!id || !user) {
-      setState({ data: null, loading: false, error: null });
-      return;
-    }
+    // Wait for both inputs before touching state. Clearing loading=false
+    // here on a brief !user tick (auth re-hydrating after a fresh mount,
+    // e.g. after router.dismissTo) used to flip the screen into the
+    // `error || !data` branch and flash "load failed" for a frame.
+    // AuthGuard keeps signed-out users off this route, so staying in
+    // loading is safe.
+    if (!id || !user) return;
     setState((s) => ({ ...s, loading: true, error: null }));
     try {
       const data = await getCollection(id, user.id);

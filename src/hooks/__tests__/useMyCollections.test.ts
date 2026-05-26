@@ -33,10 +33,13 @@ beforeEach(() => {
 });
 
 describe('useMyCollections', () => {
-  it('returns empty + not-loading when there is no user', async () => {
+  it('skips the call and stays in loading when there is no user', async () => {
     mockUseAuth.mockReturnValue({ user: null });
     const { result } = renderHook(() => useMyCollections());
-    await waitFor(() => expect(result.current.loading).toBe(false));
+    // Deliberately stay in loading rather than flipping to !loading + empty
+    // — the screen would otherwise render the empty-state for a frame
+    // while auth re-hydrates after a fresh mount (e.g. router.dismissTo).
+    expect(result.current.loading).toBe(true);
     expect(result.current.mine).toEqual([]);
     expect(result.current.pickedUp).toEqual([]);
     expect(mockListMine).not.toHaveBeenCalled();
