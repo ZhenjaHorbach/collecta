@@ -1,17 +1,19 @@
-import '../../global.css';
 import '@i18n';
+import '../../global.css';
 
 import { AchievementToastHost } from '@components/AchievementToast';
 import { AuthGuard } from '@components/AuthGuard';
 import { ConfirmDialogHost } from '@components/ConfirmDialog';
 import { ErrorBoundary } from '@components/ErrorBoundary';
 import { XpPopupHost } from '@components/XpPopup';
+import MaterialIcons from '@expo/vector-icons/MaterialIcons';
 import { useDbLifecycle } from '@hooks/useDbLifecycle';
 import { useDocumentTitle } from '@hooks/useDocumentTitle';
 import { usePushTokenRegistration } from '@hooks/usePushTokenRegistration';
 import { useTheme } from '@hooks/useTheme';
 import { useThemeVars } from '@hooks/useThemeVars';
 import { DarkTheme, DefaultTheme, ThemeProvider } from '@react-navigation/native';
+import { useFonts } from 'expo-font';
 import { Stack } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import { View } from 'react-native';
@@ -21,6 +23,8 @@ import 'react-native-reanimated';
 export default function RootLayout() {
   const { resolved } = useTheme();
   const themeVars = useThemeVars();
+
+  useFonts(MaterialIcons.font);
   usePushTokenRegistration();
   useDbLifecycle();
   useDocumentTitle();
