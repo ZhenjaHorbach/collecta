@@ -95,23 +95,53 @@ STEP 4. confidence is your certainty about the verdict (positive OR negative). 0
 
 STEP 5. suggestion is a short, kind, actionable hint that matches your verdict — never apologise for a positive verdict, never congratulate on a negative one.`;
 
+// Schema is structured as a 3-step reasoning chain: model writes
+// primary_subject (what's in the photo) → matches_claim (does it match the
+// claimed item) → valid (must equal matches_claim). Splitting the comparison
+// out catches model self-contradictions where it correctly identifies the
+// subject but still flips valid=true out of obligation. parseToolUse
+// overrides valid from matches_claim if they disagree.
 const VALIDATE_PHOTO_TOOL = {
   name: 'validate_photo',
-  description: 'Return the structured validation verdict for the submitted photo.',
+  description:
+    'Return the structured validation verdict for the submitted photo. Fill the fields in this order — primary_subject and matches_claim determine valid.',
   input_schema: {
     type: 'object',
     properties: {
-      valid: { type: 'boolean', description: 'Whether the photo matches the claimed item.' },
+      primary_subject: {
+        type: 'string',
+        description:
+          'The concrete primary subject of the photo, written as a noun phrase. Examples: "a Gothic red-brick church with two spires", "a bronze statue of a mermaid", "a tabby cat on a wooden floor". MUST be a specific subject — NOT a location or theme like "Warsaw Old Town", "city skyline", "outdoor scene".',
+      },
+      matches_claim: {
+        type: 'boolean',
+        description:
+          'True iff primary_subject and the claimed item name the same specific thing. False when they are different objects, different landmarks, different species, or different categories — even if they share a theme, area, or category (e.g. "both are statues in Warsaw" is NOT a match).',
+      },
+      valid: {
+        type: 'boolean',
+        description:
+          'MUST equal matches_claim. Setting valid=true while matches_claim=false is a contradiction and will be rejected.',
+      },
       confidence: {
         type: 'number',
         minimum: 0,
         maximum: 1,
-        description: 'Calibrated certainty between 0 and 1.',
+        description:
+          'Your real certainty about the verdict (positive OR negative). 0.95 = you would bet on it; 0.5 = a guess. A clearly-wrong photo gets valid=false with confidence ≥ 0.9.',
       },
-      detected: { type: 'string', description: 'What is actually visible in the photo.' },
-      suggestion: { type: 'string', description: 'Short, helpful hint for the user.' },
+      detected: {
+        type: 'string',
+        description:
+          'Same content as primary_subject — kept for backwards compat. A concrete noun phrase describing what is actually in the photo.',
+      },
+      suggestion: {
+        type: 'string',
+        description:
+          'Short, kind, actionable hint that matches the verdict — never apologise for a positive verdict, never congratulate on a negative one.',
+      },
     },
-    required: ['valid', 'confidence', 'detected', 'suggestion'],
+    required: ['primary_subject', 'matches_claim', 'valid', 'confidence', 'detected', 'suggestion'],
   },
 } as const;
 
@@ -206,11 +236,20 @@ interface ApiUsage {
   cacheCreationInputTokens: number;
 }
 
+interface FewShotInput {
+  primary_subject: string;
+  matches_claim: boolean;
+  valid: boolean;
+  confidence: number;
+  detected: string;
+  suggestion: string;
+}
+
 interface FewShotExample {
   imageUrl: string;
   collectionDescription: string;
   itemName: string;
-  expected: ValidationResult;
+  expected: FewShotInput;
 }
 
 function buildFewShotExamples(): FewShotExample[] {
@@ -222,9 +261,11 @@ function buildFewShotExamples(): FewShotExample[] {
       collectionDescription: 'Photos of domestic cats in everyday surroundings.',
       itemName: 'Cat',
       expected: {
+        primary_subject: 'a domestic cat sitting on a wooden floor',
+        matches_claim: true,
         valid: true,
         confidence: 0.95,
-        detected: 'A domestic cat sitting on a wooden floor.',
+        detected: 'a domestic cat sitting on a wooden floor',
         suggestion: 'Great shot — clearly a cat.',
       },
     },
@@ -233,9 +274,11 @@ function buildFewShotExamples(): FewShotExample[] {
       collectionDescription: 'Photos of domestic cats in everyday surroundings.',
       itemName: 'Cat',
       expected: {
+        primary_subject: 'a dog (looks like a Labrador) on a leash',
+        matches_claim: false,
         valid: false,
         confidence: 0.92,
-        detected: 'A dog (looks like a Labrador) on a leash.',
+        detected: 'a dog (looks like a Labrador) on a leash',
         suggestion: 'This is a dog, not a cat — try again with a feline subject.',
       },
     },
@@ -244,9 +287,11 @@ function buildFewShotExamples(): FewShotExample[] {
       collectionDescription: 'Photos of domestic cats in everyday surroundings.',
       itemName: 'Cat',
       expected: {
+        primary_subject: 'a blurry, motion-smeared shape; possibly an animal but not identifiable',
+        matches_claim: false,
         valid: false,
         confidence: 0.3,
-        detected: 'A blurry, motion-smeared shape; possibly an animal but not identifiable.',
+        detected: 'a blurry, motion-smeared shape; possibly an animal but not identifiable',
         suggestion: 'Photo is too blurry — hold the camera still and try again.',
       },
     },
@@ -336,7 +381,7 @@ function parseToolUse(content: unknown): ValidationResult {
   if (!block) throw new Error('No tool_use block in response');
   const input = (block as { input?: unknown }).input;
   if (!input || typeof input !== 'object') throw new Error('tool_use input missing');
-  const r = input as Partial<ValidationResult>;
+  const r = input as Partial<FewShotInput>;
   if (
     typeof r.valid !== 'boolean' ||
     typeof r.confidence !== 'number' ||
@@ -345,8 +390,19 @@ function parseToolUse(content: unknown): ValidationResult {
   ) {
     throw new Error('tool_use input failed schema check');
   }
+  // Safety-net: if the model wrote matches_claim=false but valid=true, trust
+  // the explicit comparison and override valid. This catches the failure mode
+  // where the model correctly identifies a mismatch but still flips valid=true
+  // out of obligation (observed on Warsaw church / mermaid case).
+  let valid = r.valid;
+  if (typeof r.matches_claim === 'boolean' && r.matches_claim !== r.valid) {
+    console.warn(
+      `[validate-find] matches_claim=${r.matches_claim} disagreed with valid=${r.valid}; overriding to matches_claim`
+    );
+    valid = r.matches_claim;
+  }
   return {
-    valid: r.valid,
+    valid,
     confidence: Math.max(0, Math.min(1, r.confidence)),
     detected: r.detected,
     suggestion: r.suggestion,

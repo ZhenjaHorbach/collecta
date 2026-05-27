@@ -40,18 +40,24 @@ STEP 4. confidence is your certainty about the verdict (positive OR negative). 0
 
 STEP 5. suggestion is a short, kind, actionable hint that matches your verdict — never apologise for a positive verdict, never congratulate on a negative one.`;
 
+// Mirror of supabase/functions/validate-find/index.ts VALIDATE_PHOTO_TOOL.
+// primary_subject + matches_claim drive a forced-reasoning chain so the
+// model commits to a subject identification before deciding valid.
 const VALIDATE_PHOTO_TOOL = {
   name: 'validate_photo',
-  description: 'Return the structured validation verdict for the submitted photo.',
+  description:
+    'Return the structured validation verdict for the submitted photo. Fill the fields in this order — primary_subject and matches_claim determine valid.',
   input_schema: {
     type: 'object' as const,
     properties: {
+      primary_subject: { type: 'string' as const },
+      matches_claim: { type: 'boolean' as const },
       valid: { type: 'boolean' as const },
       confidence: { type: 'number' as const, minimum: 0, maximum: 1 },
       detected: { type: 'string' as const },
       suggestion: { type: 'string' as const },
     },
-    required: ['valid', 'confidence', 'detected', 'suggestion'],
+    required: ['primary_subject', 'matches_claim', 'valid', 'confidence', 'detected', 'suggestion'],
   },
 };
 
@@ -113,7 +119,17 @@ export async function callValidate(
   if (!block || block.type !== 'tool_use') {
     throw new Error('No tool_use block in response');
   }
-  const result = ValidationResultSchema.parse(block.input);
+  const rawInput = block.input as Record<string, unknown>;
+  // Safety-net matching supabase/functions/validate-find/index.ts: override
+  // valid from matches_claim when the model contradicts itself.
+  if (
+    typeof rawInput.matches_claim === 'boolean' &&
+    typeof rawInput.valid === 'boolean' &&
+    rawInput.matches_claim !== rawInput.valid
+  ) {
+    rawInput.valid = rawInput.matches_claim;
+  }
+  const result = ValidationResultSchema.parse(rawInput);
   const u = message.usage;
   const usage: EvalUsage = {
     inputTokens: u.input_tokens,
