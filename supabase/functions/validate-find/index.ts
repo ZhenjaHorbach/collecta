@@ -48,6 +48,8 @@ import { authenticateRequest } from '../_shared/auth.ts';
 // @ts-ignore — Deno requires .ts extension on relative imports
 // prettier-ignore
 import { logAiCall, type AnthropicUsage } from '../_shared/anthropic-usage.ts';
+// @ts-ignore — Deno requires .ts extension on relative imports
+import { CORS_HEADERS, handlePreflight } from '../_shared/cors.ts';
 
 const supabase = createClient(
   Deno.env.get('SUPABASE_URL')!,
@@ -473,7 +475,7 @@ interface SuccessResponse {
 function jsonResponse(status: number, body: unknown): Response {
   return new Response(JSON.stringify(body), {
     status,
-    headers: { 'Content-Type': 'application/json' },
+    headers: { 'Content-Type': 'application/json', ...CORS_HEADERS },
   });
 }
 
@@ -1071,8 +1073,10 @@ function toAiCallsUsage(u: ApiUsage): AnthropicUsage {
 }
 
 Deno.serve(async (req: Request) => {
+  const preflight = handlePreflight(req);
+  if (preflight) return preflight;
   if (req.method !== 'POST') {
-    return new Response('Method Not Allowed', { status: 405 });
+    return new Response('Method Not Allowed', { status: 405, headers: CORS_HEADERS });
   }
 
   // Authenticate the caller — Vision calls cost real money. Without this,

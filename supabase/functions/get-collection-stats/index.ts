@@ -10,6 +10,9 @@ declare const Deno: any;
 // @ts-ignore — Deno npm specifier
 import { createClient } from 'npm:@supabase/supabase-js@2';
 
+// @ts-ignore — Deno requires .ts extension on relative imports
+import { CORS_HEADERS, handlePreflight } from '../_shared/cors.ts';
+
 const supabase = createClient(
   Deno.env.get('SUPABASE_URL')!,
   Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
@@ -34,8 +37,10 @@ async function fetchStats(collectionId: string): Promise<CollectionStats> {
 }
 
 Deno.serve(async (req: Request) => {
+  const preflight = handlePreflight(req);
+  if (preflight) return preflight;
   if (req.method !== 'GET') {
-    return new Response('Method Not Allowed', { status: 405 });
+    return new Response('Method Not Allowed', { status: 405, headers: CORS_HEADERS });
   }
 
   const url = new URL(req.url);
@@ -44,7 +49,7 @@ Deno.serve(async (req: Request) => {
   if (!collectionId) {
     return new Response(JSON.stringify({ error: 'collection_id query param is required' }), {
       status: 400,
-      headers: { 'Content-Type': 'application/json' },
+      headers: { 'Content-Type': 'application/json', ...CORS_HEADERS },
     });
   }
 
@@ -57,7 +62,7 @@ Deno.serve(async (req: Request) => {
   if (error || !collection) {
     return new Response(JSON.stringify({ error: 'Collection not found' }), {
       status: 404,
-      headers: { 'Content-Type': 'application/json' },
+      headers: { 'Content-Type': 'application/json', ...CORS_HEADERS },
     });
   }
 
@@ -65,6 +70,6 @@ Deno.serve(async (req: Request) => {
 
   return new Response(JSON.stringify(stats), {
     status: 200,
-    headers: { 'Content-Type': 'application/json' },
+    headers: { 'Content-Type': 'application/json', ...CORS_HEADERS },
   });
 });

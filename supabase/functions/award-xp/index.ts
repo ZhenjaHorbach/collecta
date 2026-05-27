@@ -40,6 +40,8 @@ import { authorizeRequest } from '../_shared/auth.ts';
 import { levelForXp, todayUtcIso, updateStreak, XP_PER_EVENT, type XpEvent } from '../_shared/leveling.ts';
 // @ts-ignore — Deno requires .ts extension on relative imports
 import { logAiCall } from '../_shared/anthropic-usage.ts';
+// @ts-ignore — Deno requires .ts extension on relative imports
+import { CORS_HEADERS, handlePreflight } from '../_shared/cors.ts';
 
 const supabase = createClient(
   Deno.env.get('SUPABASE_URL')!,
@@ -536,8 +538,10 @@ interface RequestBody {
 }
 
 Deno.serve(async (req: Request) => {
+  const preflight = handlePreflight(req);
+  if (preflight) return preflight;
   if (req.method !== 'POST') {
-    return new Response('Method Not Allowed', { status: 405 });
+    return new Response('Method Not Allowed', { status: 405, headers: CORS_HEADERS });
   }
 
   let body: RequestBody;
@@ -620,13 +624,13 @@ Deno.serve(async (req: Request) => {
       },
       model: MODEL,
     }),
-    { status: 200, headers: { 'Content-Type': 'application/json' } }
+    { status: 200, headers: { 'Content-Type': 'application/json', ...CORS_HEADERS } }
   );
 });
 
 function jsonError(status: number, error: string, detail?: string): Response {
   return new Response(JSON.stringify(detail ? { error, detail } : { error }), {
     status,
-    headers: { 'Content-Type': 'application/json' },
+    headers: { 'Content-Type': 'application/json', ...CORS_HEADERS },
   });
 }
