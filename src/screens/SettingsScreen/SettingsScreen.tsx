@@ -1,5 +1,4 @@
 import { useCameraPermissions } from 'expo-camera';
-import Constants from 'expo-constants';
 import * as Linking from 'expo-linking';
 import * as Location from 'expo-location';
 import * as Notifications from 'expo-notifications';
@@ -18,6 +17,7 @@ import { useHasCamera } from '@hooks/useHasCamera';
 import { useSetting, type SettingName } from '@hooks/useSetting';
 import { useUserProfile } from '@hooks/useUserProfile';
 import { signOut } from '@services/auth.service';
+import { formatBuildIdentity, getBuildIdentity } from '@utils/version.utils';
 
 export function SettingsScreen() {
   const { t } = useTranslation();
@@ -45,7 +45,7 @@ export function SettingsScreen() {
     }
   };
 
-  const version = Constants.expoConfig?.version ?? '—';
+  const version = formatBuildIdentity(getBuildIdentity());
 
   return (
     <SafeAreaView testID="settings-screen">
@@ -119,9 +119,11 @@ export function SettingsScreen() {
           </SettingsSection>
 
           <SettingsSection title={t('settings.sections.about')}>
-            <View className="flex-row items-center justify-between py-2">
+            <View className="py-2 gap-1">
               <Text className="text-sm font-semibold text-text">{t('settings.about.version')}</Text>
-              <Text className="text-sm text-text-dim">{version}</Text>
+              <Text className="text-xs text-text-dim" selectable>
+                {version}
+              </Text>
             </View>
           </SettingsSection>
 
