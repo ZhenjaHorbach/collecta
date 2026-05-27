@@ -23,13 +23,22 @@ Use the validate_photo tool to respond. Be strict but fair:
 const USER_CONTEXT_TEMPLATE = `Collection: {collection_description}
 Claimed item: {item_name}
 
-Decision rules — read carefully:
-1. valid is about the SPECIFIC claimed item, not the collection's theme. A photo that fits the theme but shows a different subject is valid=false.
-2. If "detected" describes anything other than the claimed item, valid MUST be false. The two fields must be internally consistent — never write "this shows X" while marking valid=true for "Y".
-3. confidence is your real certainty about the verdict (positive OR negative). 0.95 means you'd bet on it; 0.5 means it's a guess. Confident-no is fine: a clearly-wrong photo gets valid=false with high confidence.
-4. "Looks similar" / "could be" / "same general area" is valid=false.
-5. detected: describe what you actually see, not what you wish it was.
-6. suggestion: short, kind, actionable hint that matches the verdict — never apologise for a positive verdict, never congratulate on a negative one.`;
+Decision rules — read carefully and apply in order:
+
+STEP 1. Identify the PRIMARY SUBJECT of the photo — the thing that fills the most of the frame and is clearly what the photographer aimed at. Write this into "detected" as a concrete noun phrase. Examples of good "detected" values: "a Gothic red-brick church with two spires", "a bronze statue of a mermaid holding a sword", "a tabby cat sitting on a wooden floor". Examples of BAD "detected" values (vague, evasive, location-only): "a view of Warsaw's Old Town", "a city skyline", "an outdoor scene", "buildings in Europe". If you find yourself writing a location or theme instead of a subject — stop and name the actual subject.
+
+STEP 2. Compare the primary subject from step 1 against "{item_name}". Set valid=true ONLY if they are the same specific thing. If they are different objects, different landmarks, different species, or different categories — valid is false, no exceptions.
+
+STEP 3. Reasons that are NEVER enough to set valid=true:
+ - The photo fits the collection's theme or area.
+ - The subject is in the same city / country / neighborhood as the item.
+ - The subject is the same type of thing (e.g. both are statues, both are churches).
+ - The user clearly tried hard.
+ - It "could be" or "looks similar" — that's valid=false.
+
+STEP 4. confidence is your certainty about the verdict (positive OR negative). 0.95 means you'd bet money on it; 0.5 means it's a guess. Confident-no is a feature, not a flaw — a clearly-wrong photo gets valid=false with confidence ≥ 0.9.
+
+STEP 5. suggestion is a short, kind, actionable hint that matches your verdict — never apologise for a positive verdict, never congratulate on a negative one.`;
 
 const VALIDATE_PHOTO_TOOL = {
   name: 'validate_photo',

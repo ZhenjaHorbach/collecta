@@ -1,7 +1,7 @@
 import { Image as ExpoImage } from 'expo-image';
 import { useTranslation } from 'react-i18next';
 import { Pressable, ScrollView, Text, TextInput, View } from 'react-native';
-import { SafeAreaView as RNSafeAreaView } from 'react-native-safe-area-context';
+import { SafeAreaView as RNSafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { GoBackButton } from '@components/GoBackButton';
 import { useColors } from '@hooks/useColors';
@@ -92,6 +92,7 @@ function VerifyBranch(props: CaptureResultSheetProps): React.ReactElement {
   const { t } = useTranslation();
   const tone = deriveTone(props);
   const percent = props.result ? Math.round(props.result.confidence * 100) : null;
+  const insets = useSafeAreaInsets();
 
   const verdictTitle =
     tone === 'positive'
@@ -112,7 +113,10 @@ function VerifyBranch(props: CaptureResultSheetProps): React.ReactElement {
         tone={tone}
         onClose={props.onClose}
       />
-      <ScrollView contentContainerClassName="p-5 gap-4" keyboardShouldPersistTaps="handled">
+      <ScrollView
+        contentContainerClassName="p-5 gap-4"
+        contentContainerStyle={{ paddingBottom: insets.bottom + 20 }}
+        keyboardShouldPersistTaps="handled">
         <SectionLabel>{t('camera.addToCollection')}</SectionLabel>
         {props.collection ? (
           <CollectionChip collection={props.collection} />
@@ -334,6 +338,7 @@ function XpPreview({ xp }: { xp: number }): React.ReactElement {
 function AmbiguousBranch(props: CaptureResultSheetProps): React.ReactElement {
   const { t } = useTranslation();
   const verdictTitle = t('validation.ambiguousTitle');
+  const insets = useSafeAreaInsets();
   return (
     <View className="flex-1 bg-bg">
       <PhotoHeader
@@ -344,7 +349,10 @@ function AmbiguousBranch(props: CaptureResultSheetProps): React.ReactElement {
         tone="neutral"
         onClose={props.onClose}
       />
-      <ScrollView contentContainerClassName="p-5 gap-4" keyboardShouldPersistTaps="handled">
+      <ScrollView
+        contentContainerClassName="p-5 gap-4"
+        contentContainerStyle={{ paddingBottom: insets.bottom + 20 }}
+        keyboardShouldPersistTaps="handled">
         <SectionLabel>{t('validation.candidatesTitle')}</SectionLabel>
         {props.candidateItems.map((c) => (
           <Pressable
@@ -390,6 +398,7 @@ function AmbiguousBranch(props: CaptureResultSheetProps): React.ReactElement {
 // via onPickCollection).
 function ChooseCollectionBranch(props: CaptureResultSheetProps): React.ReactElement {
   const { t } = useTranslation();
+  const insets = useSafeAreaInsets();
   return (
     <View className="flex-1 bg-bg">
       <PhotoHeader
@@ -400,7 +409,10 @@ function ChooseCollectionBranch(props: CaptureResultSheetProps): React.ReactElem
         tone="neutral"
         onClose={props.onClose}
       />
-      <ScrollView contentContainerClassName="p-5 gap-4" keyboardShouldPersistTaps="handled">
+      <ScrollView
+        contentContainerClassName="p-5 gap-4"
+        contentContainerStyle={{ paddingBottom: insets.bottom + 20 }}
+        keyboardShouldPersistTaps="handled">
         <SectionLabel>{t('validation.collectionCandidatesTitle')}</SectionLabel>
         {props.candidateCollections.map((c) => (
           <Pressable
@@ -441,6 +453,7 @@ function ChooseCollectionBranch(props: CaptureResultSheetProps): React.ReactElem
 // manually, create a new item in a collection they're saving to, or retake.
 function NoMatchBranch(props: CaptureResultSheetProps): React.ReactElement {
   const { t } = useTranslation();
+  const insets = useSafeAreaInsets();
   return (
     <View className="flex-1 bg-bg">
       <PhotoHeader
@@ -451,7 +464,10 @@ function NoMatchBranch(props: CaptureResultSheetProps): React.ReactElement {
         tone="neutral"
         onClose={props.onClose}
       />
-      <ScrollView contentContainerClassName="p-5 gap-4" keyboardShouldPersistTaps="handled">
+      <ScrollView
+        contentContainerClassName="p-5 gap-4"
+        contentContainerStyle={{ paddingBottom: insets.bottom + 20 }}
+        keyboardShouldPersistTaps="handled">
         <Text className="text-text-dim text-sm">{t('validation.noMatchHint')}</Text>
 
         <Pressable
