@@ -5,6 +5,7 @@ Real-world photo collection app — discover, photograph, and collect physical o
 ## Legal
 
 - [Privacy Policy](./privacy-policy.html)
+- [Child Safety Standards](./child-safety-standards.html)
 
 ## Internal
 
