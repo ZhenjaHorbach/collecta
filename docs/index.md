@@ -6,6 +6,10 @@ Real-world photo collection app — discover, photograph, and collect physical o
 
 - [Privacy Policy](./privacy-policy.html)
 
+## Internal
+
+- [Release cheat sheet](./release.html)
+
 ## Links
 
 - App on Google Play: _coming soon_
