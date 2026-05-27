@@ -114,6 +114,7 @@ function VerifyBranch(props: CaptureResultSheetProps): React.ReactElement {
         onClose={props.onClose}
       />
       <ScrollView
+        className="flex-1"
         contentContainerClassName="p-5 gap-4"
         contentContainerStyle={{ paddingBottom: insets.bottom + 20 }}
         keyboardShouldPersistTaps="handled">
@@ -350,6 +351,7 @@ function AmbiguousBranch(props: CaptureResultSheetProps): React.ReactElement {
         onClose={props.onClose}
       />
       <ScrollView
+        className="flex-1"
         contentContainerClassName="p-5 gap-4"
         contentContainerStyle={{ paddingBottom: insets.bottom + 20 }}
         keyboardShouldPersistTaps="handled">
@@ -410,6 +412,7 @@ function ChooseCollectionBranch(props: CaptureResultSheetProps): React.ReactElem
         onClose={props.onClose}
       />
       <ScrollView
+        className="flex-1"
         contentContainerClassName="p-5 gap-4"
         contentContainerStyle={{ paddingBottom: insets.bottom + 20 }}
         keyboardShouldPersistTaps="handled">
@@ -465,6 +468,7 @@ function NoMatchBranch(props: CaptureResultSheetProps): React.ReactElement {
         onClose={props.onClose}
       />
       <ScrollView
+        className="flex-1"
         contentContainerClassName="p-5 gap-4"
         contentContainerStyle={{ paddingBottom: insets.bottom + 20 }}
         keyboardShouldPersistTaps="handled">
