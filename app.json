@@ -35,7 +35,7 @@
       "blockedPermissions": ["android.permission.READ_MEDIA_VIDEO"]
     },
     "web": {
-      "output": "static",
+      "output": "single",
       "favicon": "./assets/images/favicon.png"
     },
     "plugins": [
