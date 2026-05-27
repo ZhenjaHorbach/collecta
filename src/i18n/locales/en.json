@@ -165,6 +165,7 @@
     "lowMatchTitle": "Low match",
     "couldNotVerifyTitle": "Couldn't verify",
     "matchPercent": "Verified · {{percent}}% match",
+    "mismatchPercent": "Not a match · {{percent}}% sure",
     "modeNotImplemented": "This mode isn't ready yet.",
     "ambiguousTitle": "Pick the best match",
     "candidatesTitle": "Top suggestions",

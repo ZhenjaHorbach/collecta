@@ -173,6 +173,7 @@
     "lowMatchTitle": "Слабое совпадение",
     "couldNotVerifyTitle": "Не удалось проверить",
     "matchPercent": "Совпадение · {{percent}}%",
+    "mismatchPercent": "Не совпадает · уверенность {{percent}}%",
     "modeNotImplemented": "Этот режим пока не готов.",
     "ambiguousTitle": "Выберите подходящий вариант",
     "candidatesTitle": "Топ предложений",

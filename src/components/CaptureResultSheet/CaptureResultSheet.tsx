@@ -213,7 +213,11 @@ function PhotoHeader({
       <View
         className={`absolute left-4 right-4 bottom-4 rounded-lg border ${borderClass} bg-overlay-hi p-3 gap-1`}>
         <Text className={`text-[11px] font-bold uppercase tracking-wider ${accentClass}`}>
-          {percent !== null ? t('validation.matchPercent', { percent }) : verdictTitle}
+          {percent !== null
+            ? t(tone === 'negative' ? 'validation.mismatchPercent' : 'validation.matchPercent', {
+                percent,
+              })
+            : verdictTitle}
         </Text>
         <Text className="text-text text-base font-semibold" numberOfLines={1}>
           {verdictDetail || verdictTitle}

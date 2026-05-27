@@ -173,6 +173,7 @@
     "lowMatchTitle": "Слабкий збіг",
     "couldNotVerifyTitle": "Не вдалося перевірити",
     "matchPercent": "Збіг · {{percent}}%",
+    "mismatchPercent": "Не збігається · впевненість {{percent}}%",
     "modeNotImplemented": "Цей режим ще не готовий.",
     "ambiguousTitle": "Оберіть найкращий варіант",
     "candidatesTitle": "Топ пропозицій",

@@ -173,6 +173,7 @@
     "lowMatchTitle": "Niska zgodność",
     "couldNotVerifyTitle": "Nie udało się zweryfikować",
     "matchPercent": "Zgodność · {{percent}}%",
+    "mismatchPercent": "Brak dopasowania · pewność {{percent}}%",
     "modeNotImplemented": "Ten tryb nie jest jeszcze gotowy.",
     "ambiguousTitle": "Wybierz najlepsze dopasowanie",
     "candidatesTitle": "Najlepsze sugestie",
