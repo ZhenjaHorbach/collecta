@@ -70,8 +70,21 @@ Use the validate_photo tool to respond. Be strict but fair:
 - detected describes what you actually see in the photo, not what the user claimed.
 - suggestion is short, kind, actionable help for the user (e.g. "get closer", "try better lighting").`;
 
+// Per-find context — uncached. The decision rules live here (not in the
+// cached system prompt) so we can tune strictness without busting the
+// cache. Without these rules the model treats "fits the collection theme"
+// as enough: a Warsaw church passed as a Warsaw mermaid statue with 95%
+// confidence because it correctly inferred the surrounding theme.
 const USER_CONTEXT_TEMPLATE = `Collection: {collection_description}
-Claimed item: {item_name}`;
+Claimed item: {item_name}
+
+Decision rules — read carefully:
+1. valid is about the SPECIFIC claimed item, not the collection's theme. A photo that fits the theme but shows a different subject is valid=false.
+2. If "detected" describes anything other than the claimed item, valid MUST be false. The two fields must be internally consistent — never write "this shows X" while marking valid=true for "Y".
+3. confidence is your real certainty about the verdict (positive OR negative). 0.95 means you'd bet on it; 0.5 means it's a guess. Confident-no is fine: a clearly-wrong photo gets valid=false with high confidence.
+4. "Looks similar" / "could be" / "same general area" is valid=false.
+5. detected: describe what you actually see, not what you wish it was.
+6. suggestion: short, kind, actionable hint that matches the verdict — never apologise for a positive verdict, never congratulate on a negative one.`;
 
 const VALIDATE_PHOTO_TOOL = {
   name: 'validate_photo',

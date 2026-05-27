@@ -8,6 +8,7 @@ import { useMyCollections } from '@hooks/useMyCollections';
 import { Tabs } from 'expo-router';
 import { useTranslation } from 'react-i18next';
 import { Platform, TouchableOpacity, View } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 function CameraTabButton({
   onPress,
@@ -60,6 +61,7 @@ function CameraTabButton({
 export default function TabLayout() {
   const { t } = useTranslation();
   const colors = useColors();
+  const insets = useSafeAreaInsets();
   // Camera flow needs at least one collection to drop the find into. Without
   // any (own or picked-up), there's nothing to commit to — disable the tab
   // until the user creates or joins one. `useMyCollections` refetches on
@@ -84,12 +86,13 @@ export default function TabLayout() {
             borderTopColor: colors.stroke,
             borderTopLeftRadius: 22,
             borderTopRightRadius: 22,
-            height: 88,
-            // iOS home-indicator needs the asymmetric paddingBottom; on web /
-            // Android the items just look bottom-heavy. Balance the padding
-            // there so icons + labels sit visually centered in the bar.
+            // On Android, gesture-nav devices report a non-zero bottom inset
+            // that the bar must clear, otherwise labels are clipped by the
+            // pill. iOS already gets its home-indicator gap from the asymmetric
+            // paddingBottom below.
+            height: 88 + (Platform.OS === 'android' ? insets.bottom : 0),
             paddingTop: Platform.OS === 'ios' ? 10 : 19,
-            paddingBottom: Platform.OS === 'ios' ? 28 : 19,
+            paddingBottom: Platform.OS === 'ios' ? 28 : 19 + insets.bottom,
             // Match the SafeAreaView content cap so the tab row centres on
             // tablet / desktop web instead of stretching edge-to-edge. The
             // wrapping <View className="bg-bg"> paints behind the gap so the
