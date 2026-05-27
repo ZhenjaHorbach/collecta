@@ -1,0 +1,12 @@
+<svg width="1024" height="1024" viewBox="0 0 1024 1024" xmlns="http://www.w3.org/2000/svg">
+  <!-- Glyph-only viewfinder mark on transparent. Used for Android adaptive
+       foreground / monochrome and the splash icon — the surrounding
+       context paints its own background. -->
+  <g stroke="#FFFFFF" stroke-width="80" stroke-linecap="round" stroke-linejoin="round" fill="none">
+    <path d="M 220 380 L 220 220 L 380 220"/>
+    <path d="M 644 220 L 804 220 L 804 380"/>
+    <path d="M 804 644 L 804 804 L 644 804"/>
+    <path d="M 380 804 L 220 804 L 220 644"/>
+  </g>
+  <circle cx="512" cy="512" r="80" fill="#FFFFFF"/>
+</svg>

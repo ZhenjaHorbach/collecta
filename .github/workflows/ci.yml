@@ -83,7 +83,10 @@ jobs:
         run: npx expo export --platform web
       - name: Post-build checks
         run: bash scripts/post-build-checks.sh
-      - name: Deploy to EAS Hosting
-        run: eas deploy --non-interactive
+      - name: Deploy to EAS Hosting (production alias)
+        # --production promotes this deployment to the stable
+        # https://collecta.expo.app alias. EAS still keeps the
+        # deployment-specific hashed URL for history / rollback.
+        run: eas deploy --production --non-interactive
         env:
           EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
