@@ -33,6 +33,8 @@ import { createClient } from 'npm:@supabase/supabase-js@2';
 // @ts-ignore — Deno requires .ts extension on relative imports
 import { authenticateRequest } from '../_shared/auth.ts';
 // @ts-ignore — Deno requires .ts extension on relative imports
+import { CORS_HEADERS, handlePreflight } from '../_shared/cors.ts';
+// @ts-ignore — Deno requires .ts extension on relative imports
 import { objectKeyFromPublicUrl } from '../_shared/storage-keys.ts';
 
 const SUPABASE_URL = Deno.env.get('SUPABASE_URL')!;
@@ -44,11 +46,13 @@ const admin = createClient(SUPABASE_URL, SERVICE_ROLE_KEY);
 function json(status: number, body: Record<string, unknown>): Response {
   return new Response(JSON.stringify(body), {
     status,
-    headers: { 'Content-Type': 'application/json' },
+    headers: { 'Content-Type': 'application/json', ...CORS_HEADERS },
   });
 }
 
 Deno.serve(async (req: Request) => {
+  const preflight = handlePreflight(req);
+  if (preflight) return preflight;
   if (req.method !== 'POST') return json(405, { error: 'Method Not Allowed' });
 
   const auth = await authenticateRequest(req);
