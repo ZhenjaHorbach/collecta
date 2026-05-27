@@ -100,6 +100,18 @@ eas submit  --platform ios     --profile production   # → TestFlight (once iOS
 
 GitHub Secrets required by `release.yml`: `EXPO_TOKEN` (build/submit scope) and `PLAY_SERVICE_ACCOUNT_JSON` (full JSON string of the Google Play service-account key). See `.claude/rules/ci.md` → Secrets.
 
+### Over-the-air updates (EAS Update)
+
+JS-only fixes (logic, styles, copy, validation) ship via OTA without rebuilding the AAB:
+
+```
+eas update --branch production --message "fix: <short description>"
+```
+
+The build channel is bound to the EAS Update branch by the `channel` field on each `eas.json` build profile (`production`, `preview`, `development`). `runtimeVersion: { policy: "appVersion" }` in `app.json` means the JS bundle is compatible with whatever native build shares the same `version` (`1.0.0`). When `version` bumps, runtime version changes — old native installs stop receiving new updates and must be replaced via Play Store.
+
+What you can't OTA: anything that touches `ios/` or `android/` after prebuild — new native deps, plugin config, permission strings, Info.plist / AndroidManifest edits, `app.json` plugin block. Those need a full rebuild + Play submit.
+
 ### Store screenshots
 
 `npm run screenshots:generate` renders the HTML mockups in `.claude/design/collecta/` to PNG via headless Chrome (`puppeteer-core` devDep, uses local Chrome — `CHROME_PATH` env overrides). Output lands in `screenshots/{ios-67,android-phone}/` (gitignored, regenerated each run). Sizes: 1290×2796 for App Store 6.7", 1080×1920 for Play Store phone.

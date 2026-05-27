@@ -8,6 +8,12 @@
     "scheme": "collecta",
     "userInterfaceStyle": "automatic",
     "newArchEnabled": true,
+    "runtimeVersion": {
+      "policy": "appVersion"
+    },
+    "updates": {
+      "url": "https://u.expo.dev/6cbdd4c3-1bc6-4635-851b-e01ca160ac7e"
+    },
     "ios": {
       "supportsTablet": true,
       "bundleIdentifier": "com.horbachevgen.collecta",

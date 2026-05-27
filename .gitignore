@@ -74,3 +74,6 @@ supabase/.temp
 
 # store screenshots (regenerated from .claude/design via scripts/generate-screenshots.sh)
 /screenshots
+
+# local EAS build output — `eas build --local` writes here; never commit
+/build-output.aab
