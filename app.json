@@ -31,7 +31,8 @@
       },
       "edgeToEdgeEnabled": true,
       "predictiveBackGestureEnabled": false,
-      "package": "com.horbachevgen.collecta"
+      "package": "com.horbachevgen.collecta",
+      "blockedPermissions": ["android.permission.READ_MEDIA_VIDEO"]
     },
     "web": {
       "output": "static",
