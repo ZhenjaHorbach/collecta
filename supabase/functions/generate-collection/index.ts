@@ -28,6 +28,8 @@ import Anthropic from 'npm:@anthropic-ai/sdk@0.32.1';
 import { authenticateRequest } from '../_shared/auth.ts';
 // @ts-ignore — Deno requires .ts extension on relative imports
 import { logAiCall } from '../_shared/anthropic-usage.ts';
+// @ts-ignore — Deno requires .ts extension on relative imports
+import { CORS_HEADERS, handlePreflight } from '../_shared/cors.ts';
 
 // Shared agents — same files Node-side scripts use.
 // @ts-ignore — Deno requires .ts extension on relative imports
@@ -76,7 +78,7 @@ const DEFAULT_ITEM_COUNT = 15;
 function json(status: number, body: Record<string, unknown>): Response {
   return new Response(JSON.stringify(body), {
     status,
-    headers: { 'Content-Type': 'application/json' },
+    headers: { 'Content-Type': 'application/json', ...CORS_HEADERS },
   });
 }
 
@@ -94,6 +96,9 @@ async function checkRateLimit(userId: string): Promise<{ ok: boolean; used: numb
 }
 
 Deno.serve(async (req: Request) => {
+  const preflight = handlePreflight(req);
+  if (preflight) return preflight;
+
   if (req.method !== 'POST') {
     return json(405, { error: 'Method Not Allowed' });
   }
