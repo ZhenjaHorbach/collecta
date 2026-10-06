@@ -95,8 +95,9 @@ npx eas-cli build:list --platform android --status finished --limit 5
 # Recent OTA updates
 npx eas-cli update:list --branch production
 
-# Live edge function logs
-npx supabase functions logs validate-find --follow
+# Edge function logs: the CLI has no `functions logs` command —
+# Dashboard → Edge Functions → <function> → Logs
+open https://supabase.com/dashboard/project/_/functions
 
 # Play Console submissions (open dashboard)
 open https://expo.dev/accounts/horbachevgen/projects/collecta/submissions

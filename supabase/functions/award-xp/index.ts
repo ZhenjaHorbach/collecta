@@ -23,7 +23,7 @@
 //         502 agent_failed
 //
 // Logs: every step prints `[award-xp][step N] tool=... input=... output=...`
-// for tail-friendly debugging via `supabase functions logs award-xp --follow`.
+// for debugging in Dashboard → Edge Functions → award-xp → Logs.
 
 import { createClient } from '@supabase/supabase-js';
 import Anthropic from '@anthropic-ai/sdk';

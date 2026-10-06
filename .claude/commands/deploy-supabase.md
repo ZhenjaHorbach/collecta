@@ -43,7 +43,7 @@ After a successful deploy:
 
 1. **Functions** — `supabase functions list` shows the new deploy timestamp for each touched function.
 2. **Migrations** — `supabase db diff` returns empty (no drift between local and remote).
-3. **Smoke** — if a function was deployed, tail logs briefly: `supabase functions logs <name> --tail` for ~30s, report any errors.
+3. **Smoke** — if a function was deployed, send an unauthenticated request (`curl -X OPTIONS` / `POST` with `{}` to `https://<ref>.supabase.co/functions/v1/<name>`): expect 204 / 401 / 400 / 405, never 500/503 (`BOOT_ERROR` = import or startup failure). Logs are in Dashboard → Edge Functions → `<name>` → Logs — the CLI has no `functions logs` command.
 
 Report which of the three checks passed in the final message.
 
