@@ -82,6 +82,12 @@ describe('useCapture', () => {
     expect(result.current.validation?.valid).toBe(true);
     expect(result.current.pending?.photoUrl).toBe('https://stub/finds/u/k.jpg');
     expect(mockUpload).toHaveBeenCalledWith('file:///compressed.jpg', 'u');
+    // Privacy contract: the raw photo (may carry EXIF GPS) is never uploaded
+    // or sent to Vision — only the re-encoded, EXIF-stripped JPEG.
+    expect(mockCompress).toHaveBeenCalledWith(
+      expect.objectContaining({ uri: 'file:///raw.jpg', stripExif: true, format: 'jpeg' })
+    );
+    expect(mockUpload).not.toHaveBeenCalledWith('file:///raw.jpg', expect.anything());
   });
 
   it('skips validateFind when aiVerification is OFF (synthesises a passed outcome)', async () => {

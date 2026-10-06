@@ -10,6 +10,11 @@
 /* eslint-disable import/first */
 const mockUpload = jest.fn();
 const mockRemove = jest.fn();
+const mockCompress = jest.fn();
+
+jest.mock('collecta-turbo-image', () => ({
+  compressImage: (...args: unknown[]) => mockCompress(...args),
+}));
 
 jest.mock('expo-file-system/legacy', () => ({
   EncodingType: { Base64: 'base64' },
@@ -78,8 +83,21 @@ describe('upload + delete', () => {
   beforeEach(() => {
     mockUpload.mockReset();
     mockRemove.mockReset();
+    mockCompress.mockReset();
     mockUpload.mockResolvedValue({ data: { path: 'ok' }, error: null });
     mockRemove.mockResolvedValue({ data: null, error: null });
+    mockCompress.mockResolvedValue({ uri: 'file:///tmp/compressed.jpg' });
+  });
+
+  it('strips EXIF before upload — the picked file is never uploaded as-is', async () => {
+    await uploadCollectionItemPhoto('file:///tmp/picked.png', 'u-1');
+    expect(mockCompress).toHaveBeenCalledWith(
+      expect.objectContaining({ uri: 'file:///tmp/picked.png', stripExif: true, format: 'jpeg' })
+    );
+    // Re-encoded to JPEG, so the object key and content type follow.
+    const [key, , opts] = mockUpload.mock.calls[0];
+    expect(key as string).toMatch(/\.jpg$/);
+    expect(opts).toMatchObject({ contentType: 'image/jpeg' });
   });
 
   it('uploads under collection-item-images bucket with userId namespace', async () => {

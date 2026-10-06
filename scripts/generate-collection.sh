@@ -2,7 +2,7 @@
 # Generate one new starter collection via the multi-agent pipeline and write
 # a SQL migration. The migration inserts under the system user
 # (00000000-...-0001), so anon-key access is enough to read the existing
-# catalog — no service role.
+# catalog. The service role is optional (see below).
 #
 # Usage:
 #   scripts/generate-collection.sh           # writes supabase/migrations/NNN_collection_<slug>.sql
@@ -16,6 +16,11 @@
 #   ANTHROPIC_API_KEY   — Claude API key
 #   SUPABASE_URL        — for fetching the existing collection catalog
 #   SUPABASE_ANON_KEY   — anon read of public.collections
+#
+# Optional env:
+#   SUPABASE_SERVICE_ROLE_KEY — logs token usage to public.ai_calls
+#                               and mirrors reference images to Storage
+#                               (skipped with a warning when unset)
 
 set -euo pipefail
 

@@ -10,8 +10,7 @@
 // Pure where possible. extractUsage / sumUsage have no I/O so they can be
 // imported from Node tests too.
 
-// @ts-ignore — Deno npm specifier
-import type { SupabaseClient } from 'npm:@supabase/supabase-js@2';
+import type { SupabaseClient } from '@supabase/supabase-js';
 
 export interface AnthropicUsage {
   input_tokens: number;

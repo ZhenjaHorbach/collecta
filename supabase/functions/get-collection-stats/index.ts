@@ -4,13 +4,8 @@
 //
 // Invoke: GET /functions/v1/get-collection-stats?collection_id=<uuid>
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-declare const Deno: any;
+import { createClient } from '@supabase/supabase-js';
 
-// @ts-ignore — Deno npm specifier
-import { createClient } from 'npm:@supabase/supabase-js@2';
-
-// @ts-ignore — Deno requires .ts extension on relative imports
 import { CORS_HEADERS, handlePreflight } from '../_shared/cors.ts';
 
 const supabase = createClient(

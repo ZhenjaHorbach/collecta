@@ -25,38 +25,35 @@
 // Logs: every step prints `[award-xp][step N] tool=... input=... output=...`
 // for tail-friendly debugging via `supabase functions logs award-xp --follow`.
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-declare const Deno: any;
+import { createClient } from '@supabase/supabase-js';
+import Anthropic from '@anthropic-ai/sdk';
 
-// @ts-ignore — Deno npm specifier
-import { createClient } from 'npm:@supabase/supabase-js@2';
-// @ts-ignore — Deno npm specifier
-import Anthropic from 'npm:@anthropic-ai/sdk@0.32.1';
-
-// @ts-ignore — Deno requires .ts extension on relative imports
 import { authorizeRequest } from '../_shared/auth.ts';
-// @ts-ignore — Deno requires .ts extension on relative imports
 // prettier-ignore
 import { levelForXp, todayUtcIso, updateStreak, XP_PER_EVENT, type XpEvent } from '../_shared/leveling.ts';
-// @ts-ignore — Deno requires .ts extension on relative imports
 import { logAiCall } from '../_shared/anthropic-usage.ts';
-// @ts-ignore — Deno requires .ts extension on relative imports
 import { CORS_HEADERS, handlePreflight } from '../_shared/cors.ts';
+// prettier-ignore
+import { ANTHROPIC_MAX_RETRIES, ANTHROPIC_TIMEOUT_TEXT_MS, AWARD_XP_LOOP_BUDGET_MS } from '../_shared/anthropic-config.ts';
 
 const supabase = createClient(
   Deno.env.get('SUPABASE_URL')!,
   Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
 );
 
+// Explicit limits so a slow upstream lands in agent_failed (502) instead of
+// a gateway timeout. See _shared/anthropic-config.ts.
 const anthropic = new Anthropic({
   apiKey: Deno.env.get('ANTHROPIC_API_KEY')!,
+  timeout: ANTHROPIC_TIMEOUT_TEXT_MS,
+  maxRetries: ANTHROPIC_MAX_RETRIES,
 });
 
 const MODEL = 'claude-haiku-4-5-20251001';
 const MAX_LOOP_STEPS = 8; // safety net — usually 2–3 turns is enough
 
 // ─── tool schemas ─────────────────────────────────────────────────────────────
-const TOOLS = [
+const TOOLS: Anthropic.Tool[] = [
   {
     name: 'get_user_stats',
     description:
@@ -132,7 +129,7 @@ const TOOLS = [
       required: ['user_id', 'code'],
     },
   },
-] as const;
+];
 
 const SYSTEM_PROMPT = `You are the Collecta gamification agent. After a player event you decide how XP and achievements update.
 
@@ -243,7 +240,9 @@ async function checkAchievements(
 
   type UnlockedRow = { achievement_id: string; achievements: { code: string } | null };
   const unlockedCodes = new Set<string>(
-    ((unlocked ?? []) as UnlockedRow[])
+    // Without generated DB types supabase-js infers the many-to-one embed as
+    // an array; PostgREST returns a single object (or null) here.
+    ((unlocked ?? []) as unknown as UnlockedRow[])
       .map((r) => r.achievements?.code)
       .filter((c): c is string => typeof c === 'string')
   );
@@ -386,7 +385,7 @@ interface AgentResult {
 }
 
 async function runAgentLoop(userId: string, event: XpEvent): Promise<AgentResult> {
-  const messages: unknown[] = [
+  const messages: Anthropic.MessageParam[] = [
     {
       role: 'user',
       content: `Event: ${event}\nuser_id: ${userId}\nFollow the procedure.`,
@@ -406,7 +405,15 @@ async function runAgentLoop(userId: string, event: XpEvent): Promise<AgentResult
   let streakDays = 0;
   let prevLevelSeen = -1;
 
+  const startedAt = Date.now();
   for (let step = 1; step <= MAX_LOOP_STEPS; step++) {
+    // MAX_LOOP_STEPS × per-call worst case would exceed the function limit,
+    // so stop starting new steps after the budget. Throws into the handler's
+    // agent_failed path; tool effects from earlier steps stay (same as any
+    // other mid-loop failure — unlock_achievement is idempotent).
+    if (Date.now() - startedAt > AWARD_XP_LOOP_BUDGET_MS) {
+      throw new Error(`loop_budget_exceeded after ${step - 1} steps`);
+    }
     const message = await anthropic.messages.create({
       model: MODEL,
       max_tokens: 1024,
@@ -428,7 +435,7 @@ async function runAgentLoop(userId: string, event: XpEvent): Promise<AgentResult
       return { newAchievements, finalXp, finalLevel, leveledUp, streakDays, usage, steps: step };
     }
 
-    const toolResults: unknown[] = [];
+    const toolResults: Anthropic.ToolResultBlockParam[] = [];
     interface ToolUseBlock {
       type: 'tool_use';
       id: string;

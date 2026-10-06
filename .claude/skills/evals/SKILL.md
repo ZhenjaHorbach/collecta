@@ -12,7 +12,7 @@ Eval suite lives at `src/evals/` and tests the same Claude Vision contract that 
 ```
 src/evals/
   run.ts                  # CLI entrypoint — npm run evals
-  client.ts               # Anthropic SDK wrapper, mirrors edge function exactly
+  client.ts               # Anthropic SDK wrapper; prompt + tool imported from supabase/functions/_shared/validate-photo-prompt.ts
   ai-validation.eval.ts   # 8 cases for find validation
   report.ts               # accuracy / latency / format-compliance aggregation
   types.ts                # EvalCase, EvalReport interfaces

@@ -24,17 +24,10 @@
 // Body:   { collection_id: string }
 // Auth:   user JWT required; caller must be the collection's creator.
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-declare const Deno: any;
+import { createClient } from '@supabase/supabase-js';
 
-// @ts-ignore — Deno npm specifier
-import { createClient } from 'npm:@supabase/supabase-js@2';
-
-// @ts-ignore — Deno requires .ts extension on relative imports
 import { authenticateRequest } from '../_shared/auth.ts';
-// @ts-ignore — Deno requires .ts extension on relative imports
 import { CORS_HEADERS, handlePreflight } from '../_shared/cors.ts';
-// @ts-ignore — Deno requires .ts extension on relative imports
 import { objectKeyFromPublicUrl } from '../_shared/storage-keys.ts';
 
 const SUPABASE_URL = Deno.env.get('SUPABASE_URL')!;

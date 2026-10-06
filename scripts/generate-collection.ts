@@ -34,7 +34,8 @@ import { runFunFacts } from '../src/agents/subagent-funfact';
 import { runImageQueryRewriter } from '../src/agents/subagent-image-query';
 import { runRarity } from '../src/agents/subagent-rarity';
 import { runValidationHints } from '../src/agents/subagent-validation';
-import { sumUsage, type NormalizedUsage } from '../src/agents/types';
+import { logAiCallFromEnv } from '../src/agents/ai-calls';
+import { normalizeUsage, sumUsage, type NormalizedUsage } from '../src/agents/types';
 
 const TOPIC_MODEL = 'claude-haiku-4-5-20251001';
 const AGENT_MODEL = 'claude-haiku-4-5-20251001';
@@ -366,7 +367,17 @@ async function main(): Promise<void> {
   const result = await generateCollection();
   const sql = renderMigrationSql(result);
 
-  if (process.env.COLLECTION_DRY_RUN === '1') {
+  const dryRun = process.env.COLLECTION_DRY_RUN === '1';
+  const logUsage = (file: string | null): Promise<void> =>
+    logAiCallFromEnv('cron:generate-collection', result.model, normalizeUsage(result.usage), {
+      source: 'cron',
+      dry_run: dryRun,
+      title: result.collection.title,
+      file,
+    });
+
+  if (dryRun) {
+    await logUsage(null);
     process.stdout.write(sql);
     process.stderr.write(
       `\n[dry-run] topic: ${JSON.stringify(result.topic)}\n` +
@@ -381,6 +392,7 @@ async function main(): Promise<void> {
   const num = await nextMigrationNumber();
   const path = resolve(dir, `${num}_collection_${slug(result.collection.title)}.sql`);
   await writeFile(path, sql, 'utf8');
+  await logUsage(path);
 
   // Stdout consumed by the workflow to populate PR title/body.
   process.stdout.write(

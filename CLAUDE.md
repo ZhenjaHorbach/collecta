@@ -57,7 +57,7 @@ Slash commands live in `.claude/commands/`:
 Three EAS Build profiles in `eas.json`:
 
 - `development` — dev client, internal distribution, iOS Simulator allowed. For local dev builds via `eas build --profile development`.
-- `preview` — Android APK x86_64, used by the e2e workflow on every PR (see `.claude/rules/ci.md`).
+- `preview` — Android APK x86_64, used by the e2e workflow (`e2e.yml`: manual dispatch + Monday weekly cron, not per PR — see `.claude/rules/ci.md`).
 - `production` — store-bound: iOS `m-medium` build, Android `app-bundle` (`.aab`), `autoIncrement: true` so EAS bumps `versionCode` / `buildNumber` per build.
 
 `submit.production.android` references `./play-service-account.json` (gitignored — the JSON the user downloads from Google Cloud → IAM → Service Accounts after linking to Play Console). `submit.production.ios` is intentionally absent — fill in `appleId` / `ascAppId` / `appleTeamId` once the Apple Developer account exists and the App Store Connect record is created. EAS schema rejects empty strings, so leave the section out until you have real values.
@@ -126,9 +126,11 @@ Every script in `scripts/` is invoked through a `.sh` wrapper — workflows and 
 
 ## AI cost tracking
 
-Every Anthropic call site must capture `message.usage` (input/output/cache_read/cache_creation tokens) and persist it. Today there's one site — `supabase/functions/validate-find/index.ts` — which writes the four token counts to the `finds` row alongside the validation result. **When adding a new call site, repeat the same pattern.** USD conversion lives in `src/utils/cost-tracker.ts` (pure functions, no DB) — never re-implement pricing inline.
+Every Anthropic call site must capture `message.usage` (input/output/cache_read/cache_creation tokens) and persist it. USD conversion lives in `src/utils/cost-tracker.ts` (pure functions, no DB) — never re-implement pricing inline.
 
-When a second call site lands, refactor: extract `extractUsage(message)` into `supabase/functions/_shared/anthropic-usage.ts`, and if the new call has no natural parent row (i.e. doesn't 1:1 with a `finds`-like entity), introduce an `ai_calls(id, kind, model, *_tokens, metadata)` table instead of bolting columns onto unrelated tables.
+Source of truth is the `ai_calls(id, kind, model, *_tokens, metadata)` table (migration `015_starter_and_fork.sql`). Edge functions log through `supabase/functions/_shared/anthropic-usage.ts` — `extractUsage` / `sumUsage` normalise `message.usage`, `logAiCall(admin, kind, model, usage, metadata)` inserts best-effort (a logging failure never fails the request). Current call sites: `validate-find` (`kind = validate-find:<mode>`), `award-xp` (`award-xp:<event>`), `generate-collection` (`generate-collection:coordinator` / `:subagents`). **When adding a new edge-function call site, call `logAiCall` the same way** — don't add token columns to new tables.
+
+Legacy per-row mirrors are still written until readers move to `ai_calls`: `finds.ai_*` (migration 007, persisted by the client at commit time from the `usage` that validate-find returns) and `user_achievements.ai_*` (award-xp, only on unlock). The cron generators (`scripts/generate-{collection,achievement}.ts`) log from `main()` via `src/agents/ai-calls.ts → logAiCallFromEnv` (`kind = cron:generate-<collection|achievement>`, Node copy of the same insert); it needs `SUPABASE_SERVICE_ROLE_KEY` and skips with a warning without it. Eval suites import the generator functions, not `main()`, so eval runs don't log.
 
 ## Native projects (CNG)
 

@@ -28,6 +28,15 @@ apply — read them first. Only the points below are extra.
   during the copy step). Always assert `auth.uid()` and any business
   guard at the top of the function body — definer skips RLS, so the
   function IS the security boundary.
+- Imports: bare specifiers resolved by `supabase/functions/deno.json`
+  (`@supabase/supabase-js`, `@anthropic-ai/sdk` → pinned `npm:` versions),
+  relative imports with the `.ts` extension. No `npm:` / `https:` URLs
+  inline, no `@ts-ignore`, no `declare const Deno: any` — `Deno` is typed
+  by the `deno.window` lib. Editor: VS Code uses the Deno extension for this
+  folder (`.vscode/settings.json → deno.enablePaths`).
+- Type-check before deploy: `cd supabase/functions && deno check */index.ts`.
+  Known pre-existing errors are listed in
+  `docs/specs/6-ts-ignore-edge-functions.md`.
 
 ## Seeding & system data
 

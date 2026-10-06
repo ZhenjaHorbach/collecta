@@ -5,14 +5,14 @@ description: How Collecta calls Claude Vision for find validation — the single
 
 # Claude Vision API — find validation
 
-Collecta uses one path for AI photo validation: the `validate-find` Supabase edge function, which calls `anthropic.messages.create` with **forced tool use**. Eval-side code (`src/evals/client.ts`) mirrors this contract so the suite tests what production runs.
+Collecta uses one path for AI photo validation: the `validate-find` Supabase edge function, which calls `anthropic.messages.create` with **forced tool use**. Eval-side code (`src/evals/client.ts`) imports the same prompt module, so the suite tests what production runs.
 
 ## Where the canonical prompt lives
 
-- Production: `supabase/functions/validate-find/index.ts` → `VALIDATION_PROMPT` + `VALIDATE_PHOTO_TOOL`
-- Evals: `src/evals/client.ts` → same constants, must stay in sync.
-
-If you change one, change the other in the same commit. Drift between them silently breaks evals as a guard.
+- Single source: `supabase/functions/_shared/validate-photo-prompt.ts` → `VALIDATION_MODEL`, `SYSTEM_INSTRUCTIONS`, `USER_CONTEXT_TEMPLATE`, `VALIDATE_PHOTO_TOOL`, `fillTemplate`.
+- Imported by `supabase/functions/validate-find/index.ts` (prod) and `src/evals/client.ts` (evals). Don't redefine them anywhere else.
+- Keep the module import-free — Node loads it directly (see `.claude/rules/testing.md` → exception).
+- Still prod-only: few-shot examples (`buildFewShotExamples` in `validate-find`) and the `match_item` / `pick_collection` tools.
 
 ## The prompt
 
@@ -88,6 +88,6 @@ Never make UI block the find based on a `valid: false` verdict. The button label
 
 ## When to update this skill
 
-- Changed the prompt? Update both `validate-find/index.ts` and `src/evals/client.ts`, then run evals (`npm run evals`) and confirm no regressions before merging.
+- Changed the prompt? Edit `_shared/validate-photo-prompt.ts` only, then run evals (`npm run evals`) and confirm no regressions before merging.
 - Added a new failure mode (e.g. low-light photos consistently mis-classified)? Add a fixture + eval case in `src/evals/ai-validation.eval.ts` so the next regression is caught.
 - Considering switching off `tool_choice`? Don't — without it, format compliance drops and the parser becomes the bottleneck.

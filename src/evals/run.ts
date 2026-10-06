@@ -8,6 +8,7 @@ import { callValidate } from './client';
 import { collectionCalibrationCases } from './collection-calibration.eval';
 import { collectionGeneratorCases } from './collection-generator.eval';
 import { buildReport } from './report';
+import { fixtureExistsViaHead, runEvalCase } from './run-case';
 import type { EvalCase, EvalContext } from './types';
 
 const SUITES: Record<string, EvalCase[]> = {
@@ -57,11 +58,17 @@ async function main(): Promise<void> {
     throw new Error('ANTHROPIC_API_KEY is required');
   }
 
+  const fixtureUrl = fixtureUrlFactory();
   const ctx: EvalContext = {
-    fixtureUrl: fixtureUrlFactory(),
+    fixtureUrl,
+    fixtureExists: (name) => fixtureExistsViaHead(fixtureUrl, name),
     validate: async (photoUrl, collectionDescription, itemName) => {
-      const { result, durationMs } = await callValidate(photoUrl, collectionDescription, itemName);
-      return { result, durationMs };
+      const { result, durationMs, matchesClaim, overridden } = await callValidate(
+        photoUrl,
+        collectionDescription,
+        itemName
+      );
+      return { result, durationMs, matchesClaim, overridden };
     },
   };
 
@@ -77,21 +84,11 @@ async function main(): Promise<void> {
     const cases = SUITES[suiteName];
     const results = [];
     for (const c of cases) {
-      try {
-        const r = await c.run(ctx);
-        console.log(`  ${r.passed ? '✓' : '✗'} ${r.name} (${r.durationMs}ms)`);
-        if (!r.passed && r.reason) console.log(`    ↳ ${r.reason}`);
-        results.push(r);
-      } catch (err) {
-        console.log(`  ✗ ${c.name} threw: ${err instanceof Error ? err.message : String(err)}`);
-        results.push({
-          name: c.name,
-          passed: false,
-          durationMs: 0,
-          parsed: false,
-          reason: err instanceof Error ? err.message : String(err),
-        });
-      }
+      const r = await runEvalCase(c, ctx);
+      const mark = r.skipped ? '○' : r.passed ? '✓' : '✗';
+      console.log(`  ${mark} ${r.name} (${r.durationMs}ms)`);
+      if (!r.passed && r.reason) console.log(`    ↳ ${r.reason}`);
+      results.push(r);
     }
 
     const report = buildReport(suiteName, startedAt, results);
@@ -99,7 +96,7 @@ async function main(): Promise<void> {
     await mkdir(dirname(outPath), { recursive: true });
     await writeFile(outPath, JSON.stringify(report, null, 2));
     console.log(
-      `  → ${outPath}\n  accuracy=${(report.accuracy * 100).toFixed(1)}% format=${(report.formatComplianceRate * 100).toFixed(1)}% avg=${report.avgLatencyMs.toFixed(0)}ms p95=${report.p95LatencyMs.toFixed(0)}ms`
+      `  → ${outPath}\n  accuracy=${(report.accuracy * 100).toFixed(1)}% skipped=${report.skipped} format=${(report.formatComplianceRate * 100).toFixed(1)}% avg=${report.avgLatencyMs.toFixed(0)}ms p95=${report.p95LatencyMs.toFixed(0)}ms`
     );
   }
 }

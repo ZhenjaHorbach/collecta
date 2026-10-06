@@ -16,41 +16,25 @@
 // Body:   { prompt: string, locale?: 'en'|'ru'|'pl'|'uk' }
 // Auth:   user JWT required (forwarded by Supabase)
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-declare const Deno: any;
+import { createClient } from '@supabase/supabase-js';
+import Anthropic from '@anthropic-ai/sdk';
 
-// @ts-ignore — Deno npm specifier
-import { createClient } from 'npm:@supabase/supabase-js@2';
-// @ts-ignore — Deno npm specifier
-import Anthropic from 'npm:@anthropic-ai/sdk@0.32.1';
-
-// @ts-ignore — Deno requires .ts extension on relative imports
 import { authenticateRequest } from '../_shared/auth.ts';
-// @ts-ignore — Deno requires .ts extension on relative imports
 import { logAiCall } from '../_shared/anthropic-usage.ts';
-// @ts-ignore — Deno requires .ts extension on relative imports
 import { CORS_HEADERS, handlePreflight } from '../_shared/cors.ts';
+// prettier-ignore
+import { ANTHROPIC_MAX_RETRIES, ANTHROPIC_TIMEOUT_GENERATION_MS } from '../_shared/anthropic-config.ts';
 
 // Shared agents — same files Node-side scripts use.
-// @ts-ignore — Deno requires .ts extension on relative imports
 import { runCoordinator } from '../../../src/agents/coordinator.ts';
-// @ts-ignore — Deno requires .ts extension on relative imports
 import { runDescriptions } from '../../../src/agents/subagent-descriptions.ts';
-// @ts-ignore — Deno requires .ts extension on relative imports
 import { runValidationHints } from '../../../src/agents/subagent-validation.ts';
-// @ts-ignore — Deno requires .ts extension on relative imports
 import { runRarity } from '../../../src/agents/subagent-rarity.ts';
-// @ts-ignore — Deno requires .ts extension on relative imports
 import { runFunFacts } from '../../../src/agents/subagent-funfact.ts';
-// @ts-ignore — Deno requires .ts extension on relative imports
 import { mergeAndValidate } from '../../../src/agents/merge.ts';
-// @ts-ignore — Deno requires .ts extension on relative imports
 import { sumUsage, type Locale } from '../../../src/agents/types.ts';
-// @ts-ignore — Deno requires .ts extension on relative imports
 import { fetchExampleImagesForNames } from '../../../src/agents/image-fetcher.ts';
-// @ts-ignore — Deno requires .ts extension on relative imports
 import { mirrorImagesByName } from '../../../src/agents/image-mirror.ts';
-// @ts-ignore — Deno requires .ts extension on relative imports
 import { runImageQueryRewriter } from '../../../src/agents/subagent-image-query.ts';
 
 const SUPABASE_URL = Deno.env.get('SUPABASE_URL')!;
@@ -58,7 +42,14 @@ const SERVICE_ROLE_KEY = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
 const ANTHROPIC_API_KEY = Deno.env.get('ANTHROPIC_API_KEY')!;
 
 const admin = createClient(SUPABASE_URL, SERVICE_ROLE_KEY);
-const anthropic = new Anthropic({ apiKey: ANTHROPIC_API_KEY });
+// Explicit limits so a slow upstream lands in coordinator_failed /
+// subagent_failed (502) instead of a gateway timeout. The same client is
+// passed into every src/agents/* call. See _shared/anthropic-config.ts.
+const anthropic = new Anthropic({
+  apiKey: ANTHROPIC_API_KEY,
+  timeout: ANTHROPIC_TIMEOUT_GENERATION_MS,
+  maxRetries: ANTHROPIC_MAX_RETRIES,
+});
 
 const DAILY_LIMIT = 5;
 // Same model as validate-find / award-xp / weekly cron — Haiku 4.5 is plenty

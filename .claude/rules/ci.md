@@ -48,7 +48,7 @@ Two domain-specific workflows — never combined into one "all evals" job.
 
 - `workflow_dispatch` + Monday 09:00 UTC weekly canary
 - `ubuntu-latest` + `reactivecircus/android-emulator-runner@v2` (Android API 34, Pixel 6, virtual-scene camera)
-- Steps: seed Supabase test user → EAS local Android dev build → boot emulator → install APK → `maestro/run.sh maestro/flows/`
+- Steps: seed Supabase test user → EAS local Android build (`--profile preview`, no dev client) → boot emulator → install APK → `maestro/run.sh maestro/flows/`
 - ~15-20 min/run; `concurrency: cancel-in-progress: false` so the seeded test user isn't trampled by a parallel run
 - `--debug-output debug` artifacts (screenshots/video) uploaded only on failure, 30-day retention
 - iOS coverage intentionally NOT planned — testIDs are platform-agnostic and macOS minutes are 10× the cost

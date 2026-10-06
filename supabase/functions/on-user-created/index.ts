@@ -6,11 +6,7 @@
 // Set up in Supabase Dashboard → Database → Webhooks:
 //   Table: auth.users  |  Event: INSERT  |  URL: /functions/v1/on-user-created
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-declare const Deno: any;
-
-// @ts-ignore — Deno npm specifier
-import { createClient } from 'npm:@supabase/supabase-js@2';
+import { createClient } from '@supabase/supabase-js';
 
 const supabase = createClient(
   Deno.env.get('SUPABASE_URL')!,

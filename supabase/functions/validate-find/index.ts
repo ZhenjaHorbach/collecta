@@ -35,123 +35,39 @@
 // Token usage is returned alongside the result so the client can persist it
 // on the finds row at commit time (see CLAUDE.md → AI cost tracking).
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-declare const Deno: any;
+import { createClient } from '@supabase/supabase-js';
+import Anthropic from '@anthropic-ai/sdk';
 
-// @ts-ignore — Deno npm specifier
-import { createClient } from 'npm:@supabase/supabase-js@2';
-// @ts-ignore — Deno npm specifier
-import Anthropic from 'npm:@anthropic-ai/sdk@0.32.1';
-
-// @ts-ignore — Deno requires .ts extension on relative imports
 import { authenticateRequest } from '../_shared/auth.ts';
-// @ts-ignore — Deno requires .ts extension on relative imports
 // prettier-ignore
 import { logAiCall, type AnthropicUsage } from '../_shared/anthropic-usage.ts';
-// @ts-ignore — Deno requires .ts extension on relative imports
 import { CORS_HEADERS, handlePreflight } from '../_shared/cors.ts';
+// prettier-ignore
+import { ANTHROPIC_MAX_RETRIES, ANTHROPIC_TIMEOUT_VISION_MS } from '../_shared/anthropic-config.ts';
+// prettier-ignore
+import { fillTemplate, SYSTEM_INSTRUCTIONS, USER_CONTEXT_TEMPLATE, VALIDATE_PHOTO_TOOL, VALIDATION_MODEL } from '../_shared/validate-photo-prompt.ts';
+import { parseValidatePhotoToolUse } from '../_shared/validate-photo-parse.ts';
 
 const supabase = createClient(
   Deno.env.get('SUPABASE_URL')!,
   Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
 );
 
+// Explicit limits so a slow upstream lands in vision_failed (502) instead
+// of a gateway timeout. See _shared/anthropic-config.ts.
 const anthropic = new Anthropic({
   apiKey: Deno.env.get('ANTHROPIC_API_KEY')!,
+  timeout: ANTHROPIC_TIMEOUT_VISION_MS,
+  maxRetries: ANTHROPIC_MAX_RETRIES,
 });
 
-const MODEL = 'claude-haiku-4-5-20251001';
-
-// Static instructions — frozen across all calls so they sit in the cached prefix.
-// Per-find context (collection description, item name) is rendered into the
-// final user turn instead, AFTER the breakpoint, so it stays out of the cache key.
-const SYSTEM_INSTRUCTIONS = `You are validating a photo for a collection app.
-Use the validate_photo tool to respond. Be strict but fair:
-- valid=true only when the claimed item is clearly identifiable.
-- confidence reflects how certain you are (0=guess, 1=certain).
-- detected describes what you actually see in the photo, not what the user claimed.
-- suggestion is short, kind, actionable help for the user (e.g. "get closer", "try better lighting").`;
-
-// Per-find context — uncached. The decision rules live here (not in the
-// cached system prompt) so we can tune strictness without busting the
-// cache. Without these rules the model treats "fits the collection theme"
-// as enough: a Warsaw church passed as a Warsaw mermaid statue with 95%
-// confidence because it correctly inferred the surrounding theme.
-const USER_CONTEXT_TEMPLATE = `Collection: {collection_description}
-Claimed item: {item_name}
-
-Decision rules — read carefully and apply in order:
-
-STEP 1. Identify the PRIMARY SUBJECT of the photo — the thing that fills the most of the frame and is clearly what the photographer aimed at. Write this into "detected" as a concrete noun phrase. Examples of good "detected" values: "a Gothic red-brick church with two spires", "a bronze statue of a mermaid holding a sword", "a tabby cat sitting on a wooden floor". Examples of BAD "detected" values (vague, evasive, location-only): "a view of Warsaw's Old Town", "a city skyline", "an outdoor scene", "buildings in Europe". If you find yourself writing a location or theme instead of a subject — stop and name the actual subject.
-
-STEP 2. Compare the primary subject from step 1 against "{item_name}". Set valid=true ONLY if they are the same specific thing. If they are different objects, different landmarks, different species, or different categories — valid is false, no exceptions.
-
-STEP 3. Reasons that are NEVER enough to set valid=true:
- - The photo fits the collection's theme or area.
- - The subject is in the same city / country / neighborhood as the item.
- - The subject is the same type of thing (e.g. both are statues, both are churches).
- - The user clearly tried hard.
- - It "could be" or "looks similar" — that's valid=false.
-
-STEP 4. confidence is your certainty about the verdict (positive OR negative). 0.95 means you'd bet money on it; 0.5 means it's a guess. Confident-no is a feature, not a flaw — a clearly-wrong photo gets valid=false with confidence ≥ 0.9.
-
-STEP 5. suggestion is a short, kind, actionable hint that matches your verdict — never apologise for a positive verdict, never congratulate on a negative one.`;
-
-// Schema is structured as a 3-step reasoning chain: model writes
-// primary_subject (what's in the photo) → matches_claim (does it match the
-// claimed item) → valid (must equal matches_claim). Splitting the comparison
-// out catches model self-contradictions where it correctly identifies the
-// subject but still flips valid=true out of obligation. parseToolUse
-// overrides valid from matches_claim if they disagree.
-const VALIDATE_PHOTO_TOOL = {
-  name: 'validate_photo',
-  description:
-    'Return the structured validation verdict for the submitted photo. Fill the fields in this order — primary_subject and matches_claim determine valid.',
-  input_schema: {
-    type: 'object',
-    properties: {
-      primary_subject: {
-        type: 'string',
-        description:
-          'The concrete primary subject of the photo, written as a noun phrase. Examples: "a Gothic red-brick church with two spires", "a bronze statue of a mermaid", "a tabby cat on a wooden floor". MUST be a specific subject — NOT a location or theme like "Warsaw Old Town", "city skyline", "outdoor scene".',
-      },
-      matches_claim: {
-        type: 'boolean',
-        description:
-          'True iff primary_subject and the claimed item name the same specific thing. False when they are different objects, different landmarks, different species, or different categories — even if they share a theme, area, or category (e.g. "both are statues in Warsaw" is NOT a match).',
-      },
-      valid: {
-        type: 'boolean',
-        description:
-          'MUST equal matches_claim. Setting valid=true while matches_claim=false is a contradiction and will be rejected.',
-      },
-      confidence: {
-        type: 'number',
-        minimum: 0,
-        maximum: 1,
-        description:
-          'Your real certainty about the verdict (positive OR negative). 0.95 = you would bet on it; 0.5 = a guess. A clearly-wrong photo gets valid=false with confidence ≥ 0.9.',
-      },
-      detected: {
-        type: 'string',
-        description:
-          'Same content as primary_subject — kept for backwards compat. A concrete noun phrase describing what is actually in the photo.',
-      },
-      suggestion: {
-        type: 'string',
-        description:
-          'Short, kind, actionable hint that matches the verdict — never apologise for a positive verdict, never congratulate on a negative one.',
-      },
-    },
-    required: ['primary_subject', 'matches_claim', 'valid', 'confidence', 'detected', 'suggestion'],
-  },
-} as const;
+const MODEL = VALIDATION_MODEL;
 
 // Match-in-collection: pick which item from a known collection the photo
 // matches best. Returns the verdict plus the chosen item id (or null) and a
 // ranked top-3. confidence is the chosen item's confidence; "valid" means
 // confidence is high enough to call it a match without user help.
-const MATCH_ITEM_TOOL = {
+const MATCH_ITEM_TOOL: Anthropic.Tool = {
   name: 'match_item',
   description:
     'Pick the item in the collection that best matches the photo. Return null if no item is a credible match.',
@@ -186,12 +102,12 @@ const MATCH_ITEM_TOOL = {
     },
     required: ['matched_item_id', 'valid', 'confidence', 'detected', 'suggestion', 'candidates'],
   },
-} as const;
+};
 
 // Discover: pick which of the user's collections this photo most plausibly
 // belongs to. Item resolution is a separate downstream pass — this step only
 // disambiguates the collection.
-const PICK_COLLECTION_TOOL = {
+const PICK_COLLECTION_TOOL: Anthropic.Tool = {
   name: 'pick_collection',
   description:
     'Pick the collection from the supplied list that this photo most plausibly belongs to, or null if none fits.',
@@ -216,7 +132,7 @@ const PICK_COLLECTION_TOOL = {
     },
     required: ['matched_collection_id', 'confidence', 'detected', 'candidates'],
   },
-} as const;
+};
 
 // Confidence threshold above which a match is auto-accepted (`valid=true`
 // path on the client). Below this, the UI shows the candidates list and lets
@@ -300,11 +216,7 @@ function buildFewShotExamples(): FewShotExample[] {
   ];
 }
 
-function fillTemplate(template: string, vars: Record<string, string>): string {
-  return template.replace(/\{(\w+)\}/g, (_, key) => vars[key] ?? '');
-}
-
-function imageBlock(url: string): unknown {
+function imageBlock(url: string): Anthropic.ImageBlockParam {
   return { type: 'image', source: { type: 'url', url } };
 }
 
@@ -317,9 +229,9 @@ function buildMessages(
   photoUrl: string,
   collectionDescription: string,
   itemName: string
-): unknown[] {
+): Anthropic.MessageParam[] {
   const examples = buildFewShotExamples();
-  const messages: unknown[] = [];
+  const messages: Anthropic.MessageParam[] = [];
 
   examples.forEach((ex, i) => {
     const isLast = i === examples.length - 1;
@@ -354,7 +266,7 @@ function buildMessages(
           type: 'tool_result',
           tool_use_id: `example_${i}`,
           content: 'ok',
-          ...(isLast ? { cache_control: { type: 'ephemeral' } } : {}),
+          ...(isLast ? { cache_control: { type: 'ephemeral' as const } } : {}),
         },
       ],
     });
@@ -375,40 +287,6 @@ function buildMessages(
   });
 
   return messages;
-}
-
-function parseToolUse(content: unknown): ValidationResult {
-  if (!Array.isArray(content)) throw new Error('Unexpected response shape');
-  const block = content.find((b: { type?: string }) => b?.type === 'tool_use');
-  if (!block) throw new Error('No tool_use block in response');
-  const input = (block as { input?: unknown }).input;
-  if (!input || typeof input !== 'object') throw new Error('tool_use input missing');
-  const r = input as Partial<FewShotInput>;
-  if (
-    typeof r.valid !== 'boolean' ||
-    typeof r.confidence !== 'number' ||
-    typeof r.detected !== 'string' ||
-    typeof r.suggestion !== 'string'
-  ) {
-    throw new Error('tool_use input failed schema check');
-  }
-  // Safety-net: if the model wrote matches_claim=false but valid=true, trust
-  // the explicit comparison and override valid. This catches the failure mode
-  // where the model correctly identifies a mismatch but still flips valid=true
-  // out of obligation (observed on Warsaw church / mermaid case).
-  let valid = r.valid;
-  if (typeof r.matches_claim === 'boolean' && r.matches_claim !== r.valid) {
-    console.warn(
-      `[validate-find] matches_claim=${r.matches_claim} disagreed with valid=${r.valid}; overriding to matches_claim`
-    );
-    valid = r.matches_claim;
-  }
-  return {
-    valid,
-    confidence: Math.max(0, Math.min(1, r.confidence)),
-    detected: r.detected,
-    suggestion: r.suggestion,
-  };
 }
 
 interface ValidationCall {
@@ -435,7 +313,14 @@ export async function validateWithClaude(
     ],
     messages: buildMessages(photoUrl, collectionDescription, itemName),
   });
-  const result = parseToolUse(message.content);
+  // Shape check + clamp + matches_claim safety net live in the shared,
+  // unit-tested parser (_shared/validate-photo-parse.ts).
+  const { result, matchesClaim, overridden } = parseValidatePhotoToolUse(message.content);
+  if (overridden) {
+    console.warn(
+      `[validate-find] matches_claim=${matchesClaim} disagreed with valid=${!result.valid}; overriding to matches_claim`
+    );
+  }
   const u = message.usage ?? {};
   const usage: ApiUsage = {
     inputTokens: u.input_tokens ?? 0,
@@ -616,8 +501,10 @@ async function listJoinedCollections(userId: string): Promise<CollectionRow[]> {
   if (joinedRes.error) throw joinedRes.error;
 
   const owned = (ownedRes.data ?? []) as CollectionRow[];
-  const joined = (joinedRes.data ?? [])
-    .map((row: { collection: CollectionRow | null }) => row.collection)
+  // Without generated DB types supabase-js infers the many-to-one embed as
+  // an array; PostgREST returns a single object (or null) here.
+  const joined = ((joinedRes.data ?? []) as unknown as { collection: CollectionRow | null }[])
+    .map((row) => row.collection)
     .filter((c: CollectionRow | null): c is CollectionRow => c !== null);
 
   const seen = new Set<string>();
@@ -1007,7 +894,11 @@ async function handleVerify(
 
   const itemName = item.name as string | undefined;
   const collectionDescription =
-    (item.collections?.description as string | undefined) ??
+    // Many-to-one embed: an object at runtime, typed as an array without
+    // generated DB types (same as listJoinedCollections above).
+    ((item.collections as unknown as { description?: string } | null)?.description as
+      | string
+      | undefined) ??
     (item.description as string | undefined) ??
     (item.ai_validation_prompt as string | undefined);
 
