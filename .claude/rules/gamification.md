@@ -67,15 +67,15 @@ A "completed collection" = the user has at least one find for every `collection_
 
 Loop terminates on `stop_reason !== 'tool_use'`. Safety cap `MAX_LOOP_STEPS = 8`. Every step prints `[award-xp][step N] tool=... input=... output=...` — view the trace via `supabase functions logs award-xp --follow`.
 
-## AI usage tracking — mini variant
+## AI usage tracking
 
-Aggregated token counts from the entire loop are written to **each** new `user_achievements` row (`ai_model`, `ai_input_tokens`, `ai_output_tokens`, `ai_cache_read_tokens`, `ai_cache_creation_tokens`). When no achievement was unlocked, usage is **not persisted** — that's the trade-off of the mini variant per CLAUDE.md.
+Every successful loop run is logged to `ai_calls` via `logAiCall` (`kind = award-xp:<event>`, aggregated usage across all steps) — whether or not an achievement unlocked. See CLAUDE.md → AI cost tracking.
 
-**When to refactor to `ai_calls`:** as soon as a third Anthropic call site lands. At that point extract `extractUsage(message)` into `supabase/functions/_shared/anthropic-usage.ts` and create the `ai_calls(id, kind, model, *_tokens, metadata)` table.
+Legacy mirror: the same aggregated token counts are also written to **each** newly unlocked `user_achievements` row (`ai_model`, `ai_input_tokens`, `ai_output_tokens`, `ai_cache_read_tokens`, `ai_cache_creation_tokens`). Kept until readers move to `ai_calls`; don't add new readers of these columns.
 
 ## Where to debug
 
 - **Agent trace** — `supabase functions logs award-xp --follow`
-- **Per-unlock token cost** — `select * from user_achievements where user_id = ... order by unlocked_at desc;` then `estimateCostUsd(ai_model, …)` from `src/utils/cost-tracker.ts`
+- **Token cost** — `select * from ai_calls where kind like 'award-xp:%' order by created_at desc;` then `estimateCostUsd(model, …)` from `src/utils/cost-tracker.ts`
 - **Stuck streak** — check `users.last_find_date` vs today; cosmetic logic in `src/utils/streak.utils.ts`
 - **Missing toast** — confirm `<AchievementToastHost/>` is mounted in `src/app/_layout.tsx`; check that `awardXp(...)` was called (look for `[gamification]` warnings)

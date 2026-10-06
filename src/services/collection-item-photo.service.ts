@@ -1,3 +1,6 @@
+import { compressImage } from 'collecta-turbo-image';
+
+import { CAPTURE_IMAGE_STANDARD } from '@constants/capture';
 import { inferUploadExtension, readBytes } from '@utils/files.utils';
 
 import { supabase } from './supabase.service';
@@ -5,10 +8,20 @@ import { supabase } from './supabase.service';
 const BUCKET = 'collection-item-images';
 
 export async function uploadCollectionItemPhoto(localUri: string, userId: string): Promise<string> {
-  const ext = inferUploadExtension(localUri);
+  // Re-encode through the same EXIF-stripping path as find photos
+  // (useCapture). The bucket is public and the picker's output may still
+  // carry GPS / device EXIF — never upload the picked bytes as-is.
+  const compressed = await compressImage({
+    uri: localUri,
+    maxWidth: CAPTURE_IMAGE_STANDARD.maxWidth,
+    quality: CAPTURE_IMAGE_STANDARD.quality,
+    stripExif: true,
+    format: 'jpeg',
+  });
+  const ext = inferUploadExtension(compressed.uri);
   const objectKey = `${userId}/${Date.now()}-${Math.random().toString(36).slice(2, 8)}.${ext}`;
 
-  const bytes = await readBytes(localUri);
+  const bytes = await readBytes(compressed.uri);
 
   const { error } = await supabase.storage.from(BUCKET).upload(objectKey, bytes, {
     contentType: ext === 'png' ? 'image/png' : 'image/jpeg',

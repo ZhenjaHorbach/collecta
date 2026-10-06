@@ -9,11 +9,7 @@
 // Read .claude/rules/supabase.md → "Edge function caller auth" before
 // adding a new function.
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-declare const Deno: any;
-
-// @ts-ignore — Deno npm specifier
-import { createClient, type SupabaseClient } from 'npm:@supabase/supabase-js@2';
+import { createClient, type SupabaseClient } from '@supabase/supabase-js';
 
 let cached: SupabaseClient | null = null;
 function getAdmin(): SupabaseClient {

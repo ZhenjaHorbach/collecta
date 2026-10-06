@@ -7,11 +7,15 @@ function percentile(sorted: number[], p: number): number {
 }
 
 export function buildReport(suite: string, startedAt: string, cases: EvalCaseResult[]): EvalReport {
-  const total = cases.length;
-  const passed = cases.filter((c) => c.passed).length;
+  // Skipped (pending) cases stay in `cases` for visibility but don't count
+  // toward accuracy, format compliance or latency.
+  const ran = cases.filter((c) => !c.skipped);
+  const skipped = cases.length - ran.length;
+  const total = ran.length;
+  const passed = ran.filter((c) => c.passed).length;
   const failed = total - passed;
-  const parsed = cases.filter((c) => c.parsed).length;
-  const latencies = [...cases.map((c) => c.durationMs)].sort((a, b) => a - b);
+  const parsed = ran.filter((c) => c.parsed).length;
+  const latencies = [...ran.map((c) => c.durationMs)].sort((a, b) => a - b);
   const avgLatencyMs =
     latencies.length === 0 ? 0 : latencies.reduce((acc, v) => acc + v, 0) / latencies.length;
 
@@ -22,6 +26,7 @@ export function buildReport(suite: string, startedAt: string, cases: EvalCaseRes
     total,
     passed,
     failed,
+    skipped,
     accuracy: total === 0 ? 0 : passed / total,
     formatComplianceRate: total === 0 ? 0 : parsed / total,
     avgLatencyMs,

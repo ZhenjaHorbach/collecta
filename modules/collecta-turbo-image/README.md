@@ -38,7 +38,7 @@ Reproduce: `modules/collecta-turbo-image/scripts/bench.ts` — drop `runBench(ur
 
 ## Implementation
 
-- **iOS** (`ios/CollectaTurboImageImpl.swift`): `UIImage` decode → `UIGraphicsImageRenderer` resize → `CGImageDestination` write with `kCGImagePropertyExif/GPS/TIFF/IPTC` set to `NSNull` to strip metadata. The `.mm` shim wires the Swift impl into the TurboModule (JSI binding requires Objective-C++).
+- **iOS** (`ios/CollectaTurboImageImpl.swift`): `UIImage` decode → `UIGraphicsImageRenderer` resize → `CGImageDestination` write with only the lossy-quality property. The renderer produces a metadata-free bitmap and no source properties are copied, so the output carries no EXIF/GPS/TIFF/IPTC — `stripExif` is satisfied implicitly. Do **not** pass `NSNull` for the metadata keys: ImageIO then writes a header-only JPEG that Claude Vision rejects (see the comment in `CollectaTurboImageImpl.swift`). The `.mm` shim wires the Swift impl into the TurboModule (JSI binding requires Objective-C++).
 - **Android** (`android/.../CollectaTurboImageModule.kt`): `BitmapFactory` with `inSampleSize` for fast downscale → `Bitmap.compress` (JPEG/PNG/WEBP) → `androidx.exifinterface` to clear GPS/DateTime/Make/Model/Software/UserComment tags. Coroutine-based, runs on `Dispatchers.IO`.
 
 ## Codegen

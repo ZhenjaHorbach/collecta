@@ -4,6 +4,7 @@ import type { EvalCase, EvalCaseResult, EvalContext } from './types';
 
 const COLLECTION_CATS = 'Photos of domestic cats in everyday surroundings.';
 const COLLECTION_ARCH = 'Photos of brutalist architecture.';
+const COLLECTION_WARSAW = 'Landmarks and monuments of Warsaw.';
 
 async function safeRun(
   ctx: EvalContext,
@@ -258,6 +259,50 @@ const latency: EvalCase = {
   },
 };
 
+// Regression for c225b22: verify mode accepted a Warsaw church as the Warsaw
+// Mermaid statue with valid=true, confidence=0.95 — the model judged "fits
+// the collection's city" instead of "is the claimed object". Must stay
+// valid=false AND matches_claim=false (the safety net alone flipping valid
+// isn't enough — the model's own comparison must be right).
+//
+// PENDING: warsaw-church.jpg is not uploaded to the fixtures bucket yet.
+// runEvalCase skips this case (no Claude call) until it is. See
+// docs/specs/3-eval-warsaw-regression.md → "To activate".
+export const warsawChurchNotMermaid: EvalCase = {
+  name: 'regression_warsaw_church_not_mermaid',
+  requiredFixtures: ['warsaw-church.jpg'],
+  async run(ctx): Promise<EvalCaseResult> {
+    const startedAt = Date.now();
+    try {
+      const { result, durationMs, matchesClaim, overridden } = await ctx.validate(
+        ctx.fixtureUrl('warsaw-church.jpg'),
+        COLLECTION_WARSAW,
+        'Warsaw Mermaid statue'
+      );
+      const passed = result.valid === false && matchesClaim === false;
+      return {
+        name: this.name,
+        passed,
+        durationMs,
+        parsed: true,
+        result,
+        meta: { matchesClaim, overridden },
+        reason: passed
+          ? undefined
+          : `expected valid=false and matches_claim=false for a church claimed as the mermaid, got valid=${result.valid} matches_claim=${String(matchesClaim)} confidence=${result.confidence}`,
+      };
+    } catch (err) {
+      return {
+        name: this.name,
+        passed: false,
+        durationMs: Date.now() - startedAt,
+        parsed: false,
+        reason: err instanceof Error ? err.message : String(err),
+      };
+    }
+  },
+};
+
 export const aiValidationCases: EvalCase[] = [
   formatCompliance,
   truePositive,
@@ -268,4 +313,5 @@ export const aiValidationCases: EvalCase[] = [
   edgeCase,
   verifySpecificItem,
   latency,
+  warsawChurchNotMermaid,
 ];

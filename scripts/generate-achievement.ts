@@ -20,6 +20,9 @@ import { createClient } from '@supabase/supabase-js';
 import { readFile, readdir, writeFile } from 'node:fs/promises';
 import { resolve } from 'node:path';
 
+import { logAiCallFromEnv } from '../src/agents/ai-calls';
+import { normalizeUsage } from '../src/agents/types';
+
 const MODEL = 'claude-haiku-4-5-20251001';
 const REPO_ROOT = resolve(__dirname, '..');
 
@@ -261,7 +264,17 @@ async function main(): Promise<void> {
   const result = await generateAchievement();
   const sql = renderMigrationSql(result.achievement);
 
-  if (process.env.ACHIEVEMENT_DRY_RUN === '1') {
+  const dryRun = process.env.ACHIEVEMENT_DRY_RUN === '1';
+  const logUsage = (file: string | null): Promise<void> =>
+    logAiCallFromEnv('cron:generate-achievement', result.model, normalizeUsage(result.usage), {
+      source: 'cron',
+      dry_run: dryRun,
+      code: result.achievement.code,
+      file,
+    });
+
+  if (dryRun) {
+    await logUsage(null);
     process.stdout.write(sql);
     process.stderr.write(
       `\n[dry-run] proposal: ${JSON.stringify(result.achievement)}\n` +
@@ -274,6 +287,7 @@ async function main(): Promise<void> {
   const num = await nextMigrationNumber();
   const path = resolve(dir, `${num}_achievement_${result.achievement.code}.sql`);
   await writeFile(path, sql, 'utf8');
+  await logUsage(path);
 
   // Stdout consumed by the workflow to populate PR title/body.
   process.stdout.write(

@@ -13,6 +13,10 @@
 #   ANTHROPIC_API_KEY   — Claude API key
 #   SUPABASE_URL        — for fetching the existing achievement catalog
 #   SUPABASE_ANON_KEY   — anon read of public.achievements
+#
+# Optional env:
+#   SUPABASE_SERVICE_ROLE_KEY — logs token usage to public.ai_calls
+#                               (skipped with a warning when unset)
 
 set -euo pipefail
 

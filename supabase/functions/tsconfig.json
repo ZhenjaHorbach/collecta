@@ -7,7 +7,9 @@
     "strict": true,
     "noUnusedLocals": true,
     "noUnusedParameters": true,
-    "types": []
+    "types": [],
+    "allowImportingTsExtensions": true,
+    "noEmit": true
   },
   "include": ["./**/*.ts"]
 }

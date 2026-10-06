@@ -197,3 +197,11 @@ is separate (`tsc --noEmit`) — both must pass to merge.
 - Don't import from `src/` into `supabase/functions/`, even in tests —
   Deno can't resolve them, and the rule in `architecture.md` is
   bidirectional.
+  **Exception:** Node code (`src/evals/`, Jest tests) may import a module
+  from `supabase/functions/_shared/` when it is **pure and import-free**
+  (no `import`, no `Deno.*`). Current cases:
+  `_shared/validate-photo-prompt.ts` (prompt + tool schema) and
+  `_shared/validate-photo-parse.ts` (tool-output parser + `matches_claim`
+  safety net) — single sources used by prod validate-find and the vision
+  evals. The prompt module's test fences the import-free property. (Existing reverse-direction exception:
+  `generate-collection` imports `src/agents/`.)

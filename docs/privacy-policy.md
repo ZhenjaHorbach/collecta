@@ -1,7 +1,7 @@
 # Privacy Policy for Collecta
 
 **Effective date:** 2026-05-26
-**Last updated:** 2026-05-26
+**Last updated:** 2026-10-06
 
 This Privacy Policy describes how the Collecta mobile application ("Collecta", "the app", "we", "us") collects, uses, and shares information when you use it. By using Collecta you agree to the practices described here.
 
@@ -14,7 +14,7 @@ This Privacy Policy describes how the Collecta mobile application ("Collecta", "
 
 ### Content you create
 
-- **Photos** — each "find" you photograph is uploaded to our servers and, by default, visible to other Collecta users.
+- **Photos** — each "find" you photograph is uploaded to our servers and, by default, visible to other Collecta users. Photos you add to collections you create are uploaded the same way. Before upload, the app re-encodes every photo and removes embedded metadata (EXIF), including GPS coordinates and camera make/model, so the image file itself carries no location.
 - **Descriptions and reactions** — text you attach to your finds and reactions you leave on others' finds.
 - **Approximate location of finds** — if you grant location permission, the GPS coordinates of where a photo was taken are attached to the find and shown on the map. Location auto-tagging can be disabled in **Settings → Capture → Auto-tag location**.
 
@@ -33,17 +33,19 @@ This Privacy Policy describes how the Collecta mobile application ("Collecta", "
 ## 2. How we use information
 
 - **To provide the service** — store your account, sync your finds across devices, render them on the feed and map.
-- **To validate finds with AI** — when you submit a photo, the image and the collection criteria are sent to Anthropic's Claude Vision API for content-matching analysis. The verdict (match/no-match plus a confidence score) is stored alongside your find. Per Anthropic's API data policy, content sent through the API is not used to train Anthropic's models and is retained only briefly for abuse monitoring. You can disable AI validation in **Settings → Capture → AI verification**.
+- **To validate finds with AI** — when you submit a photo, the image (as a link to the stored photo, which the API fetches) and the collection criteria are sent to Anthropic's Claude Vision API for content-matching analysis. The verdict (match/no-match plus a confidence score) is stored alongside your find. Per Anthropic's API data policy, content sent through the API is not used to train Anthropic's models and is retained only briefly for abuse monitoring. You can disable AI validation in **Settings → Capture → AI verification**.
+- **To generate collection drafts with AI** — if you use the AI collection generator, the text you type (up to 500 characters) is sent to Anthropic's Claude API to draft the collection. Nothing is sent unless you use this feature.
+- **To award XP and achievements** — after you add a find or react to one, your account identifier and gamification statistics (XP, level, streak, number of finds, reactions given and completed collections) are sent to Anthropic's Claude API to calculate XP and unlock achievements. No photos or text you wrote are included.
 - **To enable social features** — display your finds to other users, allow reactions, and surface trending finds in the feed.
 
 ## 3. Who we share information with
 
-| Recipient                     | Data shared                                  | Purpose                |
-| ----------------------------- | -------------------------------------------- | ---------------------- |
-| Supabase (database + storage) | All account data, photos, find metadata      | Backend infrastructure |
-| Anthropic (Claude Vision API) | Submitted photos + collection criteria       | AI validation of finds |
-| Google (Maps SDK for Android) | Device location while the map screen is open | Render the map         |
-| Expo Push Service             | Push notification token (no message content) | Deliver notifications  |
+| Recipient                     | Data shared                                                                                                   | Purpose                                                        |
+| ----------------------------- | ------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------- |
+| Supabase (database + storage) | All account data, photos, find metadata                                                                       | Backend infrastructure                                         |
+| Anthropic (Claude API)        | Submitted photos + collection criteria; AI collection-generator prompts; account ID + gamification statistics | AI validation of finds; collection drafts; XP and achievements |
+| Google (Maps SDK for Android) | Device location while the map screen is open                                                                  | Render the map                                                 |
+| Expo Push Service             | Push notification token (no message content)                                                                  | Deliver notifications                                          |
 
 We do **not** sell your personal data. We do **not** share data with advertisers.
 
