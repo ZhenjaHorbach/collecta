@@ -35,7 +35,7 @@ Rules:
 - The helper requires `SUPABASE_SERVICE_ROLE_KEY` in env (already set on every deployed function).
 - `--no-verify-jwt` on `supabase functions deploy` is fine — the helper runs the equivalent check explicitly. Keeping `--no-verify-jwt` lets the function return a custom error body instead of Supabase's gateway-level rejection.
 
-Functions currently using this pattern: `award-xp` (authorize), `generate-collection` (authenticate), `validate-find` (authenticate). Webhooks like `on-user-created` use a different model — verify the webhook secret instead.
+Functions currently using this pattern: `award-xp` (authorize), `generate-collection` (authenticate), `validate-find` (authenticate). Webhooks like `on-user-created` use a different model — the caller is the database, so verify a shared secret instead: Dashboard webhook sends header `x-webhook-secret`, the function compares it to the `DB_WEBHOOK_SECRET` function secret with `isValidWebhookSecret` from `_shared/webhook-secret.ts`, **before** reading the body, and fails closed (500) when the secret is unset.
 
 ## Queries
 

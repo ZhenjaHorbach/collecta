@@ -8,7 +8,7 @@
   (`src/components/ErrorBoundary/ErrorBoundary.tsx:21-22`). In a release
   build these logs go nowhere we can read.
 - **Edge functions:** `console.*` lines, visible only via
-  `supabase functions logs <fn>` / the dashboard, retained per Supabase plan.
+  the Dashboard (Edge Functions → function → Logs; the CLI has no logs command), retained per Supabase plan.
   No alerting. AI failures (`vision_failed`, `agent_failed`,
   `subagent_failed`, timeouts from item 2, `loop_budget_exceeded`) are only
   discoverable by reading logs.

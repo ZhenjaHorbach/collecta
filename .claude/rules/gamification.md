@@ -65,7 +65,7 @@ A "completed collection" = the user has at least one find for every `collection_
 3. `check_achievements(user_id, stats)` — returns codes the user newly qualifies for
 4. `unlock_achievement(user_id, code)` — idempotent insert into `user_achievements`, awards bonus XP
 
-Loop terminates on `stop_reason !== 'tool_use'`. Safety cap `MAX_LOOP_STEPS = 8`. Every step prints `[award-xp][step N] tool=... input=... output=...` — view the trace via `supabase functions logs award-xp --follow`.
+Loop terminates on `stop_reason !== 'tool_use'`. Safety cap `MAX_LOOP_STEPS = 8`. Every step prints `[award-xp][step N] tool=... input=... output=...` — view the trace in Dashboard → Edge Functions → `award-xp` → Logs.
 
 ## AI usage tracking
 
@@ -75,7 +75,7 @@ Legacy mirror: the same aggregated token counts are also written to **each** new
 
 ## Where to debug
 
-- **Agent trace** — `supabase functions logs award-xp --follow`
+- **Agent trace** — Dashboard → Edge Functions → `award-xp` → Logs (filter `[award-xp]`)
 - **Token cost** — `select * from ai_calls where kind like 'award-xp:%' order by created_at desc;` then `estimateCostUsd(model, …)` from `src/utils/cost-tracker.ts`
 - **Stuck streak** — check `users.last_find_date` vs today; cosmetic logic in `src/utils/streak.utils.ts`
 - **Missing toast** — confirm `<AchievementToastHost/>` is mounted in `src/app/_layout.tsx`; check that `awardXp(...)` was called (look for `[gamification]` warnings)

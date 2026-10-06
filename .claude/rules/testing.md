@@ -203,5 +203,6 @@ is separate (`tsc --noEmit`) — both must pass to merge.
   `_shared/validate-photo-prompt.ts` (prompt + tool schema) and
   `_shared/validate-photo-parse.ts` (tool-output parser + `matches_claim`
   safety net) — single sources used by prod validate-find and the vision
-  evals. The prompt module's test fences the import-free property. (Existing reverse-direction exception:
+  evals; `_shared/webhook-secret.ts` (DB-webhook secret check, unit-tested
+  in Node). The prompt module's test fences the import-free property. (Existing reverse-direction exception:
   `generate-collection` imports `src/agents/`.)
